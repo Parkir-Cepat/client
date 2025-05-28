@@ -7,19 +7,10 @@ export function useParkingSearch() {
     fetchPolicy: 'network-only',
   });
 
-  const searchParkingLots = async (input: SearchParkingLotsInput) => {
+  const searchParkingLots = async (query: string) => {
     try {
       const { data: result } = await searchParking({
-        variables: {          input: {
-            latitude: input.lat,
-            longitude: input.lng,
-            maxDistance: input.radius || 5,
-            vehicleType: input.vehicleType,
-            minPrice: input.minPrice,
-            maxPrice: input.maxPrice,
-            sortBy: input.sortBy || 'distance',
-          }
-        },
+        variables: { query },
       });
       return result?.searchParkingLots;
     } catch (err) {

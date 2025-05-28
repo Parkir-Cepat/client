@@ -213,7 +213,7 @@ const ProfilePage: React.FC = () => {
               sx={{ mb: 2 }}
             />
             <Typography variant="body2" color="text.secondary">
-              Bergabung sejak {formatDate(user.createdAt)}
+              Bergabung sejak {user.createdAt ? formatDate(user.createdAt) : '-'}
             </Typography>
           </Paper>
         </Grid>        <Grid size={{ xs: 12, md: 8 }}>

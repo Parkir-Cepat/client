@@ -33,6 +33,8 @@ import ManageParkingLotsPage from "./pages/ManageParkingLotsPage";
 import EmailVerificationPage from "./pages/EmailVerificationPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import TopUpPage from "./pages/TopUpPage";
+import TopUpSuccessPage from "./pages/TopUpSuccessPage";
 
 // Route protection components
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -209,6 +211,26 @@ function App() {
                         element={
                           <ProtectedRoute requiredRole="landowner">
                             <ManageParkingLotsPage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      {/* TopUp Route */}
+                      <Route
+                        path="/topup"
+                        element={
+                          <ProtectedRoute>
+                            <TopUpPage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      {/* TopUp Success Route */}
+                      <Route
+                        path="/topup-success"
+                        element={
+                          <ProtectedRoute>
+                            <TopUpSuccessPage />
                           </ProtectedRoute>
                         }
                       />

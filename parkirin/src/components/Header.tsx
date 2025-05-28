@@ -277,6 +277,12 @@ const Header: React.FC = () => {
                     </ListItemIcon>
                     Profil
                   </MenuItem>
+                  <MenuItem onClick={handleClose} component={Link} to="/topup">
+                    <ListItemIcon>
+                      <DirectionsCar fontSize="small" />
+                    </ListItemIcon>
+                    Top Up Saldo
+                  </MenuItem>
                   {user?.role === 'landowner' && !isMobile && (
                     [
                       <MenuItem key="dashboard" onClick={handleClose} component={Link} to="/landowner/dashboard">

@@ -118,7 +118,6 @@ export const GET_PARKING_LOT = gql`
       name
       address
       description
-      photos
       location {
         coordinates
       }
@@ -127,10 +126,7 @@ export const GET_PARKING_LOT = gql`
         name
         avatar
       }
-      availableSlots
-      totalSlots
       vehicleTypes
-      tariff
       operationalHours {
         open
         close
@@ -147,7 +143,6 @@ export const GET_PARKING_LOT = gql`
         comment
         createdAt
       }
-      isActive
       createdAt
     }
   }
@@ -159,13 +154,10 @@ export const CREATE_PARKING_LOT = gql`
       _id
       name
       address
-      photos
       location {
         coordinates
       }
-      totalSlots
-      tariff
-      isActive
+      createdAt
     }
   }
 `;
@@ -176,10 +168,6 @@ export const UPDATE_PARKING_LOT = gql`
       _id
       name
       address
-      photos
-      availableSlots
-      totalSlots
-      tariff
       updatedAt
     }
   }
@@ -200,12 +188,15 @@ export const GET_MY_PARKING_LOTS = gql`
       _id
       name
       address
-      photos
-      availableSlots
-      totalSlots
-      tariff
+      capacity {
+        car
+        motorcycle
+      }
+      available {
+        car
+        motorcycle
+      }
       rating
-      isActive
       createdAt
     }
   }
@@ -277,7 +268,6 @@ export const GET_MY_ACTIVE_BOOKINGS = gql`
         _id
         name
         address
-        photos
       }
       vehicleType
       startTime
@@ -304,7 +294,6 @@ export const GET_MY_BOOKING_HISTORY = gql`
         _id
         name
         address
-        photos
       }
       vehicleType
       startTime

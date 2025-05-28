@@ -28,7 +28,7 @@ import {
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
 import { useParkingSearch } from '../hooks/useParkingSearch';
-import { useLocation } from '../hooks/useLocation';
+// import { useLocation } from '../hooks/useLocation';
 import type { ParkingLot } from '../types';
 
 const mapContainerStyle = {
@@ -58,7 +58,7 @@ const SearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { searchResults, isLoading, error, searchParkingLots } = useParkingSearch();
-  const { currentLocation, geocodeAddress } = useLocation();
+  // const { currentLocation, geocodeAddress } = useLocation();
   
   const searchResultsList = searchResults ?? [];
   
@@ -73,65 +73,35 @@ const SearchPage: React.FC = () => {
   });
   
   const [selectedParkingLot, setSelectedParkingLot] = React.useState<ParkingLot | null>(null);
-  const [mapCenter, setMapCenter] = React.useState(defaultCenter);
   const [showMap, setShowMap] = React.useState(true);
   // Initialize search on component mount
-  const handleSearch = React.useCallback(async (coordinates?: { lat: number; lng: number }) => {
+  const handleSearch = React.useCallback(async (query?: string) => {
     try {
-      let searchCoords = coordinates || currentLocation;
-      
-      if (!searchCoords && searchFilters.location) {
-        searchCoords = await geocodeAddress(searchFilters.location);
+      if (!query && !searchFilters.location) {
+        throw new Error('Lokasi/kata kunci pencarian harus diisi.');
       }
-      
-      if (!searchCoords) {
-        throw new Error('Lokasi tidak ditemukan. Mohon cek kembali alamat yang dimasukkan.');
-      }
-
-      const searchInput = {
-        lat: searchCoords.lat,
-        lng: searchCoords.lng,
-        radius: searchFilters.radius,
-        vehicleType: searchFilters.vehicleType || undefined,
-        minPrice: searchFilters.minPrice,
-        maxPrice: searchFilters.maxPrice,
-        sortBy: searchFilters.sortBy
-      };
-
-      await searchParkingLots(searchInput);
-      
+      const searchQuery = query || searchFilters.location;
+      await searchParkingLots(searchQuery);
       // Update URL params
       const params = new URLSearchParams();
-      params.set('location', searchFilters.location);
-      params.set('lat', searchCoords.lat.toString());
-      params.set('lng', searchCoords.lng.toString());
-      if (searchFilters.vehicleType) params.set('vehicleType', searchFilters.vehicleType);
+      params.set('location', searchQuery);
       setSearchParams(params);
     } catch (err) {
       console.error('Error during search:', err);
     }
-  }, [currentLocation, searchFilters, geocodeAddress, searchParkingLots, setSearchParams]);
+  }, [searchFilters.location, searchParkingLots, setSearchParams]);
 
   React.useEffect(() => {
-    const lat = searchParams.get('lat');
-    const lng = searchParams.get('lng');
-    
-    if (lat && lng) {
-      const center = { lat: parseFloat(lat), lng: parseFloat(lng) };
-      setMapCenter(center);
-      handleSearch(center);
-    } else if (currentLocation) {
-      setMapCenter(currentLocation);
-      handleSearch(currentLocation);
-    }  }, [currentLocation, searchParams, handleSearch, setMapCenter]);
+    const location = searchParams.get('location');
+    if (location) {
+      handleSearch(location);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleLocationSearch = async () => {
     if (searchFilters.location) {
-      const coords = await geocodeAddress(searchFilters.location);
-      if (coords) {
-        setMapCenter(coords);
-        handleSearch(coords);
-      }
+      await handleSearch(searchFilters.location);
     }
   };
 
@@ -144,8 +114,9 @@ const SearchPage: React.FC = () => {
     navigate(`/booking?${bookingParams.toString()}`);
   };
   const renderParkingCard = (parkingLot: ParkingLot) => {
-    const availableSlots = parkingLot.available ? 
-      (parkingLot.available.car + parkingLot.available.motorcycle) : 0;
+    const availableCar = parkingLot.available?.car || 0;
+    const availableMotorcycle = parkingLot.available?.motorcycle || 0;
+    const availableSlots = availableCar + availableMotorcycle;
     const totalRating = parkingLot.rating || 0;
     const carRate = parkingLot.rates?.car || 0;
     const motorRate = parkingLot.rates?.motorcycle || 0;
@@ -156,7 +127,7 @@ const SearchPage: React.FC = () => {
         <CardMedia
           component="img"
           height="200"
-          image={parkingLot.photos?.[0] || '/placeholder-parking.jpg'}
+          image={'/placeholder-parking.jpg'}
           alt={parkingLot.name}
         />
         <CardContent>
@@ -186,13 +157,6 @@ const SearchPage: React.FC = () => {
               label={`Rp ${minRate.toLocaleString('id-ID')}/jam`}
               color="primary"
             />
-            {parkingLot.distance && (
-              <Chip 
-                size="small" 
-                label={`${parkingLot.distance.toFixed(1)} km`}
-                variant="outlined"
-              />
-            )}
           </Box>
 
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -354,11 +318,11 @@ const SearchPage: React.FC = () => {
               <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
                 <GoogleMap
                   mapContainerStyle={mapContainerStyle}
-                  center={mapCenter}
+                  center={defaultCenter}
                   zoom={13}
                 >
-                  {/* Current location marker */}
-                  {currentLocation && (
+                  {/* Current location marker (di-nonaktifkan karena pencarian berbasis string) */}
+                  {/* {currentLocation && (
                     <Marker
                       position={currentLocation}
                       icon={{
@@ -366,7 +330,7 @@ const SearchPage: React.FC = () => {
                         scaledSize: new window.google.maps.Size(30, 30),
                       }}
                     />
-                  )}
+                  )} */}
           {/* Parking lot markers */}
                   {!isLoading && searchResultsList.map((parkingLot: ParkingLot) => (
                     <Marker
@@ -376,10 +340,6 @@ const SearchPage: React.FC = () => {
                         lng: parkingLot.location.coordinates[0],
                       }}
                       onClick={() => setSelectedParkingLot(parkingLot)}
-                      icon={{
-                        url: parkingLot.availableSlots > 0 ? '/parking-available.png' : '/parking-full.png',
-                        scaledSize: new window.google.maps.Size(40, 40),
-                      }}
                     />
                   ))}
 
@@ -400,16 +360,16 @@ const SearchPage: React.FC = () => {
                           {selectedParkingLot.address}
                         </Typography>
                         <Typography variant="body2" gutterBottom>
-                          Rp {selectedParkingLot.tariff.toLocaleString('id-ID')}/jam
+                          Rp {Math.min(selectedParkingLot.rates?.car || 0, selectedParkingLot.rates?.motorcycle || 0).toLocaleString('id-ID')}/jam
                         </Typography>
                         <Typography variant="body2" gutterBottom>
-                          {selectedParkingLot.availableSlots} slot tersedia
+                          {((selectedParkingLot.available?.car || 0) + (selectedParkingLot.available?.motorcycle || 0))} slot tersedia
                         </Typography>
                         <Button
                           size="small"
                           variant="contained"
                           onClick={() => handleBooking(selectedParkingLot)}
-                          disabled={selectedParkingLot.availableSlots === 0}
+                          disabled={((selectedParkingLot.available?.car || 0) + (selectedParkingLot.available?.motorcycle || 0)) === 0}
                         >
                           Book
                         </Button>
@@ -450,7 +410,7 @@ const SearchPage: React.FC = () => {
             </Alert>
           ) : (
             <Box sx={{ maxHeight: showMap ? '500px' : 'none', overflow: 'auto' }}>              {searchResultsList
-                .filter((lot: ParkingLot) => !searchFilters.showAvailableOnly || lot.availableSlots > 0)
+                .filter((lot: ParkingLot) => !searchFilters.showAvailableOnly || ((lot.available?.car || 0) + (lot.available?.motorcycle || 0)) > 0)
                 .map(renderParkingCard)}
             </Box>
           )}

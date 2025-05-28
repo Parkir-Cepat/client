@@ -169,6 +169,15 @@ const Header: React.FC<HeaderProps> = ({
             </ListItemText>
           </MenuItem>
 
+          <MenuItem onClick={() => window.location.href = '/topup'}>
+            <ListItemIcon>
+              <AccountBalanceWallet fontSize="small" />
+            </ListItemIcon>
+            <ListItemText>
+              Top Up Saldo
+            </ListItemText>
+          </MenuItem>
+
           {user.role === 'user' && (
             <MenuItem onClick={() => window.location.href = '/bookings'}>
               <ListItemIcon>

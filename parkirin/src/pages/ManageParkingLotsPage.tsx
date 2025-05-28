@@ -38,7 +38,7 @@ import {
 } from '@mui/icons-material';
 import { useQuery, useMutation } from '@apollo/client';
 import { toast } from 'react-toastify';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, isValid } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 
 import { 
@@ -404,10 +404,12 @@ const ManageParkingLotsPage: React.FC = () => {
                       )}
 
                       <Typography variant="caption" color="text.secondary">
-                        Dibuat {formatDistanceToNow(new Date(lot.createdAt), { 
-                          addSuffix: true, 
-                          locale: localeId 
-                        })}
+                        {(() => {
+                          const date = lot.createdAt ? new Date(lot.createdAt) : null;
+                          return (date && isValid(date))
+                            ? `Dibuat ${formatDistanceToNow(date, { addSuffix: true, locale: localeId })}`
+                            : 'Tanggal tidak valid';
+                        })()}
                       </Typography>
                     </CardContent>
 

@@ -1,26 +1,8 @@
 import { gql } from '@apollo/client';
 
 export const SEARCH_PARKING_LOTS = gql`
-  query SearchParkingLots(
-    $latitude: Float!
-    $longitude: Float!
-    $maxDistance: Float
-    $vehicleType: String
-    $minPrice: Float
-    $maxPrice: Float
-    $sortBy: String
-  ) {
-    searchParkingLots(
-      input: {
-        latitude: $latitude
-        longitude: $longitude
-        maxDistance: $maxDistance
-        vehicleType: $vehicleType
-        minPrice: $minPrice
-        maxPrice: $maxPrice
-        sortBy: $sortBy
-      }
-    ) {
+  query SearchParkingLots($query: String!) {
+    searchParkingLots(query: $query) {
       _id
       name
       address
@@ -39,12 +21,10 @@ export const SEARCH_PARKING_LOTS = gql`
         car
         motorcycle
       }
-      photos
       facilities
       status
       rating
       reviewCount
-      distance
       createdAt
       updatedAt
     }
