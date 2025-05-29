@@ -64,18 +64,17 @@ const PaymentStatusCard = ({ payment, onRetryPayment, onViewDetails }) => {
                 Rp {payment.amount?.toLocaleString('id-ID')}
               </span>
             </div>
-            
-            <div className="flex justify-between">
+              <div className="flex justify-between">
               <span>Method:</span>
               <span className="font-medium text-gray-900">
-                {payment.paymentMethod || 'N/A'}
+                {payment.payment_method || 'N/A'}
               </span>
             </div>
             
             <div className="flex justify-between">
               <span>Date:</span>
               <span className="font-medium text-gray-900">
-                {payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : 'N/A'}
+                {payment.created_at ? new Date(payment.created_at).toLocaleDateString() : 'N/A'}
               </span>
             </div>
 

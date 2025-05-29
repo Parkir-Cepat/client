@@ -6,7 +6,7 @@ import {
   MapPinIcon, 
   ClockIcon, 
   StarIcon, 
-  CarIcon,
+  TruckIcon,
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 
@@ -32,8 +32,7 @@ const GET_PARKING_LOT = gql`
       rates {
         car
         motorcycle
-      }
-      operationalHours {
+      }      operational_hours {
         open
         close
       }
@@ -113,7 +112,7 @@ const ParkingDetail = () => {
             
             <div className="flex items-center text-gray-600">
               <ClockIcon className="w-4 h-4 mr-1" />
-              <span>{parking.operationalHours?.open} - {parking.operationalHours?.close}</span>
+              <span>{parking.operational_hours?.open} - {parking.operational_hours?.close}</span>
             </div>
           </div>
         </div>
@@ -129,7 +128,7 @@ const ParkingDetail = () => {
               <div className="border border-gray-200 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium">Cars</h3>
-                  <CarIcon className="w-5 h-5 text-gray-600" />
+                  <TruckIcon className="w-5 h-5 text-gray-600" />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">
                   {parking.available?.car}/{parking.capacity?.car}

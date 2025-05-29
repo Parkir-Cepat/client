@@ -11,8 +11,8 @@ const GET_ME = gql`
       role
       saldo
       avatar
-      isEmailVerified
-      createdAt
+      is_email_verified
+      created_at
     }
   }
 `;
@@ -131,15 +131,14 @@ const Profile = () => {
                 <p className="text-gray-900 capitalize">{user?.role}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Member Since</label>
-                <p className="text-gray-900">
-                  {new Date(user?.createdAt).toLocaleDateString()}
+                <label className="block text-sm font-medium text-gray-700">Member Since</label>                <p className="text-gray-900">
+                  {new Date(user?.created_at).toLocaleDateString()}
                 </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email Verified</label>
                 <p className="text-gray-900">
-                  {user?.isEmailVerified ? 'Yes' : 'No'}
+                  {user?.is_email_verified ? 'Yes' : 'No'}
                 </p>
               </div>
             </div>

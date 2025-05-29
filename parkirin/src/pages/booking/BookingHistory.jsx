@@ -1,11 +1,10 @@
 import { useQuery, gql } from '@apollo/client';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
-const GET_BOOKING_HISTORY = gql`
-  query GetMyBookingHistory {
+const GET_BOOKING_HISTORY = gql`  query GetMyBookingHistory {
     getMyBookingHistory {
       _id
-      startTime
+      start_time
       duration
       cost
       status
@@ -72,7 +71,7 @@ const BookingHistory = () => {
                     bookings.map((booking) => (
                       <tr key={booking._id}>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {new Date(parseInt(booking.startTime)).toLocaleDateString()}
+                          {new Date(parseInt(booking.start_time)).toLocaleDateString()}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {booking.duration} hours

@@ -45,15 +45,14 @@ const Payments = () => {
       deletePaymentMethod({ variables: { paymentMethodId: methodId } });
     }
   };
-
   const handleTopUp = () => {
     const amount = parseFloat(topUpAmount);
     if (amount > 0) {
-      topUpWallet({ variables: { amount } });
+      topUpWallet({ variables: { input: { amount, payment_method: "QRIS" } } });
     }
   };
 
-  const transactions = transactionsData?.getTransactions || [];
+  const transactions = transactionsData?.getMyTransactionHistory || [];
   const paymentMethods = methodsData?.getPaymentMethods || [];
   const walletBalance = transactionsData?.me?.saldo || 0;
 
@@ -135,7 +134,7 @@ const Payments = () => {
           ) : (
             <div className="space-y-4">
               {transactions.map((transaction) => (
-                <Card key={transaction.id}>
+                <Card key={transaction._id}>
                   <Card.Content className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -145,9 +144,8 @@ const Payments = () => {
                            transaction.type === 'refund' ? '↩️' : '📄'}
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-900">{transaction.description}</h4>
-                          <p className="text-sm text-gray-500">
-                            {formatDate(transaction.createdAt)} • {transaction.paymentMethod}
+                          <h4 className="font-medium text-gray-900">{transaction.description}</h4>                          <p className="text-sm text-gray-500">
+                            {formatDate(transaction.created_at)} • {transaction.payment_method}
                           </p>
                         </div>
                       </div>

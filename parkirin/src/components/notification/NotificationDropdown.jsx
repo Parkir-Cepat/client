@@ -11,15 +11,14 @@ const NotificationDropdown = ({
   onDelete,
   loading = false 
 }) => {
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
   const [filter, setFilter] = useState('all'); // 'all', 'unread', 'read'
-
   const filteredNotifications = notifications.filter(notification => {
     switch (filter) {
       case 'unread':
-        return !notification.read;
+        return !notification.is_read;
       case 'read':
-        return notification.read;
+        return notification.is_read;
       default:
         return true;
     }

@@ -54,9 +54,8 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete }) => {
   };
 
   return (
-    <div 
-      className={`bg-white border-l-4 ${getBorderColor(notification.type)} p-4 shadow-sm hover:shadow-md transition-shadow ${
-        !notification.read ? 'bg-blue-50' : ''
+    <div      className={`bg-white border-l-4 ${getBorderColor(notification.type)} p-4 shadow-sm hover:shadow-md transition-shadow ${
+        !notification.is_read ? 'bg-blue-50' : ''
       }`}
     >
       <div className="flex items-start space-x-3">
@@ -85,10 +84,8 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete }) => {
                   }
                 </div>
               )}
-            </div>
-
-            {/* Unread indicator */}
-            {!notification.read && (
+            </div>            {/* Unread indicator */}
+            {!notification.is_read && (
               <div className="w-2 h-2 bg-blue-600 rounded-full ml-2 mt-1"></div>
             )}
           </div>
@@ -99,8 +96,7 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete }) => {
               {formatTimestamp(notification.created_at)}
             </span>
 
-            <div className="flex items-center space-x-2">
-              {!notification.read && onMarkAsRead && (
+            <div className="flex items-center space-x-2">              {!notification.is_read && onMarkAsRead && (
                 <button
                   onClick={() => onMarkAsRead(notification._id)}
                   className="text-xs text-blue-600 hover:text-blue-800 font-medium"

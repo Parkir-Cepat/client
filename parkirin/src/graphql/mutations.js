@@ -74,46 +74,47 @@ export const CREATE_PARKING = gql`
     createParking(input: $input) {
       _id
       name
+      description
       address
       location {
+        type
         coordinates
       }
-      capacity {
-        car
-        motorcycle
-      }
-      rates {
-        car
-        motorcycle
-      }
-      operational_hours {
-        open
-        close
-      }
-      facilities
+      total_slots
+      available_slots
+      tariff
+      vehicle_types
+      amenities
       images
+      opening_hour
+      closing_hour
       status
+      created_at
     }
   }
 `;
 
 export const UPDATE_PARKING = gql`
-  mutation UpdateParking($id: ID!, $input: UpdateParkingInput!) {
-    updateParking(id: $id, input: $input) {
+  mutation UpdateParking($input: UpdateParkingInput!) {
+    updateParking(input: $input) {
       _id
       name
+      description
       address
-      rates {
-        car
-        motorcycle
+      location {
+        type
+        coordinates
       }
-      operational_hours {
-        open
-        close
-      }
-      facilities
+      total_slots
+      available_slots
+      tariff
+      vehicle_types
+      amenities
       images
+      opening_hour
+      closing_hour
       status
+      updated_at
     }
   }
 `;
@@ -124,9 +125,36 @@ export const DELETE_PARKING = gql`
   }
 `;
 
+// Room Mutations
+export const CREATE_ROOM = gql`
+  mutation CreateRoom($input: CreateRoomInput!) {
+    createRoom(input: $input) {
+      _id
+      name
+      type
+      created_at
+    }
+  }
+`;
+
+export const UPDATE_ROOM = gql`
+  mutation UpdateRoom($id: ID!, $input: UpdateRoomInput!) {
+    updateRoom(id: $id, input: $input) {
+      _id
+      nameRoom
+      updated_at
+    }
+  }
+`;
+
+export const ADD_PARTICIPANTS = gql`
+  mutation AddParticipants($room_id: ID!, $participant_ids: [ID!]!) {
+    addParticipants(room_id: $room_id, participant_ids: $participant_ids)
+  }
+`;
+
 // Booking Mutations
-export const CREATE_BOOKING = gql`
-  mutation CreateBooking($input: CreateBookingInput!) {
+export const CREATE_BOOKING = gql`  mutation CreateBooking($input: CreateBookingInput!) {
     createBooking(input: $input) {
       _id
       user {
@@ -138,14 +166,12 @@ export const CREATE_BOOKING = gql`
         name
         address
       }
-      vehicleType
-      licensePlate
-      startTime
-      endTime
+      vehicle_type
+      start_time
       duration
       cost
       status
-      createdAt
+      created_at
     }
   }
 `;
@@ -155,7 +181,7 @@ export const CANCEL_BOOKING = gql`
     cancelBooking(id: $id) {
       _id
       status
-      cancelledAt
+      updated_at
     }
   }
 `;
@@ -165,7 +191,7 @@ export const CONFIRM_BOOKING = gql`
     confirmBooking(id: $id) {
       _id
       status
-      confirmedAt
+      updated_at
     }
   }
 `;
@@ -176,18 +202,17 @@ export const EXTEND_BOOKING = gql`
       _id
       duration
       cost
-      endTime
-      updatedAt
+      status
+      duration
+      price
+      updated_at
     }
   }
 `;
 
 export const GENERATE_BOOKING_QR = gql`
   mutation GenerateBookingQR($bookingId: ID!) {
-    generateBookingQR(bookingId: $bookingId) {
-      _id
-      qr_code
-    }
+    generateBookingQR(bookingId: $bookingId)
   }
 `;
 
@@ -197,39 +222,29 @@ export const GENERATE_PARKING_ACCESS_QR = gql`
   }
 `;
 
-// Payment Mutations
-export const CREATE_PAYMENT = gql`
-  mutation CreatePayment($input: CreatePaymentInput!) {
-    createPayment(input: $input) {
-      _id
-      transactionId
-      paymentMethod
-      amount
-      status
-      qrCodeUrl
-      createdAt
+export const VERIFY_QR_CODE = gql`
+  mutation VerifyQRCode($qrToken: String!) {
+    verifyQRCode(qrToken: $qrToken) {
+      isValid
+      message
+      booking {
+        _id
+        status
+        user {
+          name
+        }
+        parking {
+          name
+        }
+      }
     }
   }
 `;
 
-export const TOP_UP_SALDO = gql`
-  mutation TopUpSaldo($input: TopUpInput!) {
-    topUpSaldo(input: $input) {
-      _id
-      type
-      amount
-      paymentMethod
-      status
-      transactionId
-      qrCodeUrl
-      createdAt
-    }
-  }
-`;
-
+// Transaction Mutations
 export const CONFIRM_PAYMENT = gql`
-  mutation ConfirmPayment($transactionId: String!) {
-    confirmPayment(transactionId: $transactionId) {
+  mutation ConfirmPayment($transaction_id: String!) {
+    confirmPayment(transaction_id: $transaction_id) {
       _id
       status
       updated_at
@@ -263,31 +278,51 @@ export const DELETE_NOTIFICATION = gql`
 export const ADD_PAYMENT_METHOD = gql`
   mutation AddPaymentMethod($input: PaymentMethodInput!) {
     addPaymentMethod(input: $input) {
-      id
+      _id
       name
       type
-      lastFour
-      isDefault
+      last_four
+      is_default
+      created_at
     }
   }
 `;
 
 export const DELETE_PAYMENT_METHOD = gql`
   mutation DeletePaymentMethod($paymentMethodId: ID!) {
-    deletePaymentMethod(paymentMethodId: $paymentMethodId) {
+    deletePaymentMethod(payment_method_id: $paymentMethodId) {
       success
       message
     }
   }
 `;
 
+export const CREATE_PAYMENT = gql`
+  mutation CreatePayment($input: CreatePaymentInput!) {
+    createPayment(input: $input) {
+      transaction {
+        _id
+        amount
+        transaction_id
+        status
+      }
+      payment_url
+      qr_code
+    }
+  }
+`;
+
 export const TOP_UP_WALLET = gql`
-  mutation TopUpWallet($amount: Float!) {
-    topUpWallet(amount: $amount) {
-      transactionId
-      status
-      amount
-      newBalance
+  mutation TopUpWallet($input: TopUpInput!) {
+    topUpSaldo(input: $input) {
+      transaction {
+        _id
+        amount
+        transaction_id
+        status
+      }
+      payment_url
+      qr_code
     }
   }
 `;

@@ -87,9 +87,8 @@ const Notifications = () => {
       </div>
     );
   }
-
-  const notifications = data?.getNotifications || [];
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const notifications = data?.getMyNotifications || [];
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
@@ -152,11 +151,10 @@ const Notifications = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {notifications.map((notification) => (
-            <div
-              key={notification.id}
+          {notifications.map((notification) => (            <div
+              key={notification._id}
               className={`bg-white rounded-lg border p-4 hover:shadow-md transition-shadow ${
-                !notification.isRead ? 'border-l-4 border-l-blue-500 bg-blue-50' : 'border-gray-200'
+                !notification.is_read ? 'border-l-4 border-l-blue-500 bg-blue-50' : 'border-gray-200'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -169,8 +167,7 @@ const Notifications = () => {
                     <div className="flex items-center space-x-2">
                       <h4 className="text-sm font-medium text-gray-900">
                         {notification.title}
-                      </h4>
-                      {!notification.isRead && (
+                      </h4>                      {!notification.is_read && (
                         <Badge color="blue" size="sm">New</Badge>
                       )}
                       <Badge color={getNotificationColor(notification.type)} size="sm">
@@ -183,7 +180,7 @@ const Notifications = () => {
                     </p>
                     
                     <div className="flex items-center text-xs text-gray-500 mt-2">
-                      <span>{formatChatTime(notification.createdAt)}</span>
+                      <span>{formatChatTime(notification.created_at)}</span>
                       {notification.actionUrl && (
                         <>
                           <span className="mx-2">•</span>
@@ -199,17 +196,16 @@ const Notifications = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 ml-4">
-                  {!notification.isRead && (
+                <div className="flex items-center space-x-2 ml-4">                  {!notification.is_read && (
                     <button
-                      onClick={() => handleMarkAsRead(notification.id)}
+                      onClick={() => handleMarkAsRead(notification._id)}
                       className="text-blue-600 hover:text-blue-800 text-xs font-medium"
                     >
                       Mark as Read
                     </button>
                   )}
                   <button
-                    onClick={() => handleDelete(notification.id)}
+                    onClick={() => handleDelete(notification._id)}
                     className="text-red-600 hover:text-red-800 text-xs"
                   >
                     ✕

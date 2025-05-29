@@ -20,8 +20,8 @@ const GET_ME = gql`
       role
       saldo
       avatar
-      isEmailVerified
-      createdAt
+      is_email_verified
+      created_at
     }
   }
 `;

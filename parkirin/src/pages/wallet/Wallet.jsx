@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
+import { TOP_UP_WALLET } from '../../graphql/mutations';
 
 const GET_ME = gql`
   query Me {
@@ -11,24 +12,14 @@ const GET_ME = gql`
   }
 `;
 
-const TOP_UP_SALDO = gql`
-  mutation TopUpSaldo($input: TopUpInput!) {
-    topUpSaldo(input: $input) {
-      _id
-      amount
-      paymentUrl
-    }
-  }
-`;
-
 const GET_PAYMENT_HISTORY = gql`
   query GetMyPaymentHistory {
     getMyPaymentHistory {
       _id
       amount
-      paymentMethod
+      payment_method
       status
-      createdAt
+      created_at
     }
   }
 `;
@@ -36,11 +27,9 @@ const GET_PAYMENT_HISTORY = gql`
 const Wallet = () => {
   const [topUpAmount, setTopUpAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('QRIS');
-  
-  const { data: userData, loading: userLoading } = useQuery(GET_ME);
+    const { data: userData, loading: userLoading } = useQuery(GET_ME);
   const { data: historyData, loading: historyLoading } = useQuery(GET_PAYMENT_HISTORY);
-  const [topUpSaldo] = useMutation(TOP_UP_SALDO);
-
+  const [topUpSaldo] = useMutation(TOP_UP_WALLET);
   const handleTopUp = async (e) => {
     e.preventDefault();
     if (!topUpAmount || topUpAmount < 10000) return;
@@ -50,13 +39,13 @@ const Wallet = () => {
         variables: {
           input: {
             amount: parseInt(topUpAmount),
-            paymentMethod
+            payment_method: paymentMethod
           }
         }
       });
 
-      if (result.data?.topUpSaldo?.paymentUrl) {
-        window.open(result.data.topUpSaldo.paymentUrl, '_blank');
+      if (result.data?.topUpSaldo?.payment_url) {
+        window.open(result.data.topUpSaldo.payment_url, '_blank');
       }
     } catch (error) {
       console.error('Error during top up:', error);
@@ -134,10 +123,9 @@ const Wallet = () => {
               historyData.getMyPaymentHistory.map((transaction) => (
                 <div key={transaction._id} className="flex justify-between items-center p-3 border border-gray-200 rounded-lg">
                   <div>
-                    <p className="font-medium">{formatCurrency(transaction.amount)}</p>
-                    <p className="text-sm text-gray-600">{transaction.paymentMethod}</p>
+                    <p className="font-medium">{formatCurrency(transaction.amount)}</p>                    <p className="text-sm text-gray-600">{transaction.payment_method}</p>
                     <p className="text-xs text-gray-500">
-                      {new Date(transaction.createdAt).toLocaleString()}
+                      {new Date(transaction.created_at).toLocaleString()}
                     </p>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${

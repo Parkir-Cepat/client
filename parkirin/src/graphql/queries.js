@@ -172,6 +172,59 @@ export const GET_MY_PARKINGS = gql`
   }
 `;
 
+export const GET_MY_PARKING_LOTS = gql`
+  query GetMyParkingLots {
+    getMyParkingLots {
+      _id
+      name
+      description
+      address
+      location {
+        type
+        coordinates
+      }
+      total_slots
+      available_slots
+      tariff
+      vehicle_types
+      amenities
+      operating_hours {
+        open
+        close
+      }
+      images
+      status
+      rating
+      created_at
+    }
+  }
+`;
+
+export const GET_PARKING_BOOKINGS = gql`
+  query GetParkingBookings($parking_id: ID!) {
+    getParkingBookings(parking_id: $parking_id) {
+      _id
+      user {
+        _id
+        name
+      }
+      parking {
+        _id
+        name
+      }
+      vehicle_type
+      entry_time
+      exit_time
+      status
+      payment {
+        _id
+        amount
+        status
+      }
+    }
+  }
+`;
+
 // Parking Lot Queries
 export const GET_NEARBY_PARKING_LOTS = gql`
   query GetNearbyParkingLots(
@@ -218,45 +271,29 @@ export const GET_NEARBY_PARKING_LOTS = gql`
 `;
 
 export const SEARCH_PARKING_LOTS = gql`
-  query SearchParkingLots(
-    $query: String!
-    $vehicleType: String
-    $minPrice: Float
-    $maxPrice: Float
-    $rating: Float
-    $sortBy: String
-  ) {
-    searchParkings(
-      query: $query
-      vehicleType: $vehicleType
-      sortBy: $sortBy
-    ) {
+  query SearchParkingLots($input: SearchParkingInput!) {
+    searchParkingLots(input: $input) {
       _id
       name
+      description
       address
       location {
+        type
         coordinates
       }
-      capacity {
-        car
-        motorcycle
-      }      available {
-        car
-        motorcycle
-      }
-      rates {
-        car
-        motorcycle
-      }
-      operational_hours {
+      total_slots
+      available_slots
+      tariff
+      vehicle_types
+      amenities
+      operating_hours {
         open
         close
       }
-      facilities
       images
-      rating
-      review_count
       status
+      rating
+      distance
     }
   }
 `;
@@ -287,17 +324,16 @@ export const GET_PARKING_LOT = gql`
       rates {
         car
         motorcycle
-      }
-      operationalHours {
+      }      operational_hours {
         open
         close
       }
       facilities
       images
       rating
-      reviewCount
+      review_count
       status
-      createdAt
+      created_at
     }
   }
 `;
@@ -324,21 +360,15 @@ export const GET_BOOKING = gql`
           email
           avatar
         }
-      }
-      vehicleType
-      licensePlate
-      startTime
-      endTime
+      }      vehicle_type
+      start_time
       duration
       cost
-      hourlyRate
       status
-      paymentStatus
-      notes
-      qrCode
-      entryQR
-      exitQR
-      createdAt
+      qr_code
+      entry_qr
+      exit_qr
+      created_at
       confirmedAt
       completedAt
       cancelledAt
@@ -391,17 +421,11 @@ export const GET_MY_PAYMENT_HISTORY = gql`
   query GetMyPaymentHistory {
     getMyPaymentHistory {
       _id
-      booking {
-        _id
-        parking {
-          name
-        }
-      }
-      transactionId
-      paymentMethod
+      transaction_id
+      payment_method
       amount
       status
-      createdAt
+      created_at
     }
   }
 `;
@@ -412,10 +436,11 @@ export const GET_MY_SALDO_TRANSACTIONS = gql`
       _id
       type
       amount
-      paymentMethod
+      payment_method
       status
-      transactionId
-      createdAt
+      transaction_id
+      description
+      created_at
     }
   }
 `;
@@ -424,29 +449,26 @@ export const GET_BOOKING_PAYMENT = gql`
   query GetBookingPayment($bookingId: ID!) {
     getBookingPayment(bookingId: $bookingId) {
       _id
-      transactionId
-      paymentMethod
+      transaction_id
+      payment_method
       amount
       status
-      qrCodeUrl
-      createdAt
+      qr_code_url
+      created_at
     }
   }
 `;
 
 export const GET_TRANSACTIONS = gql`
   query GetTransactions($limit: Int) {
-    getTransactions(limit: $limit) {
-      id
+    getMyTransactionHistory(limit: $limit) {
+      _id
       type
-      description
+      payment_method
       amount
       status
-      paymentMethod
-      createdAt
-    }
-    me {
-      saldo
+      created_at
+      description
     }
   }
 `;
@@ -523,23 +545,23 @@ export const GET_UNREAD_NOTIFICATION_COUNT = gql`
 
 export const GET_NOTIFICATIONS = gql`
   query GetNotifications($filter: String) {
-    getNotifications(filter: $filter) {
-      id
+    getMyNotifications(filter: $filter) {
+      _id
       title
       message
       type
-      isRead
-      actionUrl
-      createdAt
+      is_read
+      data
+      created_at
     }
   }
 `;
 
 export const MARK_NOTIFICATION_READ = gql`
   mutation MarkNotificationRead($notificationId: ID!) {
-    markNotificationRead(notificationId: $notificationId) {
-      id
-      isRead
+    markNotificationAsRead(id: $notificationId) {
+      _id
+      is_read
     }
   }
 `;
@@ -596,6 +618,26 @@ export const GENERATE_BOOKING_QR = gql`
     generateBookingQR(bookingId: $bookingId) {
       _id
       qrCode
+    }
+  }
+`;
+
+// Room Queries
+export const GET_MY_ROOMS = gql`
+  query GetMyRooms {
+    getMyRooms {
+      _id
+      name
+      type
+      parking_id
+      participant_count
+      last_message {
+        _id
+        message
+        created_at
+      }
+      created_at
+      updated_at
     }
   }
 `;

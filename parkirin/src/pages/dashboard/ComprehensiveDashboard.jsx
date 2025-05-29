@@ -356,12 +356,11 @@ const ComprehensiveDashboard = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Recent Notifications
               </h3>
-              <div className="space-y-3">
-                {notifications.slice(0, 3).map((notification) => (
+              <div className="space-y-3">                {notifications.slice(0, 3).map((notification) => (
                   <div 
-                    key={notification.id}
+                    key={notification._id}
                     className={`p-3 rounded-lg border ${
-                      notification.read 
+                      notification.is_read 
                         ? 'bg-gray-50 border-gray-200' 
                         : 'bg-blue-50 border-blue-200'
                     }`}
@@ -370,7 +369,7 @@ const ComprehensiveDashboard = () => {
                       {notification.title}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {new Date(notification.timestamp).toLocaleDateString()}
+                      {new Date(notification.created_at).toLocaleDateString()}
                     </p>
                   </div>
                 ))}

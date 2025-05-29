@@ -116,12 +116,12 @@ const BookingForm = ({
       const endDateTime = new Date(startDateTime.getTime() + (formData.duration * 60 * 60 * 1000));
 
       const bookingData = {
-        parkingId: parking._id,
-        vehicleType: formData.vehicleType,
-        licensePlate: formData.licensePlate.toUpperCase(),
-        startTime: startDateTime.toISOString(),
-        endTime: endDateTime.toISOString(),
-        totalCost,
+        parking_id: parking._id,
+        vehicle_type: formData.vehicleType,
+        license_plate: formData.licensePlate.toUpperCase(),
+        start_time: startDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        total_cost: totalCost,
         notes: formData.notes.trim()
       };
 
