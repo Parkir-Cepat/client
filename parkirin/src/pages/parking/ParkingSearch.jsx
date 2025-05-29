@@ -1,22 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-
-const SEARCH_PARKING_LOTS = gql`
-  query SearchParkingLots($lat: Float!, $lng: Float!, $radius: Float, $vehicleType: String, $minPrice: Float, $maxPrice: Float) {
-    searchParkingLots(lat: $lat, lng: $lng, radius: $radius, vehicleType: $vehicleType, minPrice: $minPrice, maxPrice: $maxPrice) {
-      _id
-      name
-      address
-      photos
-      availableSlots
-      tariff
-      rating
-      distance
-    }
-  }
-`;
+import { GET_NEARBY_PARKINGS } from '../../graphql/queries';
 
 const ParkingSearch = () => {
   const [viewport, setViewport] = useState({
@@ -51,19 +37,18 @@ const ParkingSearch = () => {
           console.error('Error getting location:', error);
         }
       );
-    }
-  }, []);
-
-  const { loading, error, data } = useQuery(SEARCH_PARKING_LOTS, {
+    }  }, []);
+  const { loading, error, data } = useQuery(GET_NEARBY_PARKINGS, {
     variables: {
-      lat: viewport.latitude,
-      lng: viewport.longitude,
-      ...searchParams
+      longitude: viewport.longitude,
+      latitude: viewport.latitude,
+      maxDistance: searchParams.radius,
+      vehicleType: searchParams.vehicleType === 'all' ? null : searchParams.vehicleType
     },
     skip: !userLocation,
   });
 
-  if (loading) return <LoadingSpinner size="lg" />;
+  if (loading) return <LoadingSpinner size="large" />;
   if (error) return <div>Error loading parking spots</div>;
 
   return (
@@ -137,13 +122,10 @@ const ParkingSearch = () => {
                 />
               </div>
             </div>
-          </div>
-
-          {/* Results List */}
+          </div>          {/* Results List */}
           <div className="mt-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Available Parking Spots</h3>
-            <div className="space-y-4">
-              {data?.searchParkingLots?.map((spot) => (
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Available Parking Spots</h3>            <div className="space-y-4">
+              {data?.getNearbyParkings?.map((spot) => (
                 <div
                   key={spot._id}
                   className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow"
@@ -152,15 +134,14 @@ const ParkingSearch = () => {
                   <p className="text-sm text-gray-500">{spot.address}</p>
                   <div className="mt-2 flex justify-between items-center">
                     <span className="text-sm font-medium text-primary-600">
-                      Rp {spot.tariff}/hour
+                      Car: Rp {spot.rates?.car || 0}/hour | Motorcycle: Rp {spot.rates?.motorcycle || 0}/hour
                     </span>
                     <span className="text-sm text-gray-500">
-                      {spot.availableSlots} slots available
+                      Cars: {spot.available?.car || 0} | Motorcycles: {spot.available?.motorcycle || 0} available
                     </span>
-                  </div>
-                  <div className="mt-2 flex justify-between items-center">
+                  </div>                  <div className="mt-2 flex justify-between items-center">
                     <span className="text-sm text-gray-500">
-                      {(spot.distance / 1000).toFixed(1)} km away
+                      Status: {spot.status || 'Open'}
                     </span>
                     <div className="flex items-center">
                       <svg
@@ -174,7 +155,7 @@ const ParkingSearch = () => {
                           clipRule="evenodd"
                         />
                       </svg>
-                      <span className="ml-1 text-sm text-gray-500">{spot.rating}</span>
+                      <span className="ml-1 text-sm text-gray-500">{spot.rating || 'N/A'} ({spot.review_count || 0} reviews)</span>
                     </div>
                   </div>
                 </div>
@@ -184,12 +165,11 @@ const ParkingSearch = () => {
         </div>
 
         {/* Map */}
-        <div className="col-span-2 relative">
-          <Map
+        <div className="col-span-2 relative">          <Map
             {...viewport}
             onMove={evt => setViewport(evt.viewState)}
             mapStyle="mapbox://styles/mapbox/streets-v11"
-            mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN}
+            mapboxAccessToken={import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}
             style={{ width: '100%', height: '100%' }}
           >
             <GeolocateControl position="top-right" />
@@ -202,10 +182,8 @@ const ParkingSearch = () => {
                 latitude={userLocation.latitude}
                 color="#2563eb"
               />
-            )}
-
-            {/* Parking spots */}
-            {data?.searchParkingLots?.map((spot) => (
+            )}            {/* Parking spots */}
+            {data?.getNearbyParkings?.map((spot) => (
               <Marker
                 key={spot._id}
                 longitude={spot.location.coordinates[0]}

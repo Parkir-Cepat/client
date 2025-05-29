@@ -85,9 +85,8 @@ const ParkingList = ({
       onParkingSelect(parking);
     }
   };
-
-  const parkingLots = data?.searchParkingLots?.parkingLots || [];
-  const totalCount = data?.searchParkingLots?.totalCount || 0;
+  const parkingLots = data?.searchParkings || [];
+  const totalCount = parkingLots.length;
   const totalPages = Math.ceil(totalCount / 12);
 
   const sortOptions = [

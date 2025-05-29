@@ -180,7 +180,7 @@ export const GET_NEARBY_PARKING_LOTS = gql`
     $maxDistance: Float
     $vehicleType: String
   ) {
-    getNearbyParkingLots(
+    getNearbyParkings(
       longitude: $longitude
       latitude: $latitude
       maxDistance: $maxDistance
@@ -199,19 +199,18 @@ export const GET_NEARBY_PARKING_LOTS = gql`
       available {
         car
         motorcycle
-      }
-      rates {
+      }      rates {
         car
         motorcycle
       }
-      operationalHours {
+      operational_hours {
         open
         close
       }
       facilities
       images
       rating
-      reviewCount
+      review_count
       status
       distance
     }
@@ -227,12 +226,9 @@ export const SEARCH_PARKING_LOTS = gql`
     $rating: Float
     $sortBy: String
   ) {
-    searchParkingLots(
+    searchParkings(
       query: $query
       vehicleType: $vehicleType
-      minPrice: $minPrice
-      maxPrice: $maxPrice
-      rating: $rating
       sortBy: $sortBy
     ) {
       _id
@@ -244,8 +240,7 @@ export const SEARCH_PARKING_LOTS = gql`
       capacity {
         car
         motorcycle
-      }
-      available {
+      }      available {
         car
         motorcycle
       }
@@ -253,14 +248,14 @@ export const SEARCH_PARKING_LOTS = gql`
         car
         motorcycle
       }
-      operationalHours {
+      operational_hours {
         open
         close
       }
       facilities
       images
       rating
-      reviewCount
+      review_count
       status
     }
   }
@@ -268,7 +263,7 @@ export const SEARCH_PARKING_LOTS = gql`
 
 export const GET_PARKING_LOT = gql`
   query GetParkingLot($id: ID!) {
-    getParkingLot(id: $id) {
+    getParking(id: $id) {
       _id
       name
       address

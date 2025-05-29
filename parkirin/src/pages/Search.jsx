@@ -69,12 +69,11 @@ const Search = () => {
     skip: !useSearchQuery,
     fetchPolicy: 'cache-and-network'
   });
-
   // Determine current data and loading state
   const currentData = useSearchQuery ? searchData : nearbyData;
   const currentLoading = useSearchQuery ? searchLoading : nearbyLoading;
   const currentError = useSearchQuery ? searchError : nearbyError;
-  const parkingLots = currentData?.searchParkingLots || currentData?.getNearbyParkingLots || [];
+  const parkingLots = currentData?.searchParkings || currentData?.getNearbyParkings || [];
 
   // Set initial map center when location is available
   useEffect(() => {
@@ -225,7 +224,7 @@ const Search = () => {
         {/* Loading State */}
         {isLoading && (
           <Card className="p-8">
-            <LoadingSpinner size="lg" className="mx-auto" />
+            <LoadingSpinner size="large" className="mx-auto" />
             <p className="text-center text-gray-600 mt-4">
               {locationLoading ? "Mengakses lokasi..." : "Mencari tempat parkir..."}
             </p>

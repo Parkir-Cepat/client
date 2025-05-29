@@ -16,7 +16,7 @@ const GET_BOOKING_HISTORY = gql`
 const BookingHistory = () => {
   const { loading, error, data } = useQuery(GET_BOOKING_HISTORY);
 
-  if (loading) return <LoadingSpinner size="lg" />;
+  if (loading) return <LoadingSpinner size="large" />;
   if (error) return <div>Error loading booking history</div>;
 
   const bookings = data?.getMyBookingHistory || [];

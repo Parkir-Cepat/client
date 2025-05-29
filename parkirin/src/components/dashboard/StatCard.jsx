@@ -100,7 +100,7 @@ const StatCard = ({
 StatCard.propTypes = {
   title: PropTypes.string.isRequired,
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  change: PropTypes.string,
+  change: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   changeType: PropTypes.oneOf(['positive', 'negative', 'neutral']),
   icon: PropTypes.elementType,
   color: PropTypes.oneOf(['blue', 'green', 'yellow', 'red', 'purple']),
