@@ -1,0 +1,612 @@
+// src/graphql/queries.js
+import { gql } from '@apollo/client';
+
+// User Queries
+export const GET_ME = gql`
+  query GetMe {
+    me {
+      _id
+      email
+      name
+      role
+      saldo
+      avatar
+      created_at
+    }
+  }
+`;
+
+export const GET_USER_BY_ID = gql`
+  query GetUserById($userId: ID!) {
+    getUserById(userId: $userId) {
+      _id
+      email
+      name
+      role
+      avatar
+      created_at
+    }
+  }
+`;
+
+// Parking Queries
+export const GET_NEARBY_PARKINGS = gql`
+  query GetNearbyParkings(
+    $longitude: Float!
+    $latitude: Float!
+    $maxDistance: Float
+    $vehicleType: String
+  ) {
+    getNearbyParkings(
+      longitude: $longitude
+      latitude: $latitude
+      maxDistance: $maxDistance
+      vehicleType: $vehicleType
+    ) {
+      _id
+      name
+      address
+      location {
+        coordinates
+      }
+      capacity {
+        car
+        motorcycle
+      }
+      available {
+        car
+        motorcycle
+      }
+      rates {
+        car
+        motorcycle
+      }
+      operational_hours {
+        open
+        close
+      }
+      facilities
+      images
+      rating
+      review_count
+      status
+    }
+  }
+`;
+
+export const GET_PARKING = gql`
+  query GetParking($id: ID!) {
+    getParking(id: $id) {
+      _id
+      name
+      address
+      location {
+        coordinates
+      }
+      owner {
+        _id
+        name
+        email
+      }
+      capacity {
+        car
+        motorcycle
+      }
+      available {
+        car
+        motorcycle
+      }
+      rates {
+        car
+        motorcycle
+      }
+      operational_hours {
+        open
+        close
+      }
+      facilities
+      images
+      rating
+      review_count
+      status
+      created_at
+    }
+  }
+`;
+
+export const SEARCH_PARKINGS = gql`
+  query SearchParkings(
+    $query: String!
+    $vehicleType: String
+    $sortBy: String
+  ) {
+    searchParkings(
+      query: $query
+      vehicleType: $vehicleType
+      sortBy: $sortBy
+    ) {
+      _id
+      name
+      address
+      location {
+        coordinates
+      }
+      available {
+        car
+        motorcycle
+      }
+      rates {
+        car
+        motorcycle
+      }
+      rating
+      review_count
+      images
+    }
+  }
+`;
+
+export const GET_MY_PARKINGS = gql`
+  query GetMyParkings {
+    getMyParkings {
+      _id
+      name
+      address
+      capacity {
+        car
+        motorcycle
+      }
+      available {
+        car
+        motorcycle
+      }
+      rates {
+        car
+        motorcycle
+      }
+      status
+      rating
+      review_count
+      created_at
+    }
+  }
+`;
+
+// Parking Lot Queries
+export const GET_NEARBY_PARKING_LOTS = gql`
+  query GetNearbyParkingLots(
+    $longitude: Float!
+    $latitude: Float!
+    $maxDistance: Float
+    $vehicleType: String
+  ) {
+    getNearbyParkingLots(
+      longitude: $longitude
+      latitude: $latitude
+      maxDistance: $maxDistance
+      vehicleType: $vehicleType
+    ) {
+      _id
+      name
+      address
+      location {
+        coordinates
+      }
+      capacity {
+        car
+        motorcycle
+      }
+      available {
+        car
+        motorcycle
+      }
+      rates {
+        car
+        motorcycle
+      }
+      operationalHours {
+        open
+        close
+      }
+      facilities
+      images
+      rating
+      reviewCount
+      status
+      distance
+    }
+  }
+`;
+
+export const SEARCH_PARKING_LOTS = gql`
+  query SearchParkingLots(
+    $query: String!
+    $vehicleType: String
+    $minPrice: Float
+    $maxPrice: Float
+    $rating: Float
+    $sortBy: String
+  ) {
+    searchParkingLots(
+      query: $query
+      vehicleType: $vehicleType
+      minPrice: $minPrice
+      maxPrice: $maxPrice
+      rating: $rating
+      sortBy: $sortBy
+    ) {
+      _id
+      name
+      address
+      location {
+        coordinates
+      }
+      capacity {
+        car
+        motorcycle
+      }
+      available {
+        car
+        motorcycle
+      }
+      rates {
+        car
+        motorcycle
+      }
+      operationalHours {
+        open
+        close
+      }
+      facilities
+      images
+      rating
+      reviewCount
+      status
+    }
+  }
+`;
+
+export const GET_PARKING_LOT = gql`
+  query GetParkingLot($id: ID!) {
+    getParkingLot(id: $id) {
+      _id
+      name
+      address
+      location {
+        coordinates
+      }
+      owner {
+        _id
+        name
+        email
+        avatar
+      }
+      capacity {
+        car
+        motorcycle
+      }
+      available {
+        car
+        motorcycle
+      }
+      rates {
+        car
+        motorcycle
+      }
+      operationalHours {
+        open
+        close
+      }
+      facilities
+      images
+      rating
+      reviewCount
+      status
+      createdAt
+    }
+  }
+`;
+
+// Booking Queries
+export const GET_BOOKING = gql`
+  query GetBooking($id: ID!) {
+    getBooking(id: $id) {
+      _id
+      user {
+        _id
+        name
+        email
+      }
+      parking {
+        _id
+        name
+        address
+        images
+        rating
+        owner {
+          _id
+          name
+          email
+          avatar
+        }
+      }
+      vehicleType
+      licensePlate
+      startTime
+      endTime
+      duration
+      cost
+      hourlyRate
+      status
+      paymentStatus
+      notes
+      qrCode
+      entryQR
+      exitQR
+      createdAt
+      confirmedAt
+      completedAt
+      cancelledAt
+    }
+  }
+`;
+
+export const GET_MY_ACTIVE_BOOKINGS = gql`
+  query GetMyActiveBookings {
+    getMyActiveBookings {
+      _id
+      parking {
+        _id
+        name
+        address
+        images
+      }
+      vehicle_type
+      start_time
+      duration
+      cost
+      status
+      created_at
+    }
+  }
+`;
+
+export const GET_MY_BOOKING_HISTORY = gql`
+  query GetMyBookingHistory {
+    getMyBookingHistory {
+      _id
+      parking {
+        _id
+        name
+        address
+        images
+      }
+      vehicle_type
+      start_time
+      duration
+      cost
+      status
+      created_at
+    }
+  }
+`;
+
+// Payment Queries
+export const GET_MY_PAYMENT_HISTORY = gql`
+  query GetMyPaymentHistory {
+    getMyPaymentHistory {
+      _id
+      booking {
+        _id
+        parking {
+          name
+        }
+      }
+      transactionId
+      paymentMethod
+      amount
+      status
+      createdAt
+    }
+  }
+`;
+
+export const GET_MY_SALDO_TRANSACTIONS = gql`
+  query GetMySaldoTransactions {
+    getMySaldoTransactions {
+      _id
+      type
+      amount
+      paymentMethod
+      status
+      transactionId
+      createdAt
+    }
+  }
+`;
+
+export const GET_BOOKING_PAYMENT = gql`
+  query GetBookingPayment($bookingId: ID!) {
+    getBookingPayment(bookingId: $bookingId) {
+      _id
+      transactionId
+      paymentMethod
+      amount
+      status
+      qrCodeUrl
+      createdAt
+    }
+  }
+`;
+
+export const GET_TRANSACTIONS = gql`
+  query GetTransactions($limit: Int) {
+    getTransactions(limit: $limit) {
+      id
+      type
+      description
+      amount
+      status
+      paymentMethod
+      createdAt
+    }
+    me {
+      saldo
+    }
+  }
+`;
+
+export const GET_PAYMENT_METHODS = gql`
+  query GetPaymentMethods {
+    getPaymentMethods {
+      id
+      name
+      type
+      lastFour
+      isDefault
+    }
+  }
+`;
+
+// Chat Queries
+export const GET_ROOM_MESSAGES = gql`
+  query GetRoomMessages($roomId: ID!, $limit: Int, $offset: Int) {
+    getRoomMessages(room_id: $roomId, limit: $limit, offset: $offset) {
+      _id
+      sender {
+        _id
+        name
+        avatar
+      }
+      message
+      message_type
+      created_at
+    }
+  }
+`;
+
+export const GET_MY_RECENT_CHATS = gql`
+  query GetMyRecentChats {
+    getMyRecentChats {
+      _id
+      sender {
+        _id
+        name
+        avatar
+      }
+      room {
+        _id
+        name
+        type
+      }
+      message
+      created_at
+    }
+  }
+`;
+
+// Notification Queries
+export const GET_MY_NOTIFICATIONS = gql`
+  query GetMyNotifications($limit: Int) {
+    getMyNotifications(limit: $limit) {
+      _id
+      type
+      title
+      message
+      data
+      is_read
+      created_at
+    }
+  }
+`;
+
+export const GET_UNREAD_NOTIFICATION_COUNT = gql`
+  query GetUnreadNotificationCount {
+    getUnreadNotificationCount
+  }
+`;
+
+export const GET_NOTIFICATIONS = gql`
+  query GetNotifications($filter: String) {
+    getNotifications(filter: $filter) {
+      id
+      title
+      message
+      type
+      isRead
+      actionUrl
+      createdAt
+    }
+  }
+`;
+
+export const MARK_NOTIFICATION_READ = gql`
+  mutation MarkNotificationRead($notificationId: ID!) {
+    markNotificationRead(notificationId: $notificationId) {
+      id
+      isRead
+    }
+  }
+`;
+
+export const MARK_ALL_NOTIFICATIONS_READ = gql`
+  mutation MarkAllNotificationsRead {
+    markAllNotificationsRead {
+      count
+    }
+  }
+`;
+
+// Dashboard Queries
+export const GET_DASHBOARD_STATS = gql`
+  query GetDashboardStats {
+    getDashboardStats {
+      walletChange
+      totalParkingLots
+      parkingLotsChange
+      monthlyEarnings
+      earningsChange
+      activeBookings
+      bookingsChange
+      totalUsers
+      usersChange
+      platformRevenue
+      revenueChange
+      pendingApprovals
+      totalBookings
+      totalSpent
+      spentChange
+    }
+  }
+`;
+
+export const GET_RECENT_ACTIVITY = gql`
+  query GetRecentActivity($limit: Int) {
+    getRecentActivity(limit: $limit) {
+      id
+      type
+      title
+      description
+      timestamp
+      location
+      bookingId
+      parkingId
+      chatId
+    }
+  }
+`;
+
+export const GENERATE_BOOKING_QR = gql`
+  mutation GenerateBookingQR($bookingId: ID!) {
+    generateBookingQR(bookingId: $bookingId) {
+      _id
+      qrCode
+    }
+  }
+`;
+
+export const GENERATE_PARKING_ACCESS_QR = gql`
+  mutation GenerateParkingAccessQR($bookingId: ID!, $type: String!) {
+    generateParkingAccessQR(bookingId: $bookingId, type: $type)
+  }
+`;
