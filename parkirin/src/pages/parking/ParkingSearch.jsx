@@ -111,30 +111,65 @@ const ParkingSearch = () => {
       // Add user location marker
       if (userLocation) {
         try {
-          // Import marker library
-          const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
+          let userMarker;
           
-          // Create marker element for AdvancedMarkerElement
-          const markerElement = document.createElement('div');
-          markerElement.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="8" fill="#2563eb" stroke="white" stroke-width="2"/>
-              <circle cx="12" cy="12" r="3" fill="white"/>
-            </svg>
-          `;
-          markerElement.style.width = '24px';
-          markerElement.style.height = '24px';
-          markerElement.style.cursor = 'pointer';
+          // Try to use AdvancedMarkerElement if available
+          if (typeof window.google.maps.importLibrary === 'function') {
+            const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
+            
+            // Create marker element for AdvancedMarkerElement
+            const markerElement = document.createElement('div');
+            markerElement.innerHTML = `
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="8" fill="#2563eb" stroke="white" stroke-width="2"/>
+                <circle cx="12" cy="12" r="3" fill="white"/>
+              </svg>
+            `;
+            markerElement.style.width = '24px';
+            markerElement.style.height = '24px';
+            markerElement.style.cursor = 'pointer';
+            
+            userMarker = new AdvancedMarkerElement({
+              position: { lat: userLocation.latitude, lng: userLocation.longitude },
+              map: map.current,
+              title: 'Your Location',
+              content: markerElement
+            });
+          } else {
+            // Fallback to legacy Marker
+            const icon = {
+              url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="8" fill="#2563eb" stroke="white" stroke-width="2"/>
+                  <circle cx="12" cy="12" r="3" fill="white"/>
+                </svg>
+              `)}`,
+              scaledSize: new window.google.maps.Size(24, 24),
+              anchor: new window.google.maps.Point(12, 12)
+            };
+            
+            userMarker = new window.google.maps.Marker({
+              position: { lat: userLocation.latitude, lng: userLocation.longitude },
+              map: map.current,
+              title: 'Your Location',
+              icon: icon
+            });
+          }
           
-          const userMarker = new AdvancedMarkerElement({
-            position: { lat: userLocation.latitude, lng: userLocation.longitude },
-            map: map.current,
-            title: 'Your Location',
-            content: markerElement
-          });
-            markers.current.push(userMarker);
+          markers.current.push(userMarker);
         } catch (error) {
-          console.warn('Error creating user location marker:', error);
+          console.warn('Error creating user location marker, using basic marker:', error);
+          // Final fallback to basic marker
+          try {
+            const basicUserMarker = new window.google.maps.Marker({
+              position: { lat: userLocation.latitude, lng: userLocation.longitude },
+              map: map.current,
+              title: 'Your Location'
+            });
+            markers.current.push(basicUserMarker);
+          } catch (fallbackError) {
+            console.error('Failed to create user location marker:', fallbackError);
+          }
         }
       }
 

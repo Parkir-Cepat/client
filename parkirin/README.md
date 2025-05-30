@@ -124,3 +124,31 @@ This project is licensed under the MIT License.
 ---
 
 **Built with ❤️ by the Parkirin Team**
+
+## Google Maps Integration
+
+Aplikasi ini menggunakan Google Maps JavaScript API dengan fallback marker agar selalu stabil di berbagai versi API dan browser.
+
+### Cara Kerja:
+- Script Google Maps dimuat secara dinamis dan dipastikan benar-benar loaded sebelum digunakan (dengan polling).
+- Jika fitur AdvancedMarkerElement tidak tersedia, otomatis fallback ke legacy Marker dengan custom SVG.
+- Tidak menggunakan Map ID, sehingga warning terkait Map ID bisa diabaikan.
+
+### Konfigurasi API Key
+- Pastikan server mengembalikan API key Google Maps yang valid melalui endpoint `/api/google-maps-key`.
+- API key diatur di file `.env` pada folder server:
+  ```env
+  GOOGLE_MAPS_API_KEY=your_actual_google_maps_api_key
+  ```
+
+### Troubleshooting
+- Jika muncul warning seperti "Map is initialized without a valid Map ID", **abaikan saja** selama marker dan map tetap muncul.
+- Jika map/marker tidak muncul, cek console browser untuk error lain (misal: API key salah, quota habis, dsb).
+- Jika ingin menggunakan Advanced Markers di masa depan, tambahkan Map ID sesuai dokumentasi Google.
+
+### Fallback Strategy
+1. **Level 1:** AdvancedMarkerElement (jika tersedia)
+2. **Level 2:** Legacy Marker dengan custom SVG (default)
+3. **Level 3:** Basic legacy Marker (jika SVG gagal)
+
+Aplikasi akan selalu menampilkan marker selama Google Maps API key valid dan internet tersedia.

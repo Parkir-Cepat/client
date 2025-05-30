@@ -67,23 +67,20 @@ class GoogleMapsService {
           // Create script element
           const script = document.createElement('script');
           script.type = 'text/javascript';
-          script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry,marker&loading=async`;
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&v=beta`;
           script.defer = true;
-          script.async = true;          script.onload = async () => {
-            if (window.google?.maps) {
-              try {
-                // Import the marker library to ensure AdvancedMarkerElement is available
-                await window.google.maps.importLibrary("marker");
+          script.async = true;
+
+          script.onload = () => {
+            const checkLoaded = () => {
+              if (window.google?.maps?.Map) {
                 this.isLoaded = true;
                 resolve();
-              } catch (error) {
-                console.warn('Failed to import marker library, using legacy API:', error);
-                this.isLoaded = true;
-                resolve();
+              } else {
+                setTimeout(checkLoaded, 50);
               }
-            } else {
-              reject(new Error('Google Maps failed to load properly'));
-            }
+            };
+            checkLoaded();
           };
 
           script.onerror = () => {
@@ -348,6 +345,11 @@ class GoogleMapsService {
     try {
       await this.loadGoogleMaps();
       
+      // Additional check to ensure Google Maps is fully loaded
+      if (!window.google?.maps?.Map) {
+        throw new Error('Google Maps API not properly loaded');
+      }
+      
       const defaultOptions = {
         center: { lat: -6.2088, lng: 106.8456 }, // Jakarta default
         zoom: 12,
@@ -363,15 +365,21 @@ class GoogleMapsService {
       };
 
       const mapOptions = { ...defaultOptions, ...options };
+      
+      // Wait a small delay to ensure DOM is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       return new window.google.maps.Map(container, mapOptions);
     } catch (error) {
       console.error('Map creation error:', error);
       throw new Error('Failed to create map');
     }
-  }  /**
+  }
+
+  /**
    * Create a marker
    * @param {Object} options - Marker options
-   * @returns {google.maps.marker.AdvancedMarkerElement} Marker instance
+   * @returns {google.maps.marker.AdvancedMarkerElement|google.maps.Marker} Marker instance
    */
   async createMarker(options = {}) {
     if (!window.google?.maps) {
@@ -379,25 +387,43 @@ class GoogleMapsService {
     }
 
     try {
-      // Import marker library
-      const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
-      
-      const markerOptions = {
+      // Try to use AdvancedMarkerElement if available
+      if (typeof window.google.maps.importLibrary === 'function') {
+        const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
+        
+        const markerOptions = {
+          position: options.position,
+          map: options.map,
+          title: options.title
+        };
+
+        if (options.content) {
+          markerOptions.content = options.content;
+        }
+
+        return new AdvancedMarkerElement(markerOptions);
+      } else {
+        // Fallback to legacy Marker
+        console.warn('Using legacy Marker API');
+        return new window.google.maps.Marker({
+          position: options.position,
+          map: options.map,
+          title: options.title,
+          icon: options.icon || undefined
+        });
+      }
+    } catch (error) {
+      console.error('Failed to create marker, falling back to legacy Marker:', error);
+      // Final fallback to legacy Marker
+      return new window.google.maps.Marker({
         position: options.position,
         map: options.map,
-        title: options.title
-      };
-
-      if (options.content) {
-        markerOptions.content = options.content;
-      }
-
-      return new AdvancedMarkerElement(markerOptions);
-    } catch (error) {
-      console.error('Failed to create AdvancedMarkerElement:', error);
-      throw error;
+        title: options.title,
+        icon: options.icon || undefined
+      });
     }
   }
+
   /**
    * Create parking markers on map with server data integration
    * @param {Object} map - Google Maps instance
@@ -438,27 +464,61 @@ class GoogleMapsService {
           markerColor = '#ea580c'; // orange - full
         }        let marker;
 
-        // Import marker library
-        const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
-        
-        // Create custom SVG content for AdvancedMarkerElement
-        const markerElement = document.createElement('div');
-        markerElement.innerHTML = `
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 3C11.58 3 8 6.58 8 11c0 6.5 8 18 8 18s8-11.5 8-18c0-4.42-3.58-8-8-8z" fill="${markerColor}" stroke="white" stroke-width="2"/>
-            <circle cx="16" cy="11" r="4" fill="white"/>
-            <text x="16" y="15" text-anchor="middle" fill="${markerColor}" font-size="12" font-weight="bold">P</text>
-          </svg>
-        `;
-        markerElement.style.cursor = 'pointer';
+        try {
+          // Try to use AdvancedMarkerElement if available
+          if (typeof window.google.maps.importLibrary === 'function') {
+            const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
+            
+            // Create custom SVG content for AdvancedMarkerElement
+            const markerElement = document.createElement('div');
+            markerElement.innerHTML = `
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 3C11.58 3 8 6.58 8 11c0 6.5 8 18 8 18s8-11.5 8-18c0-4.42-3.58-8-8-8z" fill="${markerColor}" stroke="white" stroke-width="2"/>
+                <circle cx="16" cy="11" r="4" fill="white"/>
+                <text x="16" y="15" text-anchor="middle" fill="${markerColor}" font-size="12" font-weight="bold">P</text>
+              </svg>
+            `;
+            markerElement.style.cursor = 'pointer';
 
-        marker = new AdvancedMarkerElement({
-          position: { lat, lng },
-          map: map,
-          title: spot.name,
-          content: markerElement,
-          zIndex: spot.available?.car > 0 || spot.available?.motorcycle > 0 ? 1000 : 100
-        });
+            marker = new AdvancedMarkerElement({
+              position: { lat, lng },
+              map: map,
+              title: spot.name,
+              content: markerElement,
+              zIndex: spot.available?.car > 0 || spot.available?.motorcycle > 0 ? 1000 : 100
+            });
+          } else {
+            // Fallback to legacy Marker with custom icon
+            const icon = {
+              url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16 3C11.58 3 8 6.58 8 11c0 6.5 8 18 8 18s8-11.5 8-18c0-4.42-3.58-8-8-8z" fill="${markerColor}" stroke="white" stroke-width="2"/>
+                  <circle cx="16" cy="11" r="4" fill="white"/>
+                  <text x="16" y="15" text-anchor="middle" fill="${markerColor}" font-size="12" font-weight="bold">P</text>
+                </svg>
+              `)}`,
+              scaledSize: new window.google.maps.Size(32, 32),
+              anchor: new window.google.maps.Point(16, 32)
+            };
+
+            marker = new window.google.maps.Marker({
+              position: { lat, lng },
+              map: map,
+              title: spot.name,
+              icon: icon,
+              zIndex: spot.available?.car > 0 || spot.available?.motorcycle > 0 ? 1000 : 100
+            });
+          }
+        } catch (markerError) {
+          console.error('Error creating marker, using basic marker:', markerError);
+          // Basic fallback marker
+          marker = new window.google.maps.Marker({
+            position: { lat, lng },
+            map: map,
+            title: spot.name,
+            zIndex: spot.available?.car > 0 || spot.available?.motorcycle > 0 ? 1000 : 100
+          });
+        }
 
         // Create info window content
         const infoContent = this.createParkingInfoWindow(spot);
@@ -637,6 +697,36 @@ class GoogleMapsService {
       return 'Invalid coordinates';
     }
     return `${lat.toFixed(precision)}, ${lng.toFixed(precision)}`;
+  }
+
+  /**
+   * Fit map bounds to show all markers
+   * @param {google.maps.Map} map - Google Maps instance
+   * @param {Array} markers - Array of markers
+   */
+  fitBoundsToMarkers(map, markers) {
+    if (!map || !markers || markers.length === 0) {
+      return;
+    }
+
+    const bounds = new window.google.maps.LatLngBounds();
+    
+    markers.forEach(marker => {
+      if (marker.getPosition) {
+        // Legacy Marker
+        bounds.extend(marker.getPosition());
+      } else if (marker.position) {
+        // AdvancedMarkerElement
+        bounds.extend(marker.position);
+      }
+    });
+
+    // Fit the map to show all markers
+    map.fitBounds(bounds);
+    
+    // Optional: Add some padding
+    const padding = { top: 50, right: 50, bottom: 50, left: 50 };
+    map.fitBounds(bounds, padding);
   }
 }
 
