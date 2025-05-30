@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { 
   MapPinIcon, 
@@ -41,16 +42,34 @@ const GET_MY_ACTIVE_BOOKINGS = gql`
   }
 `;
 
+const GET_MY_PARKINGS = gql`
+  query GetMyParkings {
+    getMyParkings {
+      _id
+      name
+      status
+    }
+  }
+`;
+
 const Dashboard = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const { data: userData, loading: userLoading } = useQuery(GET_ME);
   const { data: bookingsData, loading: bookingsLoading } = useQuery(GET_MY_ACTIVE_BOOKINGS);
+  const { data: parkingsData, loading: parkingsLoading } = useQuery(GET_MY_PARKINGS, {
+    skip: user?.role !== 'landowner'
+  });
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR'
     }).format(amount || 0);
+  };
+
+  const handleNavigate = (path) => {
+    navigate(path);
   };
 
   if (userLoading) return (
@@ -64,17 +83,17 @@ const Dashboard = () => {
   return (
     <div className="w-full p-4 sm:p-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white mb-6">
+      <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-xl p-6 text-white mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {userInfo?.name}!</h1>
-            <p className="text-blue-100 mt-1">
-              {userInfo?.role === 'landowner' ? 'Manage your parking lots' : 'Find and book parking'}
+            <h1 className="text-2xl font-bold">Selamat datang kembali, {userInfo?.name}!</h1>
+            <p className="text-orange-100 mt-1">
+              {userInfo?.role === 'landowner' ? 'Kelola parking lot Anda' : 'Temukan dan booking parkir'}
             </p>
           </div>
           <div className="flex items-center space-x-4">
             {userInfo?.avatar ? (
-              <img src={userInfo.avatar} alt="Avatar" className="w-12 h-12 rounded-full" />
+              <img src={userInfo.avatar} alt="Avatar" className="w-12 h-12 rounded-full border-2 border-white" />
             ) : (
               <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
                 <UserIcon className="w-6 h-6" />
@@ -123,7 +142,9 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">My Parking Lots</p>
-                  <p className="text-2xl font-bold text-gray-900">0</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {parkingsLoading ? '...' : (parkingsData?.getMyParkings?.length || 0)}
+                  </p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-lg">
                   <BuildingOffice2Icon className="w-6 h-6 text-purple-600" />
@@ -206,34 +227,56 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+          <h2 className="text-lg font-semibold mb-4">Aksi Cepat</h2>
           <div className="space-y-3">
             {userInfo?.role === 'landowner' ? (
               <>
-                <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
-                  <p className="font-medium">Add New Parking Lot</p>
-                  <p className="text-sm text-gray-600">Create a new parking space</p>
+                <button 
+                  onClick={() => handleNavigate('/parking')}
+                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
+                >
+                  <p className="font-medium text-gray-900">Tambah Parking Lot Baru</p>
+                  <p className="text-sm text-gray-600">Buat tempat parkir baru untuk disewakan</p>
                 </button>
-                <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
-                  <p className="font-medium">View Analytics</p>
-                  <p className="text-sm text-gray-600">Check your earnings and stats</p>
+                <button 
+                  onClick={() => handleNavigate('/parking')}
+                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
+                >
+                  <p className="font-medium text-gray-900">Kelola Parking Lot</p>
+                  <p className="text-sm text-gray-600">Lihat dan edit parking lot Anda</p>
+                </button>
+                <button 
+                  onClick={() => handleNavigate('/dashboard/chat')}
+                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
+                >
+                  <p className="font-medium text-gray-900">Chat dengan Customer</p>
+                  <p className="text-sm text-gray-600">Komunikasi dengan pelanggan</p>
                 </button>
               </>
             ) : (
               <>
-                <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
-                  <p className="font-medium">Find Parking</p>
-                  <p className="text-sm text-gray-600">Search nearby parking spots</p>
+                <button 
+                  onClick={() => handleNavigate('/search')}
+                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
+                >
+                  <p className="font-medium text-gray-900">Cari Parkir</p>
+                  <p className="text-sm text-gray-600">Temukan tempat parkir terdekat</p>
                 </button>
-                <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
-                  <p className="font-medium">Top Up Wallet</p>
-                  <p className="text-sm text-gray-600">Add money to your wallet</p>
+                <button 
+                  onClick={() => handleNavigate('/wallet')}
+                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
+                >
+                  <p className="font-medium text-gray-900">Top Up Saldo</p>
+                  <p className="text-sm text-gray-600">Tambah saldo ke dompet Anda</p>
                 </button>
               </>
             )}
-            <button className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
-              <p className="font-medium">View Profile</p>
-              <p className="text-sm text-gray-600">Update your profile information</p>
+            <button 
+              onClick={() => handleNavigate('/profile')}
+              className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
+            >
+              <p className="font-medium text-gray-900">Lihat Profil</p>
+              <p className="text-sm text-gray-600">Update informasi profil Anda</p>
             </button>
           </div>
         </div>

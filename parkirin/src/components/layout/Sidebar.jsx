@@ -9,24 +9,22 @@ const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
 
   const navigationItems = {
-    USER: [
+    user: [
       { name: 'Dashboard', href: '/dashboard', icon: '🏠' },
       { name: 'Find Parking', href: '/search', icon: '🔍' },
       { name: 'My Bookings', href: '/bookings', icon: '📅' },
-      { name: 'History', href: '/history', icon: '📋' },
-      { name: 'Favorites', href: '/favorites', icon: '❤️' },
+      { name: 'Wallet', href: '/wallet', icon: '💰' },
+      { name: 'Chat', href: '/dashboard/chat', icon: '💬' },
       { name: 'Profile', href: '/profile', icon: '👤' },
     ],
-    PARKING_OWNER: [
-      { name: 'Dashboard', href: '/owner/dashboard', icon: '📊' },
-      { name: 'My Parkings', href: '/owner/parkings', icon: '🅿️' },
-      { name: 'Add Parking', href: '/owner/parkings/add', icon: '➕' },
-      { name: 'Bookings', href: '/owner/bookings', icon: '📋' },
-      { name: 'Analytics', href: '/owner/analytics', icon: '📈' },
-      { name: 'Reviews', href: '/owner/reviews', icon: '⭐' },
-      { name: 'Settings', href: '/owner/settings', icon: '⚙️' },
+    landowner: [
+      { name: 'Dashboard', href: '/landownerdashboard', icon: '📊' },
+      { name: 'My Parkings', href: '/parking', icon: '🅿️' },
+      { name: 'Bookings', href: '/bookings', icon: '📋' },
+      { name: 'Chat', href: '/dashboard/chat', icon: '💬' },
+      { name: 'Profile', href: '/profile', icon: '👤' },
     ],
-    ADMIN: [
+    admin: [
       { name: 'Dashboard', href: '/admin/dashboard', icon: '🏛️' },
       { name: 'Users', href: '/admin/users', icon: '👥' },
       { name: 'Parkings', href: '/admin/parkings', icon: '🅿️' },
@@ -37,7 +35,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     ],
   };
 
-  const currentItems = navigationItems[user?.role] || navigationItems.USER;
+  const currentItems = navigationItems[user?.role] || navigationItems.user;
 
   const isActivePath = (path) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
@@ -84,13 +82,21 @@ const Sidebar = ({ isOpen, onClose }) => {
             <div className="p-4 border-b border-gray-200">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium text-gray-700">
-                    {user.firstName?.[0]}{user.lastName?.[0]}
-                  </span>
+                  {user.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={user.name} 
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-gray-700">
+                      {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {user.firstName} {user.lastName}
+                    {user.name || 'User'}
                   </p>
                   <p className="text-xs text-gray-500 truncate">
                     {user.email}
@@ -98,12 +104,12 @@ const Sidebar = ({ isOpen, onClose }) => {
                   <span className={classNames(
                     'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1',
                     {
-                      'bg-blue-100 text-blue-800': user.role === 'USER',
-                      'bg-green-100 text-green-800': user.role === 'PARKING_OWNER',
-                      'bg-purple-100 text-purple-800': user.role === 'ADMIN',
+                      'bg-blue-100 text-blue-800': user.role === 'user',
+                      'bg-green-100 text-green-800': user.role === 'landowner',
+                      'bg-purple-100 text-purple-800': user.role === 'admin',
                     }
                   )}>
-                    {user.role.replace('_', ' ').toLowerCase()}
+                    {user.role}
                   </span>
                 </div>
               </div>

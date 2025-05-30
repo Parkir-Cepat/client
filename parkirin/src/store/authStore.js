@@ -161,12 +161,12 @@ const useAuthStore = create(
       },
       
       // Update Profile
-      updateProfile: async (profileData) => {
+      updateProfile: async (name) => {
         set({ loading: true, error: null });
         try {
           const { data } = await apolloClient.mutate({
             mutation: UPDATE_PROFILE,
-            variables: { input: profileData }
+            variables: { name }
           });
           
           if (data?.updateProfile) {

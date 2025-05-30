@@ -74,21 +74,32 @@ export const CREATE_PARKING = gql`
     createParking(input: $input) {
       _id
       name
-      description
       address
       location {
         type
         coordinates
       }
-      total_slots
-      available_slots
-      tariff
-      vehicle_types
-      amenities
+      capacity {
+        car
+        motorcycle
+      }
+      available {
+        car
+        motorcycle
+      }
+      rates {
+        car
+        motorcycle
+      }
+      operational_hours {
+        open
+        close
+      }
+      facilities
       images
-      opening_hour
-      closing_hour
       status
+      rating
+      review_count
       created_at
     }
   }
@@ -132,6 +143,10 @@ export const CREATE_ROOM = gql`
       _id
       name
       type
+      privacy
+      creator_id
+      max_participants
+      is_full
       created_at
     }
   }
@@ -150,6 +165,44 @@ export const UPDATE_ROOM = gql`
 export const ADD_PARTICIPANTS = gql`
   mutation AddParticipants($room_id: ID!, $participant_ids: [ID!]!) {
     addParticipants(room_id: $room_id, participant_ids: $participant_ids)
+  }
+`;
+
+export const CREATE_PRIVATE_ROOM = gql`
+  mutation CreatePrivateRoom($input: CreatePrivateRoomInput!) {
+    createPrivateRoom(input: $input) {
+      _id
+      name
+      type
+      privacy
+      creator_id
+      participants {
+        _id
+        name
+        avatar
+      }
+      participant_count
+      created_at
+    }
+  }
+`;
+
+export const JOIN_ROOM = gql`
+  mutation JoinRoom($input: JoinRoomInput!) {
+    joinRoom(input: $input) {
+      _id
+      name
+      type
+      privacy
+      participant_count
+      is_full
+    }
+  }
+`;
+
+export const LEAVE_ROOM = gql`
+  mutation LeaveRoom($roomId: ID!) {
+    leaveRoom(room_id: $roomId)
   }
 `;
 

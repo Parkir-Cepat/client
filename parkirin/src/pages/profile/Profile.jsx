@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
+import useAuthStore from '../../store/authStore';
 
 const GET_ME = gql`
   query Me {
@@ -17,19 +18,9 @@ const GET_ME = gql`
   }
 `;
 
-const UPDATE_PROFILE = gql`
-  mutation UpdateProfile($input: UpdateProfileInput!) {
-    updateProfile(input: $input) {
-      _id
-      name
-      avatar
-    }
-  }
-`;
-
 const Profile = () => {
   const { data, loading, error } = useQuery(GET_ME);
-  const [updateProfile] = useMutation(UPDATE_PROFILE);
+  const { updateProfile: updateAuthProfile } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -48,10 +39,10 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await updateProfile({
-        variables: { input: formData }
-      });
-      setIsEditing(false);
+      const result = await updateAuthProfile(formData.name);
+      if (result.success) {
+        setIsEditing(false);
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
     }

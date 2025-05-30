@@ -50,9 +50,13 @@ const Dashboard = () => {
     const baseStats = [
       {
         title: 'Wallet Balance',
-        value: formatCurrency(user?.saldo || 0),
-        change: stats.walletChange,
-        changeType: stats.walletChange > 0 ? 'positive' : 'negative',
+        value: formatCurrency(
+          typeof stats.walletBalance === 'number'
+            ? stats.walletBalance
+            : (user?.saldo || 0)
+        ),
+        change: typeof stats.walletChange === 'number' ? stats.walletChange : 0,
+        changeType: stats.walletChange > 0 ? 'positive' : (stats.walletChange < 0 ? 'negative' : 'neutral'),
         color: 'green',
         icon: () => (
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,8 +72,8 @@ const Dashboard = () => {
           ...baseStats,
           {
             title: 'Total Parking Lots',
-            value: stats.totalParkingLots || 0,
-            change: stats.parkingLotsChange,
+            value: typeof stats.totalParkingLots === 'number' ? stats.totalParkingLots : 0,
+            change: typeof stats.parkingLotsChange === 'number' ? stats.parkingLotsChange : 0,
             changeType: 'positive',
             color: 'blue',
             icon: () => (
@@ -80,9 +84,9 @@ const Dashboard = () => {
           },
           {
             title: 'Monthly Earnings',
-            value: formatCurrency(stats.monthlyEarnings || 0),
-            change: stats.earningsChange,
-            changeType: stats.earningsChange > 0 ? 'positive' : 'negative',
+            value: formatCurrency(typeof stats.monthlyEarnings === 'number' ? stats.monthlyEarnings : 0),
+            change: typeof stats.earningsChange === 'number' ? stats.earningsChange : 0,
+            changeType: stats.earningsChange > 0 ? 'positive' : (stats.earningsChange < 0 ? 'negative' : 'neutral'),
             color: 'purple',
             icon: () => (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,8 +96,8 @@ const Dashboard = () => {
           },
           {
             title: 'Active Bookings',
-            value: stats.activeBookings || 0,
-            change: stats.bookingsChange,
+            value: typeof stats.activeBookings === 'number' ? stats.activeBookings : 0,
+            change: typeof stats.bookingsChange === 'number' ? stats.bookingsChange : 0,
             changeType: 'neutral',
             color: 'yellow',
             icon: () => (
@@ -109,8 +113,8 @@ const Dashboard = () => {
           ...baseStats,
           {
             title: 'Total Users',
-            value: stats.totalUsers || 0,
-            change: stats.usersChange,
+            value: typeof stats.totalUsers === 'number' ? stats.totalUsers : 0,
+            change: typeof stats.usersChange === 'number' ? stats.usersChange : 0,
             changeType: 'positive',
             color: 'blue',
             icon: () => (
@@ -121,9 +125,9 @@ const Dashboard = () => {
           },
           {
             title: 'Platform Revenue',
-            value: formatCurrency(stats.platformRevenue || 0),
-            change: stats.revenueChange,
-            changeType: stats.revenueChange > 0 ? 'positive' : 'negative',
+            value: formatCurrency(typeof stats.platformRevenue === 'number' ? stats.platformRevenue : 0),
+            change: typeof stats.revenueChange === 'number' ? stats.revenueChange : 0,
+            changeType: stats.revenueChange > 0 ? 'positive' : (stats.revenueChange < 0 ? 'negative' : 'neutral'),
             color: 'green',
             icon: () => (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +137,7 @@ const Dashboard = () => {
           },
           {
             title: 'Pending Approvals',
-            value: stats.pendingApprovals || 0,
+            value: typeof stats.pendingApprovals === 'number' ? stats.pendingApprovals : 0,
             change: null,
             changeType: 'neutral',
             color: 'red',
@@ -150,7 +154,7 @@ const Dashboard = () => {
           ...baseStats,
           {
             title: 'Active Bookings',
-            value: stats.activeBookings || 0,
+            value: typeof stats.activeBookings === 'number' ? stats.activeBookings : 0,
             change: null,
             changeType: 'neutral',
             color: 'blue',
@@ -162,8 +166,8 @@ const Dashboard = () => {
           },
           {
             title: 'Total Bookings',
-            value: stats.totalBookings || 0,
-            change: stats.bookingsChange,
+            value: typeof stats.totalBookings === 'number' ? stats.totalBookings : 0,
+            change: typeof stats.bookingsChange === 'number' ? stats.bookingsChange : 0,
             changeType: 'positive',
             color: 'purple',
             icon: () => (
@@ -174,8 +178,8 @@ const Dashboard = () => {
           },
           {
             title: 'Total Spent',
-            value: formatCurrency(stats.totalSpent || 0),
-            change: stats.spentChange,
+            value: formatCurrency(typeof stats.totalSpent === 'number' ? stats.totalSpent : 0),
+            change: typeof stats.spentChange === 'number' ? stats.spentChange : 0,
             changeType: 'neutral',
             color: 'yellow',
             icon: () => (
@@ -195,7 +199,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-[#f16634] to-[#f89b6c] rounded-xl p-8 text-white shadow-md">
         <h1 className="text-3xl font-bold">
-          Welcome back, {user?.name}! <span className="align-middle">��</span>
+          Welcome back, {user?.name}! <span className="align-middle"></span>
         </h1>
         <p className="text-white/90 mt-2 text-lg">
           {user?.role === 'landowner' 

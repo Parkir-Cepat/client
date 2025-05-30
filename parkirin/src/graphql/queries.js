@@ -152,6 +152,11 @@ export const GET_MY_PARKINGS = gql`
       _id
       name
       address
+      location {
+        type
+        coordinates
+      }
+      owner_id
       capacity {
         car
         motorcycle
@@ -164,10 +169,17 @@ export const GET_MY_PARKINGS = gql`
         car
         motorcycle
       }
+      operational_hours {
+        open
+        close
+      }
+      facilities
+      images
       status
       rating
       review_count
       created_at
+      updated_at
     }
   }
 `;
@@ -629,6 +641,10 @@ export const GET_MY_ROOMS = gql`
       _id
       name
       type
+      privacy
+      creator_id
+      max_participants
+      is_full
       parking_id
       participant_count
       last_message {
@@ -638,6 +654,44 @@ export const GET_MY_ROOMS = gql`
       }
       created_at
       updated_at
+    }
+  }
+`;
+
+export const GET_PUBLIC_ROOMS = gql`
+  query GetPublicRooms($limit: Int, $parkingId: ID) {
+    getPublicRooms(limit: $limit, parking_id: $parkingId) {
+      _id
+      name
+      type
+      privacy
+      creator {
+        _id
+        name
+      }
+      max_participants
+      participant_count
+      is_full
+      parking_id
+      created_at
+    }
+  }
+`;
+
+export const GET_PRIVATE_ROOM_WITH_USER = gql`
+  query GetPrivateRoomWithUser($userId: ID!, $parkingId: ID) {
+    getPrivateRoomWithUser(user_id: $userId, parking_id: $parkingId) {
+      _id
+      name
+      type
+      privacy
+      participants {
+        _id
+        name
+        avatar
+      }
+      participant_count
+      created_at
     }
   }
 `;
