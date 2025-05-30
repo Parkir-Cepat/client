@@ -3,30 +3,27 @@ import { useQuery, useMutation, useSubscription } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GET_ROOM_MESSAGES } from '../../graphql/queries';
+import { SEND_MESSAGE } from '../../graphql/mutations';
 import useAuthStore from '../../store/authStore';
 import { UserIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import ChatRoomSelector from '../../components/chat/ChatRoomSelector';
-
-const SEND_MESSAGE = gql`
-  mutation SendMessage($input: SendMessageInput!) {
-    sendMessage(input: $input) {
-      _id
-      message
-      created_at
-    }
-  }
-`;
 
 const MESSAGE_RECEIVED = gql`
   subscription MessageReceived($roomId: ID!) {
     messageReceived(room_id: $roomId) {
       _id
-      message
+      sender_id
       sender {
+        _id
         name
         avatar
       }
+      room_id
+      message
+      message_type
+      read_by
       created_at
+      updated_at
     }
   }
 `;

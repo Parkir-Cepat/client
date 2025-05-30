@@ -379,3 +379,30 @@ export const TOP_UP_WALLET = gql`
     }
   }
 `;
+
+// Chat Mutations
+export const SEND_MESSAGE = gql`
+  mutation SendMessage($input: SendMessageInput!) {
+    sendMessage(input: $input) {
+      _id
+      sender_id
+      sender {
+        _id
+        name
+        avatar
+      }
+      room_id
+      message
+      message_type
+      read_by
+      created_at
+      updated_at
+    }
+  }
+`;
+
+export const MARK_ROOM_MESSAGES_AS_READ = gql`
+  mutation MarkRoomMessagesAsRead($room_id: ID!) {
+    markRoomMessagesAsRead(room_id: $room_id)
+  }
+`;
