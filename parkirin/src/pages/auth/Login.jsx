@@ -85,15 +85,17 @@ const Login = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Logo Parkirin */}
+      <div className="flex justify-center mb-2">
+        <img src="https://www.citypng.com/public/uploads/preview/creative-graphic-pinterest-red-p-letter-701751695135355tq5j7kknmm.png" alt="Parkirin Logo" className="h-12 w-12 rounded-lg shadow" />
+      </div>
       <div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to Parkirin
-        </h2>
+        <h2 className="mt-4 text-center text-3xl font-extrabold text-[#f16634]">Sign in to Parkirin</h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link to="/register" className="font-medium text-primary-600 hover:text-primary-500">
-            create a new account
+          Atau{' '}
+          <Link to="/register" className="font-semibold text-[#f16634] hover:underline">
+            buat akun baru
           </Link>
         </p>
       </div>
@@ -109,34 +111,30 @@ const Login = () => {
       )}
 
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        <div className="rounded-md shadow-sm -space-y-px">
+        <div className="rounded-xl shadow-sm space-y-4 bg-[#f9fafb] p-6">
           <div>
-            <label htmlFor="email-address" className="sr-only">
-              Email address
-            </label>
+            <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
             <input
               id="email-address"
               name="email"
               type="email"
               autoComplete="email"
               required
-              className="input-field rounded-t-md"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634]"
               placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div>
-            <label htmlFor="password" className="sr-only">
-              Password
-            </label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
               id="password"
               name="password"
               type="password"
               autoComplete="current-password"
               required
-              className="input-field rounded-b-md"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634]"
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -148,7 +146,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full"
+            className="w-full py-2 bg-[#f16634] text-white rounded-lg font-semibold shadow hover:bg-[#d45528] disabled:bg-gray-300 disabled:cursor-not-allowed transition"
           >
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
@@ -161,7 +159,7 @@ const Login = () => {
             <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            <span className="px-2 bg-white text-gray-500">Atau lanjutkan dengan</span>
           </div>
         </div>
 
