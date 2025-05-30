@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 const LoadingSpinner = ({ 
   size = 'medium', 
-  color = 'blue',
+  color = 'orange',
   text = '',
   fullScreen = false,
   className = '' 
@@ -16,6 +16,7 @@ const LoadingSpinner = ({
   };
 
   const colorClasses = {
+    orange: 'border-[#f16634]',
     blue: 'border-blue-500',
     green: 'border-green-500',
     red: 'border-red-500',
@@ -52,7 +53,7 @@ const LoadingSpinner = ({
 
 LoadingSpinner.propTypes = {
   size: PropTypes.oneOf(['small', 'medium', 'large', 'xl']),
-  color: PropTypes.oneOf(['blue', 'green', 'red', 'yellow', 'purple', 'gray', 'white']),
+  color: PropTypes.oneOf(['orange', 'blue', 'green', 'red', 'yellow', 'purple', 'gray', 'white']),
   text: PropTypes.string,
   fullScreen: PropTypes.bool,
   className: PropTypes.string

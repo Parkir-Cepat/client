@@ -34,63 +34,38 @@ const BookingHistory = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div className="px-4 sm:px-0">
-        <h2 className="text-2xl font-semibold text-gray-900">Booking History</h2>
-      </div>
-
-      <div className="mt-8 flex flex-col">
-        <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-              <table className="min-w-full divide-y divide-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Date
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Duration
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Cost
-                    </th>
-                    <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                      Status
-                    </th>
+    <div className="w-full py-6 px-2 sm:px-4">
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-2xl font-bold text-[#f16634] mb-6">Booking History</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-[#f16634]/10">
+              <tr>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-[#f16634]">Date</th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-[#f16634]">Duration</th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-[#f16634]">Cost</th>
+                <th scope="col" className="px-4 py-3 text-left text-sm font-semibold text-[#f16634]">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {bookings.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="px-4 py-6 text-sm text-gray-400 text-center">No booking history found</td>
+                </tr>
+              ) : (
+                bookings.map((booking) => (
+                  <tr key={booking._id} className="hover:bg-[#f16634]/5 transition">
+                    <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-700">{new Date(parseInt(booking.start_time)).toLocaleDateString()}</td>
+                    <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-700">{booking.duration} hours</td>
+                    <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-700">Rp {booking.cost.toLocaleString()}</td>
+                    <td className="whitespace-nowrap px-4 py-4 text-sm">
+                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(booking.status)}`}>{booking.status}</span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {bookings.length === 0 ? (
-                    <tr>
-                      <td colSpan="4" className="px-3 py-4 text-sm text-gray-500 text-center">
-                        No booking history found
-                      </td>
-                    </tr>
-                  ) : (
-                    bookings.map((booking) => (
-                      <tr key={booking._id}>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {new Date(parseInt(booking.start_time)).toLocaleDateString()}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {booking.duration} hours
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          Rp {booking.cost.toLocaleString()}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm">
-                          <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${getStatusColor(booking.status)}`}>
-                            {booking.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -73,7 +73,7 @@ const BookingDetail = () => {
   });
 
   const [generateBookingQR, { loading: generateQRLoading }] = useMutation(GENERATE_BOOKING_QR);
-  const [generateAccessQR, { loading: generateAccessLoading }] = useMutation(GENERATE_PARKING_ACCESS_QR);
+  const [generateAccessQR] = useMutation(GENERATE_PARKING_ACCESS_QR);
 
   const booking = data?.getBooking;
 
@@ -197,70 +197,54 @@ const BookingDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-[#f9fafb]">
+      <div className="max-w-4xl mx-auto px-2 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeftIcon className="h-4 w-4" />
-              Kembali
-            </Button>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Detail Booking
-              </h1>
-              <p className="text-gray-600">
-                ID: {booking._id}
-              </p>
-            </div>
-            
-            <Badge color={getStatusColor(booking.status)} size="lg">
+        <div className="mb-8 flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-[#f16634]"
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            Kembali
+          </Button>
+          <h1 className="text-2xl font-bold text-[#f16634] ml-2">Detail Booking</h1>
+          <span className="ml-auto">
+            <Badge color={getStatusColor(booking.status)} size="md">
               {getStatusText(booking.status)}
             </Badge>
-          </div>
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             {/* Parking Information */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Informasi Tempat Parkir</h2>
-              
+            <Card className="p-6 rounded-xl shadow-md border-0">
+              <h2 className="text-lg font-bold text-[#f16634] mb-4">Informasi Tempat Parkir</h2>
               <div className="flex items-start gap-4">
                 {booking.parking?.images?.[0] && (
                   <img
                     src={booking.parking.images[0]}
                     alt={booking.parking.name}
-                    className="w-24 h-24 rounded-lg object-cover"
+                    className="w-24 h-24 rounded-lg object-cover border"
                   />
                 )}
-                
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900 mb-1">
                     {booking.parking?.name}
                   </h3>
-                  
                   <div className="flex items-start gap-2 text-gray-600 mb-2">
                     <MapPinIcon className="h-4 w-4 mt-0.5 flex-shrink-0" />
                     <span className="text-sm">{booking.parking?.address}</span>
                   </div>
-                  
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <span>⭐ {booking.parking?.rating || 0}/5</span>
                     <span>•</span>
                     <span>📍 {booking.distance ? `${booking.distance}m` : 'N/A'}</span>
                   </div>
-                  
                   {booking.parking?.owner && (
                     <div className="mt-3 pt-3 border-t">
                       <p className="text-sm text-gray-600">
@@ -269,7 +253,7 @@ const BookingDetail = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="mt-2 flex items-center gap-2"
+                        className="mt-2 flex items-center gap-2 border-[#f16634] text-[#f16634]"
                         onClick={() => navigate(`/chat/${booking.parking.owner._id}`)}
                       >
                         <PhoneIcon className="h-4 w-4" />
@@ -282,13 +266,12 @@ const BookingDetail = () => {
             </Card>
 
             {/* Booking Details */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Detail Booking</h2>
-              
+            <Card className="p-6 rounded-xl shadow-md border-0">
+              <h2 className="text-lg font-bold text-[#f16634] mb-4">Detail Booking</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <CalendarDaysIcon className="h-5 w-5 text-gray-400" />
+                    <CalendarDaysIcon className="h-5 w-5 text-[#f16634]" />
                     <div>
                       <p className="text-sm text-gray-600">Tanggal & Waktu</p>
                       <p className="font-medium">
@@ -296,16 +279,14 @@ const BookingDetail = () => {
                       </p>
                     </div>
                   </div>
-                  
                   <div className="flex items-center gap-3">
-                    <ClockIcon className="h-5 w-5 text-gray-400" />
+                    <ClockIcon className="h-5 w-5 text-[#f16634]" />
                     <div>
                       <p className="text-sm text-gray-600">Durasi</p>
                       <p className="font-medium">{booking.duration} jam</p>
                     </div>
                   </div>
                 </div>
-                
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">🚗</span>
@@ -316,7 +297,6 @@ const BookingDetail = () => {
                       </p>
                     </div>
                   </div>
-                  
                   {booking.licensePlate && (
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">🔢</span>
@@ -328,7 +308,6 @@ const BookingDetail = () => {
                   )}
                 </div>
               </div>
-              
               {booking.notes && (
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-600">Catatan:</p>
@@ -338,9 +317,8 @@ const BookingDetail = () => {
             </Card>
 
             {/* Payment Information */}
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Informasi Pembayaran</h2>
-              
+            <Card className="p-6 rounded-xl shadow-md border-0">
+              <h2 className="text-lg font-bold text-[#f16634] mb-4">Informasi Pembayaran</h2>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tarif per jam:</span>
@@ -348,24 +326,19 @@ const BookingDetail = () => {
                     {formatCurrency(booking.hourlyRate || booking.cost / booking.duration)}
                   </span>
                 </div>
-                
                 <div className="flex justify-between">
                   <span className="text-gray-600">Durasi:</span>
                   <span className="font-medium">{booking.duration} jam</span>
                 </div>
-                
                 <div className="flex justify-between text-lg font-semibold border-t pt-3">
                   <span>Total Biaya:</span>
-                  <span className="text-blue-600">{formatCurrency(booking.cost)}</span>
+                  <span className="text-[#f16634]">{formatCurrency(booking.cost)}</span>
                 </div>
-                
                 <div className="flex items-center gap-2 text-sm">
-                  <CreditCardIcon className="h-4 w-4 text-gray-400" />
+                  <CreditCardIcon className="h-4 w-4 text-[#f16634]" />
                   <span className="text-gray-600">
                     Status Pembayaran: 
-                    <span className={`ml-1 font-medium ${
-                      booking.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'
-                    }`}>
+                    <span className={`ml-1 font-medium ${booking.paymentStatus === 'paid' ? 'text-green-600' : 'text-yellow-600'}`}>
                       {booking.paymentStatus === 'paid' ? 'Dibayar' : 'Belum Dibayar'}
                     </span>
                   </span>
@@ -375,11 +348,10 @@ const BookingDetail = () => {
           </div>
 
           {/* Actions Sidebar */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* QR Codes */}
-            <Card className="p-4">
-              <h3 className="font-semibold mb-3">QR Code</h3>
-              
+            <Card className="p-4 rounded-xl shadow-md border-0">
+              <h3 className="font-bold text-[#f16634] mb-3">QR Code</h3>
               <div className="space-y-2">
                 <Button
                   variant="primary"
@@ -391,29 +363,25 @@ const BookingDetail = () => {
                   <QrCodeIcon className="h-4 w-4" />
                   QR Booking
                 </Button>
-                
                 {booking.status === 'confirmed' && (
                   <>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleGenerateQR('entry')}
-                      disabled={generateAccessLoading}
-                      className="w-full flex items-center gap-2"
+                      className="w-full flex items-center gap-2 border-[#f16634] text-[#f16634]"
                     >
                       <QrCodeIcon className="h-4 w-4" />
-                      QR Masuk
+                      QR Entry
                     </Button>
-                    
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleGenerateQR('exit')}
-                      disabled={generateAccessLoading}
-                      className="w-full flex items-center gap-2"
+                      className="w-full flex items-center gap-2 border-[#f16634] text-[#f16634]"
                     >
                       <QrCodeIcon className="h-4 w-4" />
-                      QR Keluar
+                      QR Exit
                     </Button>
                   </>
                 )}
@@ -421,80 +389,40 @@ const BookingDetail = () => {
             </Card>
 
             {/* Actions */}
-            <Card className="p-4">
-              <h3 className="font-semibold mb-3">Aksi</h3>
-              
+            <Card className="p-4 rounded-xl shadow-md border-0">
+              <h3 className="font-bold text-[#f16634] mb-3">Aksi</h3>
               <div className="space-y-2">
                 {canConfirm && (
                   <Button
                     variant="primary"
                     size="sm"
                     onClick={handleConfirmBooking}
-                    disabled={confirmLoading}
-                    className="w-full flex items-center gap-2"
+                    loading={confirmLoading}
+                    className="w-full"
                   >
-                    <CheckCircleIcon className="h-4 w-4" />
-                    {confirmLoading ? 'Mengkonfirmasi...' : 'Konfirmasi Booking'}
+                    Konfirmasi Booking
                   </Button>
                 )}
-                
                 {canExtend && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowExtendModal(true)}
-                    className="w-full flex items-center gap-2"
+                    className="w-full border-[#f16634] text-[#f16634]"
                   >
-                    <PlusIcon className="h-4 w-4" />
-                    Perpanjang Waktu
+                    Perpanjang Booking
                   </Button>
                 )}
-                
                 {canCancel && (
                   <Button
-                    variant="outline"
+                    variant="danger"
                     size="sm"
                     onClick={() => setShowCancelModal(true)}
-                    className="w-full flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50"
+                    loading={cancelLoading}
+                    className="w-full"
                   >
-                    <XMarkIcon className="h-4 w-4" />
                     Batalkan Booking
                   </Button>
-                )}
-              </div>
-            </Card>
-
-            {/* Booking Timeline */}
-            <Card className="p-4">
-              <h3 className="font-semibold mb-3">Timeline</h3>
-              
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium">Booking Dibuat</p>
-                    <p className="text-gray-600">{formatDateTime(booking.createdAt)}</p>
-                  </div>
-                </div>
-                
-                {booking.confirmedAt && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div>
-                      <p className="font-medium">Dikonfirmasi</p>
-                      <p className="text-gray-600">{formatDateTime(booking.confirmedAt)}</p>
-                    </div>
-                  </div>
-                )}
-                
-                {booking.completedAt && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                    <div>
-                      <p className="font-medium">Selesai</p>
-                      <p className="text-gray-600">{formatDateTime(booking.completedAt)}</p>
-                    </div>
-                  </div>
                 )}
               </div>
             </Card>

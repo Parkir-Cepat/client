@@ -63,44 +63,42 @@ const Profile = () => {
   const user = data?.me;
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
+    <div className="w-full py-6 px-2 sm:px-4">
+      <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-bold text-[#f16634]">Profile</h1>
           <button
             onClick={() => setIsEditing(!isEditing)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-5 py-2 bg-[#f16634] text-white rounded-full font-semibold shadow hover:bg-[#d45528] transition"
           >
             {isEditing ? 'Cancel' : 'Edit'}
           </button>
         </div>
-
-        <div className="flex items-center space-x-6 mb-6">
-          <div className="w-20 h-20 rounded-full bg-gray-300 flex items-center justify-center">
+        <div className="flex items-center space-x-8 mb-8">
+          <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center border-4 border-[#f16634] shadow">
             {user?.avatar ? (
-              <img src={user.avatar} alt="Avatar" className="w-20 h-20 rounded-full" />
+              <img src={user.avatar} alt="Avatar" className="w-24 h-24 rounded-full object-cover" />
             ) : (
-              <span className="text-2xl text-gray-600">{user?.name?.charAt(0)}</span>
+              <span className="text-3xl text-gray-600 font-bold">{user?.name?.charAt(0)}</span>
             )}
           </div>
           <div>
-            <h2 className="text-xl font-semibold">{user?.name}</h2>
-            <p className="text-gray-600">{user?.email}</p>
-            <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full mt-1">
+            <h2 className="text-xl font-bold text-gray-900 mb-1">{user?.name}</h2>
+            <p className="text-gray-600 mb-1">{user?.email}</p>
+            <span className="inline-block px-3 py-1 bg-[#f16634]/10 text-[#f16634] text-sm rounded-full font-bold shadow">
               {user?.role}
             </span>
           </div>
         </div>
-
         {isEditing ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634]"
               />
             </div>
             <div>
@@ -109,35 +107,45 @@ const Profile = () => {
                 type="url"
                 value={formData.avatar}
                 onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634]"
               />
             </div>
-            <button
-              type="submit"
-              className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Save Changes
-            </button>
+            <div className="flex gap-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="px-5 py-2 border-2 border-[#f16634] text-[#f16634] rounded-full font-semibold hover:bg-[#f16634]/10 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-[#f16634] text-white rounded-full font-semibold shadow hover:bg-[#d45528] transition"
+              >
+                Save Changes
+              </button>
+            </div>
           </form>
         ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
-                <p className="text-gray-900">{user?.email}</p>
+                <p className="text-gray-900 font-semibold">{user?.email}</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Role</label>
-                <p className="text-gray-900 capitalize">{user?.role}</p>
+                <p className="text-gray-900 font-semibold capitalize">{user?.role}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Member Since</label>                <p className="text-gray-900">
+                <label className="block text-sm font-medium text-gray-700">Member Since</label>
+                <p className="text-gray-900 font-semibold">
                   {new Date(user?.created_at).toLocaleDateString()}
                 </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email Verified</label>
-                <p className="text-gray-900">
+                <p className="text-gray-900 font-semibold">
                   {user?.is_email_verified ? 'Yes' : 'No'}
                 </p>
               </div>

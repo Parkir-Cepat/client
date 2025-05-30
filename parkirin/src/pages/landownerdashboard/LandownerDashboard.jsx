@@ -62,7 +62,7 @@ const Dashboard = () => {
   const userInfo = userData?.me || user;
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="w-full p-4 sm:p-6">
       {/* Welcome Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white mb-6">
         <div className="flex items-center justify-between">

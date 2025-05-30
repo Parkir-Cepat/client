@@ -68,9 +68,9 @@ const ParkingDetail = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="w-full py-6 px-2 sm:px-4">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
         {parking.images?.length > 0 && (
           <div className="h-64 bg-gray-200">
             <img
@@ -80,11 +80,10 @@ const ParkingDetail = () => {
             />
           </div>
         )}
-        
-        <div className="p-6">
+        <div className="p-8">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{parking.name}</h1>
+              <h1 className="text-2xl font-bold text-[#f16634]">{parking.name}</h1>
               <div className="flex items-center text-gray-600 mt-1">
                 <MapPinIcon className="w-4 h-4 mr-1" />
                 <span>{parking.address}</span>
@@ -92,24 +91,21 @@ const ParkingDetail = () => {
             </div>
             <div className="flex items-center">
               <StarIcon className="w-5 h-5 text-yellow-400 fill-current" />
-              <span className="ml-1 text-gray-900 font-medium">{parking.rating || 0}</span>
+              <span className="ml-1 text-[#f16634] font-bold text-lg">{parking.rating || 0}</span>
             </div>
           </div>
-
           {parking.description && (
             <p className="text-gray-600 mb-4">{parking.description}</p>
           )}
-
           {/* Status */}
           <div className="flex items-center space-x-4">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+            <span className={`px-3 py-1 rounded-full text-sm font-bold shadow ${
               parking.status === 'active' 
-                ? 'bg-green-100 text-green-800' 
+                ? 'bg-[#f16634]/10 text-[#f16634]' 
                 : 'bg-red-100 text-red-800'
             }`}>
               {parking.status === 'active' ? 'Open' : 'Closed'}
             </span>
-            
             <div className="flex items-center text-gray-600">
               <ClockIcon className="w-4 h-4 mr-1" />
               <span>{parking.operational_hours?.open} - {parking.operational_hours?.close}</span>
@@ -117,47 +113,40 @@ const ParkingDetail = () => {
           </div>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Info */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
           {/* Availability */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Availability</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="border border-gray-200 rounded-lg p-4">
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h2 className="text-lg font-bold text-[#f16634] mb-4">Availability</h2>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="border border-gray-100 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium">Cars</h3>
-                  <TruckIcon className="w-5 h-5 text-gray-600" />
+                  <h3 className="font-bold text-[#f16634]">Cars</h3>
+                  <TruckIcon className="w-5 h-5 text-[#f16634]" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {parking.available?.car}/{parking.capacity?.car}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{parking.available?.car}/{parking.capacity?.car}</p>
                 <p className="text-sm text-gray-600">Available slots</p>
               </div>
-              
-              <div className="border border-gray-200 rounded-lg p-4">
+              <div className="border border-gray-100 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium">Motorcycles</h3>
-                  <div className="w-5 h-5 bg-gray-600 rounded-sm"></div>
+                  <h3 className="font-bold text-[#f16634]">Motorcycles</h3>
+                  <div className="w-5 h-5 bg-[#f16634] rounded-sm"></div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900">
-                  {parking.available?.motorcycle}/{parking.capacity?.motorcycle}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{parking.available?.motorcycle}/{parking.capacity?.motorcycle}</p>
                 <p className="text-sm text-gray-600">Available slots</p>
               </div>
             </div>
           </div>
-
           {/* Facilities */}
           {parking.facilities?.length > 0 && (
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-lg font-semibold mb-4">Facilities</h2>
+            <div className="bg-white rounded-xl shadow-lg p-8">
+              <h2 className="text-lg font-bold text-[#f16634] mb-4">Facilities</h2>
               <div className="flex flex-wrap gap-2">
                 {parking.facilities.map((facility, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                    className="px-3 py-1 bg-[#f16634]/10 text-[#f16634] rounded-full text-sm font-bold shadow"
                   >
                     {facility}
                   </span>
@@ -165,49 +154,35 @@ const ParkingDetail = () => {
               </div>
             </div>
           )}
-
           {/* Map placeholder */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Location</h2>
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h2 className="text-lg font-bold text-[#f16634] mb-4">Location</h2>
             <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
               <p className="text-gray-500">Map will be displayed here</p>
             </div>
           </div>
         </div>
-
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Pricing */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Pricing</h2>
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h2 className="text-lg font-bold text-[#f16634] mb-4">Pricing</h2>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Car (per hour)</span>
-                <span className="font-medium">Rp {parking.rates?.car?.toLocaleString()}</span>
+                <span className="font-bold text-[#f16634]">Rp {parking.rates?.car?.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-600">Motorcycle (per hour)</span>
-                <span className="font-medium">Rp {parking.rates?.motorcycle?.toLocaleString()}</span>
+                <span className="font-bold text-[#f16634]">Rp {parking.rates?.motorcycle?.toLocaleString()}</span>
               </div>
             </div>
           </div>
-
           {/* Book Now */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Book Now</h2>
-            <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-medium">
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h2 className="text-lg font-bold text-[#f16634] mb-4">Book Now</h2>
+            <button className="w-full bg-[#f16634] text-white py-3 rounded-full font-bold shadow hover:bg-[#d45528] transition">
               Book This Parking
-            </button>
-            <p className="text-xs text-gray-500 mt-2 text-center">
-              Secure booking with instant confirmation
-            </p>
-          </div>
-
-          {/* Contact */}
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Need Help?</h2>
-            <button className="w-full border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50">
-              Contact Owner
             </button>
           </div>
         </div>

@@ -63,7 +63,7 @@ const ManageParking = () => {
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="w-full p-4 sm:p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Manage My Parking Lots</h1>
         <button
@@ -154,10 +154,6 @@ const ManageParking = () => {
       {showCreateForm && (
         <CreateParkingForm 
           onClose={() => setShowCreateForm(false)}
-          onSuccess={() => {
-            setShowCreateForm(false);
-            refetch();
-          }}
         />
       )}
     </div>
@@ -165,7 +161,7 @@ const ManageParking = () => {
 };
 
 // Simple create form component (you can expand this)
-const CreateParkingForm = ({ onClose, onSuccess }) => {
+const CreateParkingForm = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">

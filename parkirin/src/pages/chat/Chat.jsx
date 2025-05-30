@@ -3,6 +3,8 @@ import { useQuery, useMutation, useSubscription } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { GET_ROOM_MESSAGES, GET_MY_ROOMS } from '../../graphql/queries';
 import { CREATE_ROOM } from '../../graphql/mutations';
+import useAuthStore from '../../store/authStore';
+import { UserIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 
 const SEND_MESSAGE = gql`
   mutation SendMessage($input: SendMessageInput!) {
@@ -33,6 +35,7 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState('');
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const messagesEndRef = useRef(null);
+  const { user } = useAuthStore();
 
   // Fetch user's rooms
   const { data: roomsData, loading: roomsLoading } = useQuery(GET_MY_ROOMS);
@@ -127,83 +130,121 @@ const Chat = () => {
   // Show loading state while fetching rooms or creating room
   if (roomsLoading || isCreatingRoom) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <span className="ml-2">
-          {isCreatingRoom ? 'Creating chat room...' : 'Loading chat...'}
+      <div className="flex flex-col justify-center items-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#f16634]"></div>
+        <span className="ml-2 text-[#f16634] font-semibold">
+          {isCreatingRoom ? 'Membuat chat room...' : 'Memuat chat...'}
         </span>
       </div>
     );
   }
   return (
-    <div className="flex flex-col h-screen max-h-96 bg-white rounded-lg shadow-lg">
-      <div className="bg-blue-600 text-white p-4 rounded-t-lg">
-        <h2 className="text-lg font-semibold">
+    <div className="flex flex-col h-[70vh] max-h-[600px] bg-white rounded-xl shadow-lg mx-auto my-8 max-w-2xl">
+      {/* Header dengan icon chat */}
+      <div className="bg-[#f16634] text-white p-4 rounded-t-xl flex items-center space-x-2">
+        <ChatBubbleLeftRightIcon className="w-6 h-6" />
+        <h2 className="text-lg font-bold">
           {roomsData?.getMyRooms?.find(room => room._id === roomId)?.name || 'Chat'}
         </h2>
         {roomsData?.getMyRooms?.length > 1 && (
-          <div className="text-sm opacity-90">
+          <div className="text-sm opacity-90 ml-2">
             Room: {roomsData.getMyRooms.find(room => room._id === roomId)?.name}
           </div>
         )}
       </div>
-      
+      {/* End Header */}
       {!roomId ? (
         <div className="flex-1 flex items-center justify-center p-4">
           <div className="text-center text-gray-500">
-            <p>No chat room available</p>
+            <p>Belum ada chat room</p>
             <button
               onClick={handleCreateDefaultRoom}
               disabled={isCreatingRoom}
-              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="mt-2 px-4 py-2 bg-[#f16634] text-white rounded-full font-semibold shadow hover:bg-[#d45528] disabled:opacity-50"
             >
-              {isCreatingRoom ? 'Creating...' : 'Create Chat Room'}
+              {isCreatingRoom ? 'Membuat...' : 'Buat Chat Room'}
             </button>
           </div>
         </div>
       ) : (
         <>
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* Bubble chat modern */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f9fafb] rounded-b-xl">
             {messagesData?.getRoomMessages?.length === 0 ? (
               <div className="text-center text-gray-500 py-8">
-                <p>No messages yet. Start the conversation!</p>
+                <p>Belum ada pesan. Mulai percakapan!</p>
               </div>
             ) : (
-              messagesData?.getRoomMessages?.map((message) => (
-                <div key={message._id} className="flex flex-col">
-                  <div className="bg-gray-100 rounded-lg p-3 max-w-xs">
-                    {message.sender && (
-                      <div className="text-xs font-semibold text-gray-700 mb-1">
-                        {message.sender.name}
+              messagesData?.getRoomMessages?.map((message) => {
+                const isOwn = user && message.sender && (user._id === message.sender._id);
+                return (
+                  <div
+                    key={message._id}
+                    className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {/* Avatar untuk lawan bicara */}
+                    {!isOwn && (
+                      <div className="flex-shrink-0 mr-2">
+                        {message.sender?.avatar ? (
+                          <img
+                            src={message.sender.avatar}
+                            alt={message.sender.name}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-[#f16634]"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center border-2 border-[#f16634]">
+                            <UserIcon className="w-5 h-5 text-gray-400" />
+                          </div>
+                        )}
                       </div>
                     )}
-                    <p className="text-sm">{message.message}</p>
-                    <span className="text-xs text-gray-500 mt-1">
-                      {new Date(message.created_at).toLocaleTimeString()}
-                    </span>
+                    {/* Bubble chat */}
+                    <div
+                      className={`max-w-[80%] flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}
+                    >
+                      {/* Nama pengirim untuk lawan bicara */}
+                      {!isOwn && message.sender?.name && (
+                        <span className="text-xs text-[#f16634] font-bold mb-1 px-1">
+                          {message.sender.name}
+                        </span>
+                      )}
+                      <div
+                        className={`px-4 py-2 rounded-2xl shadow border text-sm ${
+                          isOwn
+                            ? 'bg-[#ffe5d1] text-[#f16634] rounded-br-md'
+                            : 'bg-white text-gray-800 rounded-bl-md'
+                        }`}
+                      >
+                        {message.message}
+                      </div>
+                      <span className="text-xs text-gray-400 mt-1">
+                        {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
             <div ref={messagesEndRef} />
           </div>
-
-          <form onSubmit={handleSendMessage} className="p-4 border-t">
+          {/* End Bubble chat */}
+          {/* Input chat modern */}
+          <form onSubmit={handleSendMessage} className="p-4 border-t bg-white rounded-b-xl">
             <div className="flex space-x-2">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ketik pesan..."
+                className="flex-1 px-3 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634] placeholder:text-gray-400"
                 disabled={!roomId}
               />
               <button
                 type="submit"
-                disabled={!roomId || !newMessage.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!newMessage.trim() || !roomId}
+                className="px-5 py-2 bg-[#f16634] text-white rounded-full font-semibold shadow hover:bg-[#d45528] disabled:bg-gray-300 disabled:cursor-not-allowed transition"
               >
-                Send
+                Kirim
               </button>
             </div>
           </form>

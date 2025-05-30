@@ -43,7 +43,7 @@ const Card = ({
     shadows[shadow],
     roundeds[rounded],
     {
-      'border border-gray-200': border,
+      'border border-[#f16634]/30': border,
       'hover:shadow-lg cursor-pointer': hover,
       'cursor-pointer': onClick
     },
@@ -71,7 +71,7 @@ Card.Header = ({ children, className = '', ...props }) => (
 );
 
 Card.Title = ({ children, className = '', ...props }) => (
-  <h3 className={classNames('text-lg font-semibold text-gray-900', className)} {...props}>
+  <h3 className={classNames('text-lg font-bold text-[#f16634]', className)} {...props}>
     {children}
   </h3>
 );

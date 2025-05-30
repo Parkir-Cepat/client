@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AuthLayout from './layouts/AuthLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import LoadingSpinner from './components/common/LoadingSpinner';
@@ -20,11 +20,21 @@ const Wallet = React.lazy(() => import('./pages/wallet/Wallet'));
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { isAuthenticated, user } = useAuthStore();
+  const location = useLocation();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
+  // Landowner: hanya boleh akses /parking/manage dan /chat
+  if (user?.role === 'landowner') {
+    const allowedLandownerRoutes = ['/parking/manage', '/chat'];
+    if (!allowedLandownerRoutes.includes(location.pathname)) {
+      return <Navigate to="/parking/manage" replace />;
+    }
+  }
+
+  // User: akses sesuai allowedRoles jika ada
   if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -34,11 +44,9 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useAuthStore();
-  
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
-  
   return children;
 };
 
@@ -63,6 +71,7 @@ const AppRoutes = () => {
         } />
 
         {/* Protected Routes */}
+        {/* Landowner: hanya /parking/manage dan /chat, User: semua fitur */}
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -70,7 +79,6 @@ const AppRoutes = () => {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-
         <Route path="/parking/search" element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -78,7 +86,6 @@ const AppRoutes = () => {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-
         <Route path="/parking/:id" element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -86,15 +93,13 @@ const AppRoutes = () => {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-
         <Route path="/parking/manage" element={
-          <ProtectedRoute allowedRoles={['landowner']}>
+          <ProtectedRoute>
             <DashboardLayout>
               <ManageParking />
             </DashboardLayout>
           </ProtectedRoute>
         } />
-
         <Route path="/bookings" element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -102,7 +107,6 @@ const AppRoutes = () => {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-
         <Route path="/chat" element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -110,7 +114,6 @@ const AppRoutes = () => {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-
         <Route path="/profile" element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -118,7 +121,6 @@ const AppRoutes = () => {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-
         <Route path="/wallet" element={
           <ProtectedRoute>
             <DashboardLayout>
@@ -126,10 +128,8 @@ const AppRoutes = () => {
             </DashboardLayout>
           </ProtectedRoute>
         } />
-
         {/* Default redirect */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
         {/* 404 fallback */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

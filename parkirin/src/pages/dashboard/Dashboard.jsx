@@ -191,13 +191,13 @@ const Dashboard = () => {
   const userStats = getStatsForRole();
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-8 p-4 sm:p-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
-        <h1 className="text-2xl font-bold">
-          Welcome back, {user?.name}! 👋
+      <div className="bg-gradient-to-r from-[#f16634] to-[#f89b6c] rounded-xl p-8 text-white shadow-md">
+        <h1 className="text-3xl font-bold">
+          Welcome back, {user?.name}! <span className="align-middle">��</span>
         </h1>
-        <p className="text-blue-100 mt-2">
+        <p className="text-white/90 mt-2 text-lg">
           {user?.role === 'landowner' 
             ? 'Manage your parking lots and track your earnings'
             : user?.role === 'admin'
@@ -219,15 +219,16 @@ const Dashboard = () => {
             icon={stat.icon}
             color={stat.color}
             loading={statsLoading}
+            className="shadow-lg rounded-xl border-0"
           />
         ))}
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Quick Actions */}
         <div className="lg:col-span-1">
-          <QuickActions userRole={user?.role} />
+          <QuickActions userRole={user?.role} className="rounded-xl shadow-md border-0" />
         </div>
 
         {/* Recent Activity */}
@@ -235,6 +236,7 @@ const Dashboard = () => {
           <RecentActivity 
             activities={activities} 
             loading={activityLoading}
+            className="rounded-xl shadow-md border-0"
           />
         </div>
       </div>
