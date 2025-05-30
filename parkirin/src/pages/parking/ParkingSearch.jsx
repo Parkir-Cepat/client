@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@apollo/client';
-import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import GoogleMapsService from '../../services/googleMapsService';
 import { GET_NEARBY_PARKINGS } from '../../graphql/queries';
 
 const ParkingSearch = () => {
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const markers = useRef([]);
+  
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [viewport, setViewport] = useState({
     latitude: -6.2088,  // Default to Jakarta's coordinates
     longitude: 106.8456,
@@ -17,11 +22,57 @@ const ParkingSearch = () => {
     minPrice: 0,
     maxPrice: 100000
   });
-
   const [userLocation, setUserLocation] = useState(null);
 
+  // GraphQL query - must be defined before useEffect that uses `data`
+  const { loading, error, data } = useQuery(GET_NEARBY_PARKINGS, {
+    variables: {
+      longitude: viewport.longitude,
+      latitude: viewport.latitude,
+      maxDistance: searchParams.radius,
+      vehicleType: searchParams.vehicleType === 'all' ? null : searchParams.vehicleType
+    },
+    skip: !userLocation,
+  });
+  // Initialize Google Maps
   useEffect(() => {
-    // Get user's location
+    const initMap = async () => {
+      try {
+        if (mapContainer.current && !map.current) {
+          map.current = await GoogleMapsService.createMap(mapContainer.current, {
+            center: { lat: viewport.latitude, lng: viewport.longitude },
+            zoom: viewport.zoom,
+            styles: [
+              {
+                featureType: "poi.business",
+                stylers: [{ visibility: "off" }]
+              },
+              {
+                featureType: "poi.park",
+                elementType: "labels.text",
+                stylers: [{ visibility: "off" }]
+              }
+            ],
+            gestureHandling: 'auto',
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: true,
+            zoomControl: true
+          });
+          
+          setMapLoaded(true);
+        }
+      } catch (error) {
+        console.error('Error initializing Google Maps:', error);
+        // Handle error gracefully - maybe show a fallback UI
+      }
+    };
+
+    initMap();
+  }, [viewport.latitude, viewport.longitude, viewport.zoom]);
+
+  // Get user's location and update map center
+  useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -32,21 +83,96 @@ const ParkingSearch = () => {
             latitude,
             longitude
           }));
+
+          // Update map center if map is loaded
+          if (map.current) {
+            map.current.setCenter({ lat: latitude, lng: longitude });
+          }
         },
         (error) => {
           console.error('Error getting location:', error);
         }
       );
-    }  }, []);
-  const { loading, error, data } = useQuery(GET_NEARBY_PARKINGS, {
-    variables: {
-      longitude: viewport.longitude,
-      latitude: viewport.latitude,
-      maxDistance: searchParams.radius,
-      vehicleType: searchParams.vehicleType === 'all' ? null : searchParams.vehicleType
-    },
-    skip: !userLocation,
-  });
+    }
+  }, []);
+  // Clear existing markers
+  const clearMarkers = () => {
+    markers.current.forEach(marker => marker.setMap(null));
+    markers.current = [];
+  };
+  // Add markers for parking spots and user location
+  useEffect(() => {
+    const addMarkers = async () => {
+      if (!map.current || !mapLoaded) return;
+
+      // Clear existing markers
+      clearMarkers();
+
+      // Add user location marker
+      if (userLocation) {
+        try {
+          // Import marker library
+          const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
+          
+          // Create marker element for AdvancedMarkerElement
+          const markerElement = document.createElement('div');
+          markerElement.innerHTML = `
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="8" fill="#2563eb" stroke="white" stroke-width="2"/>
+              <circle cx="12" cy="12" r="3" fill="white"/>
+            </svg>
+          `;
+          markerElement.style.width = '24px';
+          markerElement.style.height = '24px';
+          markerElement.style.cursor = 'pointer';
+          
+          const userMarker = new AdvancedMarkerElement({
+            position: { lat: userLocation.latitude, lng: userLocation.longitude },
+            map: map.current,
+            title: 'Your Location',
+            content: markerElement
+          });
+            markers.current.push(userMarker);
+        } catch (error) {
+          console.warn('Error creating user location marker:', error);
+        }
+      }
+
+      // Add parking spot markers using integrated service
+      if (data?.getNearbyParkings) {
+        try {
+          // Global function for parking selection (called from info window)
+          window.selectParking = (parkingId) => {
+            const selectedParking = data.getNearbyParkings.find(p => p._id === parkingId);
+            if (selectedParking) {
+              console.log('Selected parking:', selectedParking);
+              // TODO: Navigate to booking page or show booking modal
+              alert(`Selected parking: ${selectedParking.name}`);
+            }
+          };
+            const parkingMarkers = await GoogleMapsService.createParkingMarkers(
+            map.current,
+            data.getNearbyParkings,
+            (parkingData) => {
+              console.log('Parking marker clicked:', parkingData);
+              // You can add additional click handling here
+            }
+          );
+          
+          markers.current.push(...parkingMarkers);
+
+          // Fit map to show all markers if we have parking data
+          if (parkingMarkers.length > 0) {
+            GoogleMapsService.fitBoundsToMarkers(map.current, [...markers.current]);
+          }
+        } catch (error) {
+          console.error('Error creating parking markers:', error);
+        }
+      }
+    };
+
+    addMarkers();
+  }, [mapLoaded, data, userLocation]);
 
   if (loading) return <LoadingSpinner size="large" />;
   if (error) return <div>Error loading parking spots</div>;
@@ -142,39 +268,17 @@ const ParkingSearch = () => {
               ))}
             </div>
           </div>
-        </div>
-        {/* Map */}
+        </div>        {/* Map */}
         <div className="col-span-2 relative rounded-xl overflow-hidden m-4 md:m-6 md:ml-0 shadow-lg">
-          <Map
-            {...viewport}
-            onMove={evt => setViewport(evt.viewState)}
-            mapStyle="mapbox://styles/mapbox/streets-v11"
-            mapboxAccessToken={import.meta.env.VITE_MAPBOX_ACCESS_TOKEN}
-            style={{ width: '100%', height: '100%' }}
-          >
-            <GeolocateControl position="top-right" />
-            <NavigationControl position="top-right" />
-            {/* User's location */}
-            {userLocation && (
-              <Marker
-                longitude={userLocation.longitude}
-                latitude={userLocation.latitude}
-                color="#f16634"
-              />
-            )}
-            {/* Parking spots */}
-            {data?.getNearbyParkings?.map((spot) => (
-              <Marker
-                key={spot._id}
-                longitude={spot.location.coordinates[0]}
-                latitude={spot.location.coordinates[1]}
-              >
-                <div className="bg-[#f16634] text-white px-2 py-1 rounded text-xs font-bold shadow">
-                  {spot.name}
-                </div>
-              </Marker>
-            ))}
-          </Map>
+          <div 
+            ref={mapContainer}
+            style={{ width: '100%', height: '100%', minHeight: '400px' }}
+          />
+          {!mapLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+              <LoadingSpinner size="large" />
+            </div>
+          )}
         </div>
       </div>
     </div>
