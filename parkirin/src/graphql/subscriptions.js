@@ -36,18 +36,46 @@ export const SALDO_UPDATED = gql`
 `;
 
 // Chat Subscriptions
-export const MESSAGE_SENT = gql`
-  subscription MessageSent($roomId: ID!) {
-    messageSent(room_id: $roomId) {
+export const MESSAGE_RECEIVED = gql`
+  subscription MessageReceived($room_id: ID!) {
+    messageReceived(room_id: $room_id) {
       _id
       sender {
         _id
         name
         avatar
       }
+      room {
+        _id
+        name
+      }
       message
       message_type
+      read_by
       created_at
+      updated_at
+    }
+  }
+`;
+
+export const MESSAGE_SENT = gql`
+  subscription MessageReceived($room_id: ID!) {
+    messageReceived(room_id: $room_id) {
+      _id
+      sender {
+        _id
+        name
+        avatar
+      }
+      room {
+        _id
+        name
+      }
+      message
+      message_type
+      read_by
+      created_at
+      updated_at
     }
   }
 `;

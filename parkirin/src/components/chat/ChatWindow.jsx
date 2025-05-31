@@ -8,7 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { GET_CHAT_MESSAGES, GET_ROOM_DETAILS } from '../../graphql/queries';
 import { SEND_MESSAGE, MARK_MESSAGES_READ } from '../../graphql/mutations';
-import { MESSAGE_SENT, MESSAGE_STATUS_UPDATED } from '../../graphql/subscriptions';
+import { MESSAGE_RECEIVED, MESSAGE_STATUS_UPDATED } from '../../graphql/subscriptions';
 import { useAuth } from '../../hooks';
 import ChatMessage from './ChatMessage';
 import ChatInput from './ChatInput';
@@ -47,14 +47,13 @@ const ChatWindow = ({
 
   const [sendMessage] = useMutation(SEND_MESSAGE);
   const [markMessagesRead] = useMutation(MARK_MESSAGES_READ);
-
   // Subscriptions
-  useSubscription(MESSAGE_SENT, {
+  useSubscription(MESSAGE_RECEIVED, {
     variables: { roomId },
     skip: !roomId,
     onSubscriptionData: ({ subscriptionData }) => {
-      if (subscriptionData.data?.messageSent) {
-        const newMessage = subscriptionData.data.messageSent;
+      if (subscriptionData.data?.messageReceived) {
+        const newMessage = subscriptionData.data.messageReceived;
         setMessages(prev => [...prev, newMessage]);
         scrollToBottom();
         

@@ -1,54 +1,60 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useSubscription } from '@apollo/client';
-import { gql } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GET_ROOM_MESSAGES } from '../../graphql/queries';
 import { SEND_MESSAGE } from '../../graphql/mutations';
+import { MESSAGE_RECEIVED } from '../../graphql/subscriptions';
 import useAuthStore from '../../store/authStore';
 import { UserIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import ChatRoomSelector from '../../components/chat/ChatRoomSelector';
 
-const MESSAGE_RECEIVED = gql`
-  subscription MessageReceived($roomId: ID!) {
-    messageReceived(room_id: $roomId) {
-      _id
-      sender_id
-      sender {
-        _id
-        name
-        avatar
-      }
-      room_id
-      message
-      message_type
-      read_by
-      created_at
-      updated_at
-    }
-  }
-`;
-
 const Chat = () => {
   const [roomId, setRoomId] = useState(null);
   const [newMessage, setNewMessage] = useState('');
+  const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
   const { user } = useAuthStore();
   const location = useLocation();
-  const navigate = useNavigate();
-
-  // Fetch messages for the selected room
+  const navigate = useNavigate();  // Fetch messages for the selected room
   const { data: messagesData } = useQuery(GET_ROOM_MESSAGES, {
     variables: { roomId, limit: 50 },
-    skip: !roomId
+    skip: !roomId,
+    onCompleted: (data) => {
+      if (data?.getRoomMessages) {
+        setMessages(data.getRoomMessages);
+      }
+    }
   });
-
+  
   // Send message mutation
-  const [sendMessage] = useMutation(SEND_MESSAGE);
-
-  // Subscribe to new messages
-  const { data: subscriptionData } = useSubscription(MESSAGE_RECEIVED, {
-    variables: { roomId },
-    skip: !roomId
+  const [sendMessage] = useMutation(SEND_MESSAGE, {
+    onError: (error) => {
+      console.error('Send message error:', error);
+    }
+  });
+    // Subscribe to new messages with proper real-time updates
+  useSubscription(MESSAGE_RECEIVED, {
+    variables: { room_id: roomId },
+    skip: !roomId,
+    onSubscriptionData: ({ subscriptionData }) => {
+      console.log('New message received via subscription:', subscriptionData);
+      if (subscriptionData.data?.messageReceived) {
+        const newMessage = subscriptionData.data.messageReceived;
+        
+        // Add new message to state in real-time
+        setMessages(prevMessages => {
+          // Check if message already exists to avoid duplicates
+          const messageExists = prevMessages.some(msg => msg._id === newMessage._id);
+          if (!messageExists) {
+            return [...prevMessages, newMessage];
+          }
+          return prevMessages;
+        });
+        
+        // Scroll to bottom after new message
+        setTimeout(() => scrollToBottom(), 100);
+      }
+    }
   });
 
   // Handle URL parameter for room selection
@@ -66,33 +72,49 @@ const Chat = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
   useEffect(() => {
     scrollToBottom();
-  }, [messagesData, subscriptionData]);
-
+  }, [messages]); // Changed from messagesData to messages
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !roomId) return;
 
+    const tempMessage = newMessage;
+    
     try {
+      // Optimistically add message to UI
+      const optimisticMessage = {
+        _id: `temp-${Date.now()}`,
+        sender: user,
+        message: tempMessage,
+        created_at: new Date().toISOString(),
+        message_type: 'text',
+        read_by: []
+      };
+      
+      setMessages(prev => [...prev, optimisticMessage]);
+      setNewMessage('');
+      scrollToBottom();
+
       await sendMessage({
         variables: {
           input: {
             room_id: roomId,
-            message: newMessage
+            message: tempMessage
           }
-        },
-        refetchQueries: [
-          {
-            query: GET_ROOM_MESSAGES,
-            variables: { roomId, limit: 50 }
-          }
-        ]
+        }
       });
-      setNewMessage('');
+      
+      // Remove optimistic message after successful send (real message will come via subscription)
+      setTimeout(() => {
+        setMessages(prev => prev.filter(msg => msg._id !== optimisticMessage._id));
+      }, 1000);
+      
     } catch (error) {
       console.error('Error sending message:', error);
+      // Remove optimistic message on error and restore input
+      setMessages(prev => prev.filter(msg => msg._id.startsWith('temp-')));
+      setNewMessage(tempMessage);
     }
   };
 
@@ -125,15 +147,14 @@ const Chat = () => {
                 </h2>
               </div>
             </div>
-            
-            {/* Messages Area */}
+              {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f9fafb]">
-              {messagesData?.getRoomMessages?.length === 0 ? (
+              {messages.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   <p>Belum ada pesan. Mulai percakapan!</p>
                 </div>
               ) : (
-                messagesData?.getRoomMessages?.map((message) => {
+                messages.map((message) => {
                   const isOwn = user && message.sender && (user._id === message.sender._id);
                   return (
                     <div
@@ -163,7 +184,7 @@ const Chat = () => {
                           isOwn
                             ? 'bg-[#f16634] text-white rounded-br-md'
                             : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
-                        }`}
+                        } ${message._id?.startsWith('temp-') ? 'opacity-70' : ''}`}
                       >
                         {/* Nama pengirim untuk lawan bicara */}
                         {!isOwn && (
