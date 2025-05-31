@@ -32,33 +32,32 @@ const useGeolocation = (options = {}) => {
     };
 
     const handleError = (error) => {
+      console.error('Geolocation error:', error);
       setError(error);
       setLoading(false);
+      
+      // Set default location if geolocation fails
+      setLocation({
+        latitude: -6.2088,
+        longitude: 106.8456,
+        accuracy: null,
+        timestamp: Date.now()
+      });
     };
 
     const defaultOptions = {
       enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 60000, // 1 minute
+      timeout: 15000, // Increase timeout
+      maximumAge: 60000,
       ...options
     };
 
-    const watchId = navigator.geolocation.watchPosition(
-      handleSuccess,
-      handleError,
-      defaultOptions
-    );
-
-    // Get initial position
+    // Only get initial position, don't watch
     navigator.geolocation.getCurrentPosition(
       handleSuccess,
       handleError,
       defaultOptions
     );
-
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-    };
   }, []);
 
   // Function to refresh location

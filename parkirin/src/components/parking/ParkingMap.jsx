@@ -28,15 +28,28 @@ const ParkingMap = ({
     const initializeMap = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
+        console.log('Starting map initialization...');
         await GoogleMapsService.loadGoogleMaps();
+        
+        console.log('Google Maps loaded, checking availability...');
+        if (!window.google || !window.google.maps) {
+          throw new Error('Google Maps API not available');
+        }
 
-        const mapCenter = userLocation 
+        // Use fallback center if userLocation is not available
+        const mapCenter = userLocation && userLocation.latitude && userLocation.longitude
           ? { lat: userLocation.latitude, lng: userLocation.longitude }
           : { lat: center[1], lng: center[0] };
+
+        console.log('Creating map with center:', mapCenter);
 
         map.current = new window.google.maps.Map(mapContainer.current, {
           center: mapCenter,
           zoom: zoom,
+          // Remove mapId temporarily to test without Advanced Markers
+          // mapId: "DEMO_MAP_ID", 
           styles: [
             {
               featureType: 'poi',
@@ -50,17 +63,20 @@ const ParkingMap = ({
           zoomControl: showNavigationControls
         });
 
+        console.log('Map created successfully');
         setMapLoaded(true);
-        setLoading(false);
+        setError(null);
       } catch (error) {
         console.error('Error initializing Google Map:', error);
-        setError('Failed to load map. Please try again.');
+        setError(`Failed to load map: ${error.message}`);
+      } finally {
         setLoading(false);
       }
     };
 
+    // Remove timeout and initialize directly
     initializeMap();
-
+    
     return () => {
       // Cleanup markers
       markers.current.forEach(marker => {
@@ -69,32 +85,42 @@ const ParkingMap = ({
         }
       });
       markers.current = [];
+      
+      // Don't destroy the map instance to avoid re-initialization issues
+      // map.current = null;
     };
-  }, [userLocation, center, zoom, showNavigationControls]);
+  }, []); // Keep empty dependency array
 
-  // Add user location marker
+  // Add user location marker separately after map is loaded
   useEffect(() => {
     if (!map.current || !mapLoaded || !userLocation || !showUserLocation) return;
 
+    console.log('Adding user location marker:', userLocation);
     let userMarker;
     
-    const addUserMarker = async () => {
+    const addUserMarker = () => {
       try {
-        // Import marker library
-        const { AdvancedMarkerElement } = await window.google.maps.importLibrary("marker");
-        
-        // Create marker element for AdvancedMarkerElement
-        const markerElement = document.createElement('div');
-        markerElement.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="8" fill="#3B82F6" stroke="white" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="white"/></svg>';
-        markerElement.style.width = '24px';
-        markerElement.style.height = '24px';
-        markerElement.style.cursor = 'pointer';
-        
-        userMarker = new AdvancedMarkerElement({
+        // Use simple legacy marker for now
+        const userIcon = {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          fillColor: '#3B82F6',
+          fillOpacity: 1,
+          strokeColor: 'white',
+          strokeWeight: 2,
+          scale: 8
+        };
+
+        userMarker = new window.google.maps.Marker({
           position: { lat: userLocation.latitude, lng: userLocation.longitude },
           map: map.current,
           title: 'Your Location',
-          content: markerElement
+          icon: userIcon
+        });
+
+        // Update map center to user location
+        map.current.setCenter({ 
+          lat: userLocation.latitude, 
+          lng: userLocation.longitude 
         });
 
         const userInfoWindow = new window.google.maps.InfoWindow({
@@ -104,6 +130,8 @@ const ParkingMap = ({
         userMarker.addListener('click', () => {
           userInfoWindow.open(map.current, userMarker);
         });
+
+        console.log('User location marker added successfully');
       } catch (error) {
         console.error('Error creating user location marker:', error);
       }
@@ -122,46 +150,41 @@ const ParkingMap = ({
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
+    console.log('Adding parking markers:', parkingLots.length);
+
     // Clear existing markers
-    markers.current.forEach(marker => {
+    markers.current.forEach(({ marker }) => {
       if (marker.setMap) {
         marker.setMap(null);
       }
     });
     markers.current = [];
 
-    // Add new markers
-    const addParkingMarkers = async () => {
+    // Add new markers using legacy markers only
+    const addParkingMarkers = () => {
       try {
-        // Import marker library
-        const { AdvancedMarkerElement } = await window.google.maps.importLibrary("marker");
-
         for (const parking of parkingLots) {
           if (!parking.location?.coordinates) continue;
 
           const [lng, lat] = parking.location.coordinates;
-
-          // Create custom marker
-          let marker;
           
-          try {
-            // Create marker element for AdvancedMarkerElement
-            const markerElement = document.createElement('div');
-            markerElement.innerHTML = '<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="14" fill="#10B981" stroke="white" stroke-width="2"/><path d="M12 14V18H20V14H12Z" fill="white"/><path d="M10 12H22V20H10V12Z" stroke="white" stroke-width="1.5" fill="none"/></svg>';
-            markerElement.style.width = '32px';
-            markerElement.style.height = '32px';
-            markerElement.style.cursor = 'pointer';
-            
-            marker = new AdvancedMarkerElement({
-              position: { lat, lng },
-              map: map.current,
-              title: parking.name,
-              content: markerElement
-            });
-          } catch (error) {
-            console.error('Error creating parking marker:', error);
-            continue; // Skip this marker if creation fails
-          }
+          // Use simple legacy marker
+          const parkingIcon = {
+            path: 'M12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5M12,2A7,7 0 0,1 19,9C19,14.25 12,22 12,22C12,22 5,14.25 5,9A7,7 0 0,1 12,2M12,4A5,5 0 0,0 7,9C7,10 7,12 12,18.71C17,12 17,10 17,9A5,5 0 0,0 12,4Z',
+            fillColor: '#10B981',
+            fillOpacity: 1,
+            strokeColor: 'white',
+            strokeWeight: 2,
+            scale: 1.5,
+            anchor: new window.google.maps.Point(12, 22)
+          };
+
+          const marker = new window.google.maps.Marker({
+            position: { lat, lng },
+            map: map.current,
+            title: parking.name,
+            icon: parkingIcon
+          });
 
           // Create info window content
           const infoWindowContent = `
@@ -233,8 +256,10 @@ const ParkingMap = ({
 
           markers.current.push({ marker, infoWindow });
         }
+
+        console.log('Parking markers added:', markers.current.length);
       } catch (error) {
-        console.error('Error importing marker library or creating markers:', error);
+        console.error('Error creating markers:', error);
       }
     };
 
@@ -287,6 +312,20 @@ const ParkingMap = ({
       delete window.handleParkingSelect;
     };
   }, [parkingLots, mapLoaded, fitBounds, userLocation, showUserLocation, onParkingClick]);
+
+  // Debugging: Log component state
+  useEffect(() => {
+    console.log('ParkingMap Debug State:', {
+      mapLoaded,
+      hasUserLocation: !!userLocation,
+      userLocation,
+      parkingLotsCount: parkingLots.length,
+      hasMapContainer: !!mapContainer.current,
+      hasMap: !!map.current,
+      loading,
+      error
+    });
+  }, [mapLoaded, userLocation, parkingLots, loading, error]);
 
   if (loading) {
     return (
