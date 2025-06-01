@@ -10,6 +10,7 @@ const ParkingSearch = () => {
   const markers = useRef([]);
   
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(null);
   const [viewport, setViewport] = useState({
     latitude: -6.2088,  // Default to Jakarta's coordinates
     longitude: 106.8456,
@@ -24,7 +25,7 @@ const ParkingSearch = () => {
   });
   const [userLocation, setUserLocation] = useState(null);
 
-  // GraphQL query - must be defined before useEffect that uses `data`
+  // GraphQL query
   const { loading, error, data } = useQuery(GET_NEARBY_PARKINGS, {
     variables: {
       longitude: viewport.longitude,
@@ -34,183 +35,198 @@ const ParkingSearch = () => {
     },
     skip: !userLocation,
   });
-  // Initialize Google Maps
+
+  // Initialize Google Maps with better error handling
   useEffect(() => {
     const initMap = async () => {
+      if (!mapContainer.current || map.current) return;
+      
       try {
-        if (mapContainer.current && !map.current) {
-          map.current = await GoogleMapsService.createMap(mapContainer.current, {
-            center: { lat: viewport.latitude, lng: viewport.longitude },
-            zoom: viewport.zoom,
-            styles: [
-              {
-                featureType: "poi.business",
-                stylers: [{ visibility: "off" }]
-              },
-              {
-                featureType: "poi.park",
-                elementType: "labels.text",
-                stylers: [{ visibility: "off" }]
-              }
-            ],
-            gestureHandling: 'auto',
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: true,
-            zoomControl: true
-          });
-          
-          setMapLoaded(true);
-        }
+        setMapError(null);
+        console.log('Initializing Google Maps...');
+        
+        // Create map instance
+        map.current = await GoogleMapsService.createMap(mapContainer.current, {
+          center: { lat: viewport.latitude, lng: viewport.longitude },
+          zoom: viewport.zoom,
+          styles: [
+            {
+              featureType: "poi.business",
+              stylers: [{ visibility: "off" }]
+            },
+            {
+              featureType: "poi.park",
+              elementType: "labels.text",
+              stylers: [{ visibility: "off" }]
+            }
+          ],
+          gestureHandling: 'auto',
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: true,
+          zoomControl: true
+        });
+        
+        console.log('Map created successfully');
+        setMapLoaded(true);
+        
       } catch (error) {
         console.error('Error initializing Google Maps:', error);
-        // Handle error gracefully - maybe show a fallback UI
+        setMapError(error.message);
       }
     };
 
-    initMap();
-  }, [viewport.latitude, viewport.longitude, viewport.zoom]);
+    // Add delay to ensure component is mounted
+    const timeoutId = setTimeout(initMap, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []); // Remove dependencies to prevent re-initialization
 
-  // Get user's location and update map center
+  // Get user's location
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ latitude, longitude });
-          setViewport(prev => ({
-            ...prev,
-            latitude,
-            longitude
-          }));
-
-          // Update map center if map is loaded
-          if (map.current) {
-            map.current.setCenter({ lat: latitude, lng: longitude });
-          }
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-        }
-      );
+    if (!navigator.geolocation) {
+      console.warn('Geolocation is not supported by this browser');
+      return;
     }
+
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 60000
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        console.log('User location obtained:', { latitude, longitude });
+        
+        setUserLocation({ latitude, longitude });
+        setViewport(prev => ({
+          ...prev,
+          latitude,
+          longitude
+        }));
+
+        // Update map center if map is loaded
+        if (map.current) {
+          map.current.setCenter({ lat: latitude, lng: longitude });
+        }
+      },
+      (error) => {
+        console.error('Error getting location:', error);
+        // Continue with default location
+      },
+      options
+    );
   }, []);
-  // Clear existing markers
+
+  // Clear existing markers helper
   const clearMarkers = () => {
-    markers.current.forEach(marker => marker.setMap(null));
+    markers.current.forEach(marker => {
+      if (marker.setMap) {
+        marker.setMap(null);
+      }
+    });
     markers.current = [];
   };
+
   // Add markers for parking spots and user location
   useEffect(() => {
     const addMarkers = async () => {
-      if (!map.current || !mapLoaded) return;
-
-      // Clear existing markers
-      clearMarkers();
-
-      // Add user location marker
-      if (userLocation) {
-        try {
-          let userMarker;
-          
-          // Try to use AdvancedMarkerElement if available
-          if (typeof window.google.maps.importLibrary === 'function') {
-            const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
-            
-            // Create marker element for AdvancedMarkerElement
-            const markerElement = document.createElement('div');
-            markerElement.innerHTML = `
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="8" fill="#2563eb" stroke="white" stroke-width="2"/>
-                <circle cx="12" cy="12" r="3" fill="white"/>
-              </svg>
-            `;
-            markerElement.style.width = '24px';
-            markerElement.style.height = '24px';
-            markerElement.style.cursor = 'pointer';
-            
-            userMarker = new AdvancedMarkerElement({
-              position: { lat: userLocation.latitude, lng: userLocation.longitude },
-              map: map.current,
-              title: 'Your Location',
-              content: markerElement
-            });
-          } else {
-            // Fallback to legacy Marker
-            const icon = {
-              url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="8" fill="#2563eb" stroke="white" stroke-width="2"/>
-                  <circle cx="12" cy="12" r="3" fill="white"/>
-                </svg>
-              `)}`,
-              scaledSize: new window.google.maps.Size(24, 24),
-              anchor: new window.google.maps.Point(12, 12)
-            };
-            
-            userMarker = new window.google.maps.Marker({
-              position: { lat: userLocation.latitude, lng: userLocation.longitude },
-              map: map.current,
-              title: 'Your Location',
-              icon: icon
-            });
-          }
-          
-          markers.current.push(userMarker);
-        } catch (error) {
-          console.warn('Error creating user location marker, using basic marker:', error);
-          // Final fallback to basic marker
-          try {
-            const basicUserMarker = new window.google.maps.Marker({
-              position: { lat: userLocation.latitude, lng: userLocation.longitude },
-              map: map.current,
-              title: 'Your Location'
-            });
-            markers.current.push(basicUserMarker);
-          } catch (fallbackError) {
-            console.error('Failed to create user location marker:', fallbackError);
-          }
-        }
+      if (!map.current || !mapLoaded || !GoogleMapsService.isGoogleMapsLoaded()) {
+        return;
       }
 
-      // Add parking spot markers using integrated service
-      if (data?.getNearbyParkings) {
-        try {
-          // Global function for parking selection (called from info window)
-          window.selectParking = (parkingId) => {
-            const selectedParking = data.getNearbyParkings.find(p => p._id === parkingId);
-            if (selectedParking) {
-              console.log('Selected parking:', selectedParking);
-              // TODO: Navigate to booking page or show booking modal
-              alert(`Selected parking: ${selectedParking.name}`);
-            }
-          };
-            const parkingMarkers = await GoogleMapsService.createParkingMarkers(
-            map.current,
-            data.getNearbyParkings,
-            (parkingData) => {
-              console.log('Parking marker clicked:', parkingData);
-              // You can add additional click handling here
-            }
-          );
-          
-          markers.current.push(...parkingMarkers);
+      try {
+        // Clear existing markers
+        clearMarkers();
 
-          // Fit map to show all markers if we have parking data
-          if (parkingMarkers.length > 0) {
-            GoogleMapsService.fitBoundsToMarkers(map.current, [...markers.current]);
+        // Add user location marker
+        if (userLocation) {
+          try {
+            const userMarker = new window.google.maps.Marker({
+              position: { lat: userLocation.latitude, lng: userLocation.longitude },
+              map: map.current,
+              title: 'Your Location',
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                fillColor: '#4285F4',
+                fillOpacity: 1,
+                strokeColor: 'white',
+                strokeWeight: 2,
+                scale: 8
+              }
+            });
+            
+            markers.current.push(userMarker);
+            console.log('User location marker added');
+          } catch (error) {
+            console.error('Error creating user location marker:', error);
           }
-        } catch (error) {
-          console.error('Error creating parking markers:', error);
         }
+
+        // Add parking spot markers
+        if (data?.getNearbyParkings) {
+          try {
+            const parkingMarkers = await GoogleMapsService.createParkingMarkers(
+              map.current,
+              data.getNearbyParkings,
+              (parkingData) => {
+                console.log('Parking marker clicked:', parkingData);
+                // Handle parking selection
+              }
+            );
+            
+            markers.current.push(...parkingMarkers);
+            console.log(`Added ${parkingMarkers.length} parking markers`);
+
+            // Fit map to show all markers
+            if (parkingMarkers.length > 0) {
+              GoogleMapsService.fitBoundsToMarkers(map.current, markers.current);
+            }
+          } catch (error) {
+            console.error('Error creating parking markers:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error in addMarkers:', error);
       }
     };
 
     addMarkers();
   }, [mapLoaded, data, userLocation]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearMarkers();
+    };
+  }, []);
+
+  if (mapError) {
+    return (
+      <div className="h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to Load Map</h3>
+          <p className="text-gray-600 mb-4">{mapError}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) return <LoadingSpinner size="large" />;
-  if (error) return <div>Error loading parking spots</div>;
+  if (error) return <div>Error loading parking spots: {error.message}</div>;
 
   return (
     <div className="h-[calc(100vh-64px)] bg-[#f9fafb]">
@@ -304,16 +320,27 @@ const ParkingSearch = () => {
             </div>
           </div>
         </div>        {/* Map */}
-        <div className="col-span-2 relative rounded-xl overflow-hidden m-4 md:m-6 md:ml-0 shadow-lg">
-          <div 
-            ref={mapContainer}
-            style={{ width: '100%', height: '100%', minHeight: '400px' }}
-          />
-          {!mapLoaded && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-              <LoadingSpinner size="large" />
+        <div className="md:col-span-2 p-4 md:p-6">
+          <div className="bg-white rounded-xl shadow-lg h-full">
+            <div className="p-4 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-gray-900">Parking Locations</h2>
             </div>
-          )}
+            <div className="relative h-[calc(100%-80px)]">
+              {!mapLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading map...</p>
+                  </div>
+                </div>
+              )}
+              <div
+                ref={mapContainer}
+                className="w-full h-full rounded-lg"
+                style={{ minHeight: '400px' }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

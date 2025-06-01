@@ -9,10 +9,12 @@ class GoogleMapsService {
     this.isLoaded = false;
     this.isLoading = false;
     this.loadPromise = null;
+    this.cache = new Map();
+    this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
   }
 
   /**
-   * Load Google Maps JavaScript API
+   * Load Google Maps JavaScript API with better error handling
    * @returns {Promise<void>}
    */
   async loadGoogleMaps() {
@@ -27,38 +29,102 @@ class GoogleMapsService {
     this.isLoading = true;
     this.loadPromise = new Promise((resolve, reject) => {
       // Check if Google Maps is already loaded
-      if (window.google && window.google.maps) {
+      if (window.google && window.google.maps && window.google.maps.Map) {
         this.isLoaded = true;
         this.isLoading = false;
         resolve();
         return;
       }
 
-      // Create script element with async loading
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places,geometry&loading=async&v=weekly`;
-      script.async = true;
-      script.defer = true;
-      
-      script.onload = () => {
-        this.isLoaded = true;
-        this.isLoading = false;
-        resolve();
-      };
-      
-      script.onerror = (error) => {
-        this.isLoading = false;
-        reject(new Error('Failed to load Google Maps API'));
-      };
-      
-      document.head.appendChild(script);
+      // Get API key from environment or server
+      this.getApiKey().then(apiKey => {
+        if (!apiKey) {
+          throw new Error('Google Maps API key not found');
+        }
+
+        // Create script element with proper error handling
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&loading=async&v=weekly`;
+        script.async = true;
+        script.defer = true;
+        
+        script.onload = () => {
+          // Wait for Google Maps to be fully available
+          this.waitForGoogleMaps().then(() => {
+            this.isLoaded = true;
+            this.isLoading = false;
+            resolve();
+          }).catch(reject);
+        };
+        
+        script.onerror = (error) => {
+          this.isLoading = false;
+          reject(new Error('Failed to load Google Maps API script'));
+        };
+        
+        document.head.appendChild(script);
+      }).catch(reject);
     });
 
     return this.loadPromise;
   }
 
+  /**
+   * Get API key from server or environment
+   */
+  async getApiKey() {
+    // First try environment variable
+    if (import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
+      return import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    }
+
+    // Then try server endpoint
+    try {
+      const response = await fetch('/api/google-maps-key');
+      if (response.ok) {
+        const data = await response.json();
+        return data.apiKey;
+      }
+    } catch (error) {
+      console.warn('Failed to get API key from server:', error);
+    }
+
+    return null;
+  }
+
+  /**
+   * Wait for Google Maps to be fully loaded
+   */
+  async waitForGoogleMaps(maxAttempts = 50) {
+    return new Promise((resolve, reject) => {
+      let attempts = 0;
+      
+      const checkGoogleMaps = () => {
+        attempts++;
+        
+        if (window.google && 
+            window.google.maps && 
+            window.google.maps.Map && 
+            window.google.maps.Marker &&
+            window.google.maps.places &&
+            window.google.maps.places.PlacesService) {
+          resolve();
+        } else if (attempts >= maxAttempts) {
+          reject(new Error('Google Maps API failed to load completely'));
+        } else {
+          setTimeout(checkGoogleMaps, 100);
+        }
+      };
+      
+      checkGoogleMaps();
+    });
+  }
+
   isGoogleMapsLoaded() {
-    return this.isLoaded && window.google && window.google.maps;
+    return this.isLoaded && 
+           window.google && 
+           window.google.maps && 
+           window.google.maps.Map;
   }
 
   /**
@@ -296,7 +362,7 @@ class GoogleMapsService {
   }
 
   /**
-   * Create a map instance
+   * Create a map instance with better validation
    * @param {HTMLElement} container - Map container element
    * @param {Object} options - Map options
    * @returns {Promise<google.maps.Map>} Map instance
@@ -307,10 +373,11 @@ class GoogleMapsService {
     }
 
     try {
+      // Ensure Google Maps is loaded
       await this.loadGoogleMaps();
       
-      // Additional check to ensure Google Maps is fully loaded
-      if (!window.google?.maps?.Map) {
+      // Double check availability
+      if (!this.isGoogleMapsLoaded()) {
         throw new Error('Google Maps API not properly loaded');
       }
       
@@ -330,10 +397,25 @@ class GoogleMapsService {
 
       const mapOptions = { ...defaultOptions, ...options };
       
-      // Wait a small delay to ensure DOM is ready
+      // Add small delay to ensure DOM is ready
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      return new window.google.maps.Map(container, mapOptions);
+      const map = new window.google.maps.Map(container, mapOptions);
+      
+      // Wait for map to be fully initialized
+      return new Promise((resolve, reject) => {
+        const listener = window.google.maps.event.addListener(map, 'idle', () => {
+          window.google.maps.event.removeListener(listener);
+          resolve(map);
+        });
+        
+        // Timeout fallback
+        setTimeout(() => {
+          window.google.maps.event.removeListener(listener);
+          resolve(map);
+        }, 5000);
+      });
+      
     } catch (error) {
       console.error('Map creation error:', error);
       throw new Error('Failed to create map');
