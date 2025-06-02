@@ -8,10 +8,9 @@ import {
   GET_PARKING_ANALYTICS
 } from '../graphql/queries.js';
 import {
-  CREATE_PARKING_LOT,
-  UPDATE_PARKING_LOT,
-  DELETE_PARKING_LOT,
-  UPDATE_PARKING_STATUS
+  CREATE_PARKING,
+  UPDATE_PARKING,
+  DELETE_PARKING
 } from '../graphql/mutations.js';
 import toast from 'react-hot-toast';
 
@@ -195,22 +194,21 @@ const useParkingStore = create((set, get) => ({
   // Create parking lot
   createParkingLot: async (parkingData) => {
     set({ userParkingLotsLoading: true, userParkingLotsError: null });
-    
-    try {
+      try {
       const { data } = await apolloClient.mutate({
-        mutation: CREATE_PARKING_LOT,
+        mutation: CREATE_PARKING,
         variables: { input: parkingData }
       });
       
-      if (data?.createParkingLot) {
+      if (data?.createParking) {
         const { userParkingLots } = get();
         set({
-          userParkingLots: [data.createParkingLot, ...userParkingLots],
+          userParkingLots: [data.createParking, ...userParkingLots],
           userParkingLotsLoading: false,
           userParkingLotsError: null
         });
         toast.success('Parking lot created successfully!');
-        return { success: true, parkingLot: data.createParkingLot };
+        return { success: true, parkingLot: data.createParking };
       }
     } catch (error) {
       console.error('Create parking lot failed:', error);
@@ -223,28 +221,27 @@ const useParkingStore = create((set, get) => ({
       return { success: false, error: errorMessage };
     }
   },
-  
-  // Update parking lot
+    // Update parking lot
   updateParkingLot: async (parkingId, updateData) => {
     try {
       const { data } = await apolloClient.mutate({
-        mutation: UPDATE_PARKING_LOT,
+        mutation: UPDATE_PARKING,
         variables: { id: parkingId, input: updateData }
       });
       
-      if (data?.updateParkingLot) {
+      if (data?.updateParking) {
         const { userParkingLots } = get();
         const updatedLots = userParkingLots.map(lot =>
-          lot._id === parkingId ? { ...lot, ...data.updateParkingLot } : lot
+          lot._id === parkingId ? { ...lot, ...data.updateParking } : lot
         );
         
         set({
           userParkingLots: updatedLots,
-          selectedParking: data.updateParkingLot
+          selectedParking: data.updateParking
         });
         
         toast.success('Parking lot updated successfully!');
-        return { success: true, parkingLot: data.updateParkingLot };
+        return { success: true, parkingLot: data.updateParking };
       }
     } catch (error) {
       console.error('Update parking lot failed:', error);
@@ -255,14 +252,13 @@ const useParkingStore = create((set, get) => ({
   },
   
   // Delete parking lot
-  deleteParkingLot: async (parkingId) => {
-    try {
+  deleteParkingLot: async (parkingId) => {    try {
       const { data } = await apolloClient.mutate({
-        mutation: DELETE_PARKING_LOT,
+        mutation: DELETE_PARKING,
         variables: { id: parkingId }
       });
       
-      if (data?.deleteParkingLot) {
+      if (data?.deleteParking) {
         const { userParkingLots } = get();
         const filteredLots = userParkingLots.filter(lot => lot._id !== parkingId);
         
@@ -281,25 +277,26 @@ const useParkingStore = create((set, get) => ({
       return { success: false, error: errorMessage };
     }
   },
-  
-  // Update parking status (available/unavailable)
+    // Update parking status (available/unavailable)
+  // TODO: Create UPDATE_PARKING_STATUS mutation on server
   updateParkingStatus: async (parkingId, status) => {
     try {
-      const { data } = await apolloClient.mutate({
-        mutation: UPDATE_PARKING_STATUS,
-        variables: { id: parkingId, status }
-      });
+      // Note: This mutation doesn't exist yet
+      // const { data } = await apolloClient.mutate({
+      //   mutation: UPDATE_PARKING_STATUS,
+      //   variables: { id: parkingId, status }
+      // });
       
-      if (data?.updateParkingStatus) {
-        const { userParkingLots } = get();
-        const updatedLots = userParkingLots.map(lot =>
-          lot._id === parkingId ? { ...lot, status } : lot
-        );
-        
-        set({ userParkingLots: updatedLots });
-        toast.success(`Parking lot status updated to ${status}`);
-        return { success: true };
-      }
+      // For now, just update the local state
+      const { userParkingLots } = get();
+      const updatedLots = userParkingLots.map(lot =>
+        lot._id === parkingId ? { ...lot, status } : lot
+      );
+      
+      set({ userParkingLots: updatedLots });
+      toast.success(`Parking lot status updated to ${status}`);
+      return { success: true };
+      
     } catch (error) {
       console.error('Update parking status failed:', error);
       const errorMessage = error.message || 'Failed to update parking status';
@@ -333,9 +330,10 @@ const useParkingStore = create((set, get) => ({
         parkingAnalytics: null,
         analyticsLoading: false,
         analyticsError: errorMessage
-      });
-      return { success: false, error: errorMessage };
-    }  
+      });      return { success: false, error: errorMessage };
+    }
+  },
+  
   // Setter methods for direct state updates
   setSearchResults: (results) => set({ searchResults: results }),
   

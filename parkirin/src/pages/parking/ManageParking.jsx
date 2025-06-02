@@ -3,7 +3,9 @@ import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import CreateParkingForm from '../../components/parking/CreateParkingForm';
+import EditParkingForm from '../../components/parking/EditParkingForm';
 import { LoadingSpinner } from '../../components/common';
+import { DELETE_PARKING } from '../../graphql/mutations';
 
 const GET_MY_PARKINGS = gql`
   query GetMyParkings {
@@ -41,16 +43,13 @@ const GET_MY_PARKINGS = gql`
   }
 `;
 
-const DELETE_PARKING_LOT = gql`
-  mutation DeleteParkingLot($id: ID!) {
-    deleteParkingLot(id: $id)
-  }
-`;
-
 const ManageParking = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingParking, setEditingParking] = useState(null);
   const { data, loading, error, refetch } = useQuery(GET_MY_PARKINGS);
-  const [deleteParkingLot] = useMutation(DELETE_PARKING_LOT);
+  const [deleteParkingLot] = useMutation(DELETE_PARKING);
+  
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this parking lot?')) {
       try {
@@ -65,9 +64,19 @@ const ManageParking = () => {
     }
   };
 
+  const handleEdit = (parking) => {
+    setEditingParking(parking);
+    setShowEditForm(true);
+  };
+
   const handleCreateSuccess = (newParking) => {
     refetch(); // Refresh data
     alert(`Parking lot "${newParking.name}" created successfully!`);
+  };
+
+  const handleEditSuccess = (updatedParking) => {
+    refetch(); // Refresh data
+    alert(`Parking lot "${updatedParking.name}" updated successfully!`);
   };
   if (loading) return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">
@@ -177,9 +186,9 @@ const ManageParking = () => {
                     <span className="text-sm text-gray-600 ml-1 font-medium">{parking.rating?.toFixed(1) || '0.0'}</span>
                     <span className="text-xs text-gray-400 ml-1">({parking.review_count || 0} reviews)</span>
                   </div>
-                  
-                  <div className="flex space-x-2">
+                    <div className="flex space-x-2">
                     <button 
+                      onClick={() => handleEdit(parking)}
                       className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200 hover:scale-105"
                       title="Edit"
                     >
@@ -198,12 +207,21 @@ const ManageParking = () => {
             </div>
           ))}
         </div>
-      )}
-
-      {showCreateForm && (
+      )}      {showCreateForm && (
         <CreateParkingForm 
           onClose={() => setShowCreateForm(false)}
           onSuccess={handleCreateSuccess}
+        />
+      )}
+
+      {showEditForm && editingParking && (
+        <EditParkingForm 
+          parking={editingParking}
+          onClose={() => {
+            setShowEditForm(false);
+            setEditingParking(null);
+          }}
+          onSuccess={handleEditSuccess}
         />
       )}
     </div>

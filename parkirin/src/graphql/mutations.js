@@ -106,25 +106,37 @@ export const CREATE_PARKING = gql`
 `;
 
 export const UPDATE_PARKING = gql`
-  mutation UpdateParking($input: UpdateParkingInput!) {
-    updateParking(input: $input) {
+  mutation UpdateParking($id: ID!, $input: UpdateParkingInput!) {
+    updateParking(id: $id, input: $input) {
       _id
       name
-      description
       address
       location {
         type
         coordinates
       }
-      total_slots
-      available_slots
-      tariff
-      vehicle_types
-      amenities
+      capacity {
+        car
+        motorcycle
+      }
+      available {
+        car
+        motorcycle
+      }
+      rates {
+        car
+        motorcycle
+      }
+      operational_hours {
+        open
+        close
+      }
+      facilities
       images
-      opening_hour
-      closing_hour
       status
+      rating
+      review_count
+      created_at
       updated_at
     }
   }
