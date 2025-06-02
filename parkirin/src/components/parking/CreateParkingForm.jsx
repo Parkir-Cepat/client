@@ -3,16 +3,16 @@ import { useMutation } from '@apollo/client';
 import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { CREATE_PARKING } from '../../graphql/mutations';
 import { GET_MY_PARKINGS } from '../../graphql/queries';
+import MapPicker from '../common/MapPicker';
 
 const CreateParkingForm = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [createParking] = useMutation(CREATE_PARKING);
-  
-  const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState({
     name: '',
     address: '',
     location: {
-      coordinates: [0, 0] // [longitude, latitude]
+      coordinates: [106.8456, -6.2088] // [longitude, latitude] - Default to Jakarta
     },
     capacity: {
       car: 10,
@@ -51,9 +51,8 @@ const CreateParkingForm = ({ onClose, onSuccess }) => {
     const newErrors = {};
     
     if (!formData.name.trim()) newErrors.name = 'Nama parking lot wajib diisi';
-    if (!formData.address.trim()) newErrors.address = 'Alamat wajib diisi';
-    if (formData.location.coordinates[0] === 0 || formData.location.coordinates[1] === 0) {
-      newErrors.location = 'Koordinat lokasi wajib diisi';
+    if (!formData.address.trim()) newErrors.address = 'Alamat wajib diisi';    if (formData.location.coordinates[0] === 106.8456 && formData.location.coordinates[1] === -6.2088) {
+      newErrors.location = 'Silakan pilih lokasi parking lot pada peta';
     }
     if (formData.capacity.car < 1) newErrors.carCapacity = 'Kapasitas mobil minimal 1';
     if (formData.capacity.motorcycle < 1) newErrors.motorcycleCapacity = 'Kapasitas motor minimal 1';
@@ -214,43 +213,27 @@ const CreateParkingForm = ({ onClose, onSuccess }) => {
               />
               {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
             </div>
-          </div>
-
-          {/* Location Coordinates */}
+          </div>          {/* Location Coordinates */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Koordinat Lokasi *
+              Lokasi Parking Lot *
             </label>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <input
-                  type="number"
-                  step="any"
-                  value={formData.location.coordinates[1]}
-                  onChange={(e) => handleInputChange('location.coordinates', [formData.location.coordinates[0], parseFloat(e.target.value) || 0])}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    errors.location ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Latitude (contoh: -6.200000)"
-                />
-              </div>
-              <div>
-                <input
-                  type="number"
-                  step="any"
-                  value={formData.location.coordinates[0]}
-                  onChange={(e) => handleInputChange('location.coordinates', [parseFloat(e.target.value) || 0, formData.location.coordinates[1]])}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    errors.location ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Longitude (contoh: 106.816666)"
-                />
-              </div>
-            </div>
-            {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
-            <p className="text-xs text-gray-500 mt-1">
-              Tip: Gunakan Google Maps untuk mendapatkan koordinat yang akurat
-            </p>
+            <MapPicker
+              center={{
+                lat: formData.location.coordinates[1],
+                lng: formData.location.coordinates[0]
+              }}
+              onSelect={(position) => {
+                handleInputChange('location.coordinates', [position.lng, position.lat]);
+                // Clear location error when user selects a location
+                if (errors.location) {
+                  setErrors(prev => ({ ...prev, location: null }));
+                }
+              }}
+              showSearchBox={true}
+              height="350px"
+            />
+            {errors.location && <p className="text-red-500 text-xs mt-2">{errors.location}</p>}
           </div>
 
           {/* Capacity */}

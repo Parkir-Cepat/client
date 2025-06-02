@@ -8,17 +8,17 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          300: '#fdba74',
+          400: '#fb923c',
+          500: '#f97316', // Orange-500
+          600: '#ea580c', // Orange-600
+          700: '#c2410c', // Orange-700
+          800: '#9a3412', // Orange-800
+          900: '#7c2d12', // Orange-900
+          950: '#431407'
         },
         secondary: {
           50: '#f0f9ff',

@@ -146,7 +146,8 @@ const Dashboard = () => {
         return [
           ...baseStats,
           {
-            title: 'Active Bookings',            value: typeof stats.activeBookings === 'number' ? stats.activeBookings : 0,
+            title: 'Active Bookings',           
+            value: typeof stats.activeBookings === 'number' ? stats.activeBookings : 0,
             change: null,
             changeType: 'neutral',
             color: 'primary',
@@ -157,7 +158,8 @@ const Dashboard = () => {
             )
           },
           {
-            title: 'Total Bookings',            value: typeof stats.totalBookings === 'number' ? stats.totalBookings : 0,
+            title: 'Total Bookings',            
+            value: typeof stats.totalBookings === 'number' ? stats.totalBookings : 0,
             change: typeof stats.bookingsChange === 'number' ? stats.bookingsChange : 0,
             changeType: 'positive',
             color: 'secondary',
