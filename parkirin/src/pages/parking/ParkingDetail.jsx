@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
+import { toast } from 'react-hot-toast';
 import { 
   MapPinIcon,
   StarIcon,
@@ -25,7 +26,7 @@ import {
   HeartIcon as HeartIconSolid 
 } from '@heroicons/react/24/solid';
 
-// GraphQL Query - disesuaikan dengan schema server yang sebenarnya
+// GraphQL Queries and Mutations
 const GET_PARKING = gql`
   query GetParking($id: ID!) {
     getParking(id: $id) {
@@ -66,6 +67,43 @@ const GET_PARKING = gql`
       review_count
       created_at
       updated_at
+    }
+  }
+`;
+
+const CREATE_BOOKING = gql`
+  mutation CreateBooking($input: CreateBookingInput!) {
+    createBooking(input: $input) {
+      booking {
+        _id
+        user_id
+        parking_id
+        vehicle_type
+        start_time
+        duration
+        cost
+        status
+        created_at
+        updated_at
+        user {
+          _id
+          name
+          email
+          saldo
+        }
+        parking {
+          _id
+          name
+          address
+          rates {
+            car
+            motorcycle
+          }
+        }
+      }
+      qr_code
+      total_cost
+      message
     }
   }
 `;
@@ -345,6 +383,217 @@ const ActionButton = ({ variant = 'primary', children, onClick, disabled, classN
   );
 };
 
+// Enhanced Book Now Section Component - HANYA CREATE BOOKING
+const EnhancedBookNowSection = ({ parking, navigate }) => {
+  const [selectedVehicleType, setSelectedVehicleType] = useState('car');
+  const [selectedDuration, setSelectedDuration] = useState(2);
+  const [isBooking, setIsBooking] = useState(false);
+
+  const [createBooking] = useMutation(CREATE_BOOKING, {
+    onCompleted: (data) => {
+      console.log('Booking created successfully:', data.createBooking);
+      setIsBooking(false);
+      
+      // Show success notification dengan booking ID
+      toast.success(`Booking created successfully! ID: ${data.createBooking.booking._id}`, {
+        duration: 4000,
+        position: 'top-center',
+      });
+      
+      // Redirect to My Bookings page
+      setTimeout(() => {
+        navigate('/bookings');
+      }, 1500);
+    },
+    onError: (error) => {
+      console.error('Booking creation failed:', error);
+      toast.error(error.message || 'Failed to create booking');
+      setIsBooking(false);
+    }
+  });
+
+  const handleBookNow = async () => {
+    if (!parking) {
+      toast.error('Parking information not available');
+      return;
+    }
+
+    try {
+      setIsBooking(true);
+      
+      // Show loading notification
+      toast.loading('Creating your booking...', {
+        id: 'booking-process'
+      });
+
+      // Calculate start time (current time)
+      const startTime = new Date();
+      
+      // Create booking input dengan field yang sesuai server
+      const bookingInput = {
+        parking_id: parking._id,
+        vehicle_type: selectedVehicleType,
+        start_time: startTime.toISOString(),
+        duration: selectedDuration
+      };
+
+      // Create booking ONLY - no payment processing
+      await createBooking({
+        variables: { input: bookingInput }
+      });
+
+      // Dismiss loading toast
+      toast.dismiss('booking-process');
+
+    } catch (error) {
+      console.error('Booking process failed:', error);
+      toast.dismiss('booking-process');
+      
+      // Handle specific error cases
+      if (error.message.includes('tidak tersedia') || error.message.includes('not available')) {
+        toast.error('No parking slots available for the selected vehicle type.', {
+          duration: 4000
+        });
+      } else if (error.message.includes('penuh') || error.message.includes('full')) {
+        toast.error('Parking lot is currently full. Please try again later.', {
+          duration: 4000
+        });
+      } else {
+        toast.error(error.message || 'Booking failed. Please try again.', {
+          duration: 4000
+        });
+      }
+      
+      setIsBooking(false);
+    }
+  };
+
+  const totalCost = (parking.rates?.[selectedVehicleType] || 0) * selectedDuration;
+  const isAvailable = parking.status === 'active' && (parking.available?.[selectedVehicleType] || 0) > 0;
+
+  return (
+    <div className="bg-white rounded-xl shadow-lg p-6">
+      <h3 className="text-lg font-bold text-[#f16634] mb-4">Quick Booking</h3>
+      
+      {/* Vehicle Type Selection */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Vehicle Type
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setSelectedVehicleType('car')}
+            disabled={isBooking}
+            className={`p-3 rounded-lg border text-sm font-medium transition-colors disabled:opacity-50 ${
+              selectedVehicleType === 'car'
+                ? 'border-[#f16634] bg-orange-50 text-[#f16634]'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            🚗 Car
+          </button>
+          <button
+            onClick={() => setSelectedVehicleType('motorcycle')}
+            disabled={isBooking}
+            className={`p-3 rounded-lg border text-sm font-medium transition-colors disabled:opacity-50 ${
+              selectedVehicleType === 'motorcycle'
+                ? 'border-[#f16634] bg-orange-50 text-[#f16634]'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            🏍️ Motor
+          </button>
+        </div>
+      </div>
+
+      {/* Duration Selection */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Duration (hours)
+        </label>
+        <select
+          value={selectedDuration}
+          onChange={(e) => setSelectedDuration(parseInt(e.target.value))}
+          disabled={isBooking}
+          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#f16634] focus:border-transparent disabled:opacity-50"
+        >
+          {[1, 2, 3, 4, 5, 6, 8, 12, 24].map(hour => (
+            <option key={hour} value={hour}>
+              {hour} hour{hour > 1 ? 's' : ''}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Availability Info */}
+      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+        <div className="text-xs text-gray-600 mb-1">Available slots for {selectedVehicleType}:</div>
+        <div className="flex justify-between items-center">
+          <span className="font-bold text-gray-800">
+            {parking.available?.[selectedVehicleType] || 0} / {parking.capacity?.[selectedVehicleType] || 0}
+          </span>
+          <span className={`text-xs px-2 py-1 rounded-full ${
+            (parking.available?.[selectedVehicleType] || 0) > 0 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {(parking.available?.[selectedVehicleType] || 0) > 0 ? 'Available' : 'Full'}
+          </span>
+        </div>
+      </div>
+
+      {/* Pricing Preview */}
+      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-gray-600">Estimated Cost:</span>
+          <span className="font-bold text-[#f16634]">
+            {formatPrice(totalCost)}
+          </span>
+        </div>
+        <div className="text-xs text-gray-500 mt-1">
+          {formatPrice(parking.rates?.[selectedVehicleType] || 0)} × {selectedDuration} hour{selectedDuration > 1 ? 's' : ''}
+        </div>
+      </div>
+
+      {/* Booking Status Info */}
+      <div className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+          <span className="text-xs text-yellow-800 font-medium">
+            Booking will be created with "pending" status - payment required separately
+          </span>
+        </div>
+      </div>
+
+      {/* Book Now Button */}
+      <ActionButton 
+        variant="primary"
+        onClick={handleBookNow}
+        className={`w-full py-4 text-lg relative ${isBooking ? 'cursor-not-allowed' : ''}`}
+        disabled={!isAvailable || isBooking}
+      >
+        {isBooking ? (
+          <div className="flex items-center justify-center space-x-2">
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Creating Booking...</span>
+          </div>
+        ) : parking.status !== 'active' ? (
+          'Currently Closed'
+        ) : (parking.available?.[selectedVehicleType] || 0) <= 0 ? (
+          `No ${selectedVehicleType} slots available`
+        ) : (
+          'Create Booking'
+        )}
+      </ActionButton>
+
+      {/* Quick booking info */}
+      <div className="mt-3 text-xs text-gray-500 text-center">
+        <p>Creates booking reservation • Payment processing later • Secure booking</p>
+      </div>
+    </div>
+  );
+};
+
 // Main Component
 const ParkingDetail = () => {
   const { id } = useParams();
@@ -376,12 +625,6 @@ const ParkingDetail = () => {
   const handleRetry = useCallback(() => {
     window.location.reload();
   }, []);
-
-  const handleBookNow = useCallback(() => {
-    if (parking) {
-      navigate(`/booking/form/${parking._id}`);
-    }
-  }, [parking, navigate]);
 
   const handleToggleFavorite = useCallback(() => {
     setIsFavorite(prev => !prev);
@@ -551,42 +794,34 @@ const ParkingDetail = () => {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Enhanced Quick Booking - HANYA CREATE BOOKING */}
+            <EnhancedBookNowSection parking={parking} navigate={navigate} />
+            
             {/* Quick Actions */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <ActionButton 
-                  variant="primary"
-                  onClick={handleBookNow}
-                  className="w-full py-4 text-lg"
-                  disabled={parking.status !== 'active'}
+                  variant="secondary"
+                  onClick={handleToggleFavorite}
+                  className="flex items-center justify-center px-4 py-3"
                 >
-                  {parking.status === 'active' ? 'Book Now' : 'Currently Closed'}
+                  {isFavorite ? (
+                    <HeartIconSolid className="w-4 h-4 mr-2 text-red-500" />
+                  ) : (
+                    <HeartIcon className="w-4 h-4 mr-2 text-gray-600" />
+                  )}
+                  <span className="text-sm font-medium">{isFavorite ? 'Saved' : 'Save'}</span>
                 </ActionButton>
                 
-                <div className="grid grid-cols-2 gap-3">
-                  <ActionButton 
-                    variant="secondary"
-                    onClick={handleToggleFavorite}
-                    className="flex items-center justify-center px-4 py-3"
-                  >
-                    {isFavorite ? (
-                      <HeartIconSolid className="w-4 h-4 mr-2 text-red-500" />
-                    ) : (
-                      <HeartIcon className="w-4 h-4 mr-2 text-gray-600" />
-                    )}
-                    <span className="text-sm font-medium">{isFavorite ? 'Saved' : 'Save'}</span>
-                  </ActionButton>
-                  
-                  <ActionButton 
-                    variant="secondary"
-                    onClick={handleContactOwner}
-                    className="flex items-center justify-center px-4 py-3"
-                    disabled={!parking.owner?.email}
-                  >
-                    <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2 text-gray-600" />
-                    <span className="text-sm font-medium">Contact</span>
-                  </ActionButton>
-                </div>
+                <ActionButton 
+                  variant="secondary"
+                  onClick={handleContactOwner}
+                  className="flex items-center justify-center px-4 py-3"
+                  disabled={!parking.owner?.email}
+                >
+                  <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2 text-gray-600" />
+                  <span className="text-sm font-medium">Contact</span>
+                </ActionButton>
               </div>
             </div>
 
@@ -609,29 +844,27 @@ const ParkingDetail = () => {
               </div>
             )}
 
-            {/* Quick Info */}
-            <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
-              <h3 className="font-semibold text-blue-900 mb-4">Quick Information</h3>
+            {/* Booking Process Info */}
+            <div className="bg-orange-50 rounded-xl p-6 border border-orange-100">
+              <h3 className="font-semibold text-orange-900 mb-4">Booking Process</h3>
               <div className="space-y-3 text-sm">
-                <div className="flex items-center space-x-3">
-                  <ShieldCheckIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                  <span className="text-blue-800">Verified parking location</span>
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-orange-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-orange-800">1</span>
+                  </div>
+                  <span className="text-orange-800">Create booking reservation</span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CalendarIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                  <span className="text-blue-800">Instant booking available</span>
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-orange-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-orange-800">2</span>
+                  </div>
+                  <span className="text-orange-800">Complete payment separately</span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <InformationCircleIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                  <span className="text-blue-800">Real-time availability updates</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                    parking.status === 'active' ? 'bg-green-400' : 'bg-red-400'
-                  }`}></div>
-                  <span className="text-blue-800">
-                    {parking.status === 'active' ? 'Currently Open' : 'Currently Closed'}
-                  </span>
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-orange-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-xs font-bold text-orange-800">3</span>
+                  </div>
+                  <span className="text-orange-800">Receive confirmation & QR code</span>
                 </div>
               </div>
             </div>
