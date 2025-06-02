@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useLocation } from '../hooks/useLocation';
 import type { ParkingSearchForm } from '../types/index';
+import LogoGroup from '../components/LogoGroup';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -81,6 +82,10 @@ const HomePage: React.FC = () => {
 
   return (
     <Container maxWidth="lg">
+      {/* ParkGo Logos Section */}
+      <Box sx={{ py: 4 }}>
+        <LogoGroup />
+      </Box>
       {/* Hero Section */}
       <Box sx={{ py: 8, textAlign: 'center' }}>
         <Typography variant="h2" component="h1" gutterBottom fontWeight="bold">

@@ -37,7 +37,7 @@ const UserDashboardLayout = ({ children }) => {
       {/* Sidebar */}
       <div className={`fixed z-30 inset-y-0 left-0 w-60 bg-[#f16634] shadow-lg flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
         <div className="flex items-center h-16 px-4 font-bold text-white text-xl border-b border-[#f16634]/30">
-          <img src='https://www.citypng.com/public/uploads/preview/creative-graphic-pinterest-red-p-letter-701751695135355tq5j7kknmm.png' className='h-8 mr-2' alt="" /> Parkirin
+          <img src='/assets/logo_ParkGo.png' className='h-8 mr-2' alt="ParkGo Logo" /> Parkirin
           <button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}>
             <XMarkIcon className="h-6 w-6 text-white" />
           </button>
