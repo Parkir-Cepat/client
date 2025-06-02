@@ -1,189 +1,655 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { 
-  MapPinIcon, 
-  ClockIcon, 
-  StarIcon, 
+  MapPinIcon,
+  StarIcon,
+  CurrencyDollarIcon,
+  ClockIcon,
   TruckIcon,
-  CurrencyDollarIcon
+  CalendarIcon,
+  UserIcon,
+  ChatBubbleLeftRightIcon,
+  HeartIcon,
+  ArrowLeftIcon,
+  ArrowPathIcon,
+  ShieldCheckIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  CameraIcon,
+  PhoneIcon
 } from '@heroicons/react/24/outline';
+import { 
+  StarIcon as StarIconSolid,
+  HeartIcon as HeartIconSolid 
+} from '@heroicons/react/24/solid';
 
-const GET_PARKING_LOT = gql`
-  query GetParkingLot($id: ID!) {
-    getParkingLot(id: $id) {
+// GraphQL Query - disesuaikan dengan schema server yang sebenarnya
+const GET_PARKING = gql`
+  query GetParking($id: ID!) {
+    getParking(id: $id) {
       _id
       name
       address
-      description
-      images
       location {
+        type
         coordinates
       }
-      available {
+      owner_id
+      owner {
+        _id
+        email
+        name
+        role
+      }
+      capacity {
         car
         motorcycle
       }
-      capacity {
+      available {
         car
         motorcycle
       }
       rates {
         car
         motorcycle
-      }      operational_hours {
+      }
+      operational_hours {
         open
         close
       }
       facilities
-      rating
+      images
       status
+      rating
+      review_count
+      created_at
+      updated_at
     }
   }
 `;
 
-const ParkingDetail = () => {
-  const { id } = useParams();
-  const { data, loading, error } = useQuery(GET_PARKING_LOT, {
-    variables: { id }
+// Custom hook for parking data management
+const useParkingData = (id) => {
+  const { data, loading, error, refetch } = useQuery(GET_PARKING, {
+    variables: { id },
+    errorPolicy: 'all',
+    notifyOnNetworkStatusChange: true,
+    fetchPolicy: 'cache-and-network'
   });
 
-  if (loading) return (
-    <div className="flex justify-center p-8">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  const parking = useMemo(() => data?.getParking, [data]);
+
+  return { parking, loading, error, refetch };
+};
+
+// Utility functions
+const formatOperationalHours = (operational_hours) => {
+  if (!operational_hours?.open || !operational_hours?.close) return 'Hours not specified';
+  return `${operational_hours.open} - ${operational_hours.close}`;
+};
+
+const formatRating = (rating) => {
+  return rating ? rating.toFixed(1) : '0.0';
+};
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0
+  }).format(price || 0);
+};
+
+const getAvailabilityStatus = (available, capacity) => {
+  const total = (available?.car || 0) + (available?.motorcycle || 0);
+  const totalCapacity = (capacity?.car || 0) + (capacity?.motorcycle || 0);
+  
+  if (total === 0) return { status: 'full', color: 'red', text: 'Full' };
+  if (total / totalCapacity > 0.7) return { status: 'available', color: 'green', text: 'Available' };
+  if (total / totalCapacity > 0.3) return { status: 'limited', color: 'yellow', text: 'Limited' };
+  return { status: 'few', color: 'orange', text: 'Few spots left' };
+};
+
+// Loading Component
+const LoadingSpinner = () => (
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+    <div className="text-center space-y-6">
+      <div className="relative">
+        <div className="w-20 h-20 border-4 border-blue-200 rounded-full animate-spin border-t-[#f16634] mx-auto"></div>
+        <div className="absolute inset-0 w-20 h-20 border-4 border-transparent rounded-full animate-ping border-t-orange-400 mx-auto"></div>
+      </div>
+      <div className="space-y-2">
+        <h3 className="text-xl font-semibold text-gray-800">Loading Parking Details</h3>
+        <p className="text-gray-600">Fetching the latest information...</p>
+      </div>
     </div>
-  );
+  </div>
+);
 
-  if (error) return (
-    <div className="text-red-600 p-4">Error: {error.message}</div>
-  );
+// Error Component
+const ErrorDisplay = ({ error, onRetry, onBack }) => (
+  <div className="min-h-screen bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="max-w-lg w-full">
+      <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-red-100 p-8 text-center">
+        <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-red-100 to-rose-100 rounded-full flex items-center justify-center">
+          <ExclamationTriangleIcon className="w-10 h-10 text-red-500" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 mb-4">Unable to Load Parking Details</h2>
+        <p className="text-slate-600 mb-6">{error?.message || 'An unexpected error occurred'}</p>
+        <div className="flex gap-3 justify-center">
+          <button 
+            onClick={onBack}
+            className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white font-semibold rounded-xl hover:from-gray-600 hover:to-gray-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+          >
+            Back to Search
+          </button>
+          <button 
+            onClick={onRetry}
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white font-semibold rounded-xl hover:from-red-600 hover:to-rose-600 transform hover:scale-105 transition-all duration-200 shadow-lg flex items-center space-x-2"
+          >
+            <ArrowPathIcon className="w-4 h-4" />
+            <span>Try Again</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
-  const parking = data?.getParkingLot;
-
-  if (!parking) return (
+// Not Found Component
+const NotFoundDisplay = ({ onBack }) => (
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
     <div className="text-center p-8">
-      <p className="text-gray-500">Parking lot not found</p>
+      <MapPinIcon className="w-20 h-20 text-gray-300 mx-auto mb-6" />
+      <h2 className="text-2xl font-bold text-gray-600 mb-4">Parking Spot Not Found</h2>
+      <p className="text-gray-500 mb-8 max-w-md">The parking spot you're looking for doesn't exist or has been removed.</p>
+      <button 
+        onClick={onBack}
+        className="px-8 py-3 bg-gradient-to-r from-[#f16634] to-[#f89b6c] text-white font-semibold rounded-xl hover:from-[#d45528] hover:to-[#e67e4e] transform hover:scale-105 transition-all duration-200 shadow-lg"
+      >
+        Back to Search
+      </button>
     </div>
-  );
+  </div>
+);
 
-  return (
-    <div className="w-full py-6 px-2 sm:px-4">
-      {/* Header */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-        {parking.images?.length > 0 && (
-          <div className="h-64 bg-gray-200">
-            <img
-              src={parking.images[0]}
-              alt={parking.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-        <div className="p-8">
-          <div className="flex justify-between items-start mb-4">
+// Header Component
+const ParkingHeader = ({ parking, onBack, onRefresh, isRefreshing }) => (
+  <div className="bg-white/90 backdrop-blur-xl border-b border-white/20 shadow-sm sticky top-0 z-40">
+    <div className="px-4 lg:px-8 py-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <button 
+            onClick={onBack}
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors group"
+            aria-label="Go back"
+          >
+            <ArrowLeftIcon className="w-6 h-6 text-gray-600 group-hover:text-gray-800" />
+          </button>
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-[#f16634] to-[#f89b6c] rounded-2xl flex items-center justify-center shadow-lg">
+              <MapPinIcon className="h-7 w-7 text-white" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#f16634]">{parking.name}</h1>
-              <div className="flex items-center text-gray-600 mt-1">
-                <MapPinIcon className="w-4 h-4 mr-1" />
-                <span>{parking.address}</span>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <StarIcon className="w-5 h-5 text-yellow-400 fill-current" />
-              <span className="ml-1 text-[#f16634] font-bold text-lg">{parking.rating || 0}</span>
+              <h1 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-[#f16634] to-[#f89b6c] bg-clip-text text-transparent">
+                {parking.name}
+              </h1>
+              <p className="text-sm text-gray-600">Parking Details</p>
             </div>
           </div>
-          {parking.description && (
-            <p className="text-gray-600 mb-4">{parking.description}</p>
-          )}
-          {/* Status */}
-          <div className="flex items-center space-x-4">
-            <span className={`px-3 py-1 rounded-full text-sm font-bold shadow ${
-              parking.status === 'active' 
-                ? 'bg-[#f16634]/10 text-[#f16634]' 
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {parking.status === 'active' ? 'Open' : 'Closed'}
-            </span>
-            <div className="flex items-center text-gray-600">
-              <ClockIcon className="w-4 h-4 mr-1" />
-              <span>{parking.operational_hours?.open} - {parking.operational_hours?.close}</span>
-            </div>
+        </div>
+        
+        <button 
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          className="p-2 hover:bg-gray-100 rounded-xl transition-colors group disabled:opacity-50"
+          aria-label="Refresh data"
+        >
+          <ArrowPathIcon className={`w-5 h-5 text-gray-600 group-hover:text-gray-800 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// Image Gallery Component
+const ImageGallery = ({ images, name }) => {
+  const [currentImage, setCurrentImage] = useState(0);
+  const [imageError, setImageError] = useState(false);
+
+  if (!images || images.length === 0 || imageError) {
+    return (
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+          <div className="text-center">
+            <CameraIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+            <p className="text-gray-500">No images available</p>
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Info */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Availability */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-lg font-bold text-[#f16634] mb-4">Availability</h2>
-            <div className="grid grid-cols-2 gap-6">
-              <div className="border border-gray-100 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-[#f16634]">Cars</h3>
-                  <TruckIcon className="w-5 h-5 text-[#f16634]" />
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className="relative h-64 bg-gray-200">
+        <img
+          src={images[currentImage]}
+          alt={`${name} - Image ${currentImage + 1}`}
+          className="w-full h-full object-cover"
+          onError={() => setImageError(true)}
+        />
+        {images.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImage(index)}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  index === currentImage ? 'bg-white' : 'bg-white/50'
+                }`}
+                aria-label={`View image ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Status Badge Component
+const StatusBadge = ({ status, availability }) => {
+  const availabilityStatus = getAvailabilityStatus(availability.available, availability.capacity);
+  
+  const getStatusConfig = () => {
+    if (status !== 'active') {
+      return { color: 'red', text: 'Closed', bgColor: 'bg-red-100', textColor: 'text-red-800' };
+    }
+    
+    switch (availabilityStatus.status) {
+      case 'available':
+        return { color: 'green', text: 'Open & Available', bgColor: 'bg-green-100', textColor: 'text-green-800' };
+      case 'limited':
+        return { color: 'yellow', text: 'Open - Limited', bgColor: 'bg-yellow-100', textColor: 'text-yellow-800' };
+      case 'few':
+        return { color: 'orange', text: 'Open - Few spots', bgColor: 'bg-orange-100', textColor: 'text-orange-800' };
+      default:
+        return { color: 'red', text: 'Full', bgColor: 'bg-red-100', textColor: 'text-red-800' };
+    }
+  };
+
+  const statusConfig = getStatusConfig();
+
+  return (
+    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusConfig.bgColor} ${statusConfig.textColor}`}>
+      <div className={`w-2 h-2 rounded-full mr-2 bg-${statusConfig.color}-400`}></div>
+      {statusConfig.text}
+    </div>
+  );
+};
+
+// Availability Card Component
+const AvailabilityCard = ({ type, available, capacity, rate, icon: Icon, colorScheme }) => (
+  <div className={`bg-gradient-to-r ${colorScheme.from} ${colorScheme.to} rounded-xl p-6 border ${colorScheme.border}`}>
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center space-x-3">
+        <Icon className={`w-6 h-6 ${colorScheme.iconColor}`} />
+        <span className={`font-semibold ${colorScheme.textColor}`}>{type}</span>
+      </div>
+      <StatusBadge 
+        status={available > 0 ? 'available' : 'full'} 
+        availability={{ available: { [type.toLowerCase()]: available }, capacity: { [type.toLowerCase()]: capacity } }}
+      />
+    </div>
+    
+    <div className="space-y-3">
+      <div>
+        <p className={`text-3xl font-bold ${colorScheme.textColor}`}>
+          {available} / {capacity}
+        </p>
+        <p className={`text-sm ${colorScheme.subTextColor}`}>Available spots</p>
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <span className={`text-sm ${colorScheme.subTextColor}`}>Rate per hour</span>
+        <span className={`font-bold ${colorScheme.textColor}`}>
+          {formatPrice(rate)}
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
+// Action Button Component
+const ActionButton = ({ variant = 'primary', children, onClick, disabled, className = '', ...props }) => {
+  const baseClasses = "font-semibold rounded-xl transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed";
+  
+  const variants = {
+    primary: "bg-gradient-to-r from-[#f16634] to-[#f89b6c] text-white hover:from-[#d45528] hover:to-[#e67e4e] hover:shadow-xl transform hover:scale-105",
+    secondary: "border border-gray-300 text-gray-700 hover:bg-gray-50",
+    outline: "border-2 border-[#f16634] text-[#f16634] hover:bg-[#f16634] hover:text-white"
+  };
+
+  return (
+    <button 
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseClasses} ${variants[variant]} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+
+// Main Component
+const ParkingDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { parking, loading, error, refetch } = useParkingData(id);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  // Handlers
+  const handleBack = useCallback(() => {
+    navigate(-1);
+  }, [navigate]);
+
+  const handleBackToSearch = useCallback(() => {
+    navigate('/parking/search');
+  }, [navigate]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } catch (err) {
+      console.error('Refresh failed:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
+
+  const handleRetry = useCallback(() => {
+    window.location.reload();
+  }, []);
+
+  const handleBookNow = useCallback(() => {
+    if (parking) {
+      navigate(`/booking/form/${parking._id}`);
+    }
+  }, [parking, navigate]);
+
+  const handleToggleFavorite = useCallback(() => {
+    setIsFavorite(prev => !prev);
+    // TODO: Implement favorite functionality
+  }, []);
+
+  const handleContactOwner = useCallback(() => {
+    // Karena field phone tidak ada, kita bisa gunakan email atau fallback
+    if (parking?.owner?.email) {
+      window.open(`mailto:${parking.owner.email}`, '_self');
+    }
+  }, [parking]);
+
+  // Render loading state
+  if (loading) return <LoadingSpinner />;
+
+  // Render error state
+  if (error) {
+    return <ErrorDisplay error={error} onRetry={handleRetry} onBack={handleBackToSearch} />;
+  }
+
+  // Render not found state
+  if (!parking) {
+    return <NotFoundDisplay onBack={handleBackToSearch} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Header */}
+      <ParkingHeader 
+        parking={parking}
+        onBack={handleBack}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
+      />
+
+      <div className="max-w-7xl mx-auto p-4 lg:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Image Gallery */}
+            <ImageGallery images={parking.images} name={parking.name} />
+
+            {/* Basic Information */}
+            <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">{parking.name}</h2>
+                  <div className="flex items-start space-x-2 text-gray-600 mb-4">
+                    <MapPinIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">{parking.address}</span>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <StatusBadge 
+                      status={parking.status} 
+                      availability={{ available: parking.available, capacity: parking.capacity }}
+                    />
+                    {parking.rating > 0 && (
+                      <div className="flex items-center space-x-1">
+                        <StarIconSolid className="w-5 h-5 text-yellow-400" />
+                        <span className="font-semibold text-gray-900">{formatRating(parking.rating)}</span>
+                        <span className="text-gray-500 text-sm">({parking.review_count} reviews)</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{parking.available?.car}/{parking.capacity?.car}</p>
-                <p className="text-sm text-gray-600">Available slots</p>
               </div>
-              <div className="border border-gray-100 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-[#f16634]">Motorcycles</h3>
-                  <div className="w-5 h-5 bg-[#f16634] rounded-sm"></div>
+
+              {/* Operating Hours */}
+              {parking.operational_hours && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-900 mb-2">Operating Hours</h3>
+                  <div className="flex items-center space-x-2">
+                    <ClockIcon className="w-5 h-5 text-gray-400" />
+                    <span className="text-gray-600">{formatOperationalHours(parking.operational_hours)}</span>
+                  </div>
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{parking.available?.motorcycle}/{parking.capacity?.motorcycle}</p>
-                <p className="text-sm text-gray-600">Available slots</p>
+              )}
+
+              {/* Basic parking information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-gray-900">Location</h3>
+                  <p className="text-gray-600 flex items-start space-x-2">
+                    <MapPinIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <span>{parking.address}</span>
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-gray-900">Status</h3>
+                  <p className="text-gray-600">
+                    {parking.status === 'active' ? 'Currently Open' : 'Currently Closed'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Availability & Pricing */}
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-gray-900">Current Availability & Pricing</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AvailabilityCard
+                  type="Cars"
+                  available={parking.available?.car || 0}
+                  capacity={parking.capacity?.car || 0}
+                  rate={parking.rates?.car || 0}
+                  icon={TruckIcon}
+                  colorScheme={{
+                    from: 'from-blue-50',
+                    to: 'to-indigo-50',
+                    border: 'border-blue-100',
+                    iconColor: 'text-blue-600',
+                    textColor: 'text-blue-900',
+                    subTextColor: 'text-blue-600'
+                  }}
+                />
+                <AvailabilityCard
+                  type="Motorcycles"
+                  available={parking.available?.motorcycle || 0}
+                  capacity={parking.capacity?.motorcycle || 0}
+                  rate={parking.rates?.motorcycle || 0}
+                  icon={({ className }) => <div className={`w-6 h-6 bg-purple-600 rounded-sm ${className}`} />}
+                  colorScheme={{
+                    from: 'from-purple-50',
+                    to: 'to-pink-50',
+                    border: 'border-purple-100',
+                    iconColor: 'text-purple-600',
+                    textColor: 'text-purple-900',
+                    subTextColor: 'text-purple-600'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Facilities */}
+            {parking.facilities && parking.facilities.length > 0 && (
+              <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
+                <h3 className="text-xl font-bold text-[#f16634] mb-6">Facilities & Amenities</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {parking.facilities.map((facility, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                      <div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+                      <span className="text-sm font-medium text-gray-700">{facility}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Location Map Placeholder */}
+            <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
+              <h3 className="text-xl font-bold text-[#f16634] mb-6">Location</h3>
+              <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-64 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <MapPinIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">Interactive map will be displayed here</p>
+                  {parking.location?.coordinates && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      Coordinates: {parking.location.coordinates[1]}, {parking.location.coordinates[0]}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-          {/* Facilities */}
-          {parking.facilities?.length > 0 && (
-            <div className="bg-white rounded-xl shadow-lg p-8">
-              <h2 className="text-lg font-bold text-[#f16634] mb-4">Facilities</h2>
-              <div className="flex flex-wrap gap-2">
-                {parking.facilities.map((facility, index) => (
-                  <span
-                    key={index}
-                    className="px-3 py-1 bg-[#f16634]/10 text-[#f16634] rounded-full text-sm font-bold shadow"
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="space-y-4">
+                <ActionButton 
+                  variant="primary"
+                  onClick={handleBookNow}
+                  className="w-full py-4 text-lg"
+                  disabled={parking.status !== 'active'}
+                >
+                  {parking.status === 'active' ? 'Book Now' : 'Currently Closed'}
+                </ActionButton>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <ActionButton 
+                    variant="secondary"
+                    onClick={handleToggleFavorite}
+                    className="flex items-center justify-center px-4 py-3"
                   >
-                    {facility}
+                    {isFavorite ? (
+                      <HeartIconSolid className="w-4 h-4 mr-2 text-red-500" />
+                    ) : (
+                      <HeartIcon className="w-4 h-4 mr-2 text-gray-600" />
+                    )}
+                    <span className="text-sm font-medium">{isFavorite ? 'Saved' : 'Save'}</span>
+                  </ActionButton>
+                  
+                  <ActionButton 
+                    variant="secondary"
+                    onClick={handleContactOwner}
+                    className="flex items-center justify-center px-4 py-3"
+                    disabled={!parking.owner?.email}
+                  >
+                    <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2 text-gray-600" />
+                    <span className="text-sm font-medium">Contact</span>
+                  </ActionButton>
+                </div>
+              </div>
+            </div>
+
+            {/* Owner Information */}
+            {parking.owner && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-bold text-[#f16634] mb-4">Owner Information</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-[#f16634] to-[#f89b6c] rounded-full flex items-center justify-center">
+                      <UserIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{parking.owner.name || 'Owner'}</p>
+                      <p className="text-sm text-gray-600">{parking.owner.email}</p>
+                      <p className="text-xs text-gray-500 capitalize">{parking.owner.role}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Info */}
+            <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
+              <h3 className="font-semibold text-blue-900 mb-4">Quick Information</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center space-x-3">
+                  <ShieldCheckIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <span className="text-blue-800">Verified parking location</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <CalendarIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <span className="text-blue-800">Instant booking available</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <InformationCircleIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                  <span className="text-blue-800">Real-time availability updates</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
+                    parking.status === 'active' ? 'bg-green-400' : 'bg-red-400'
+                  }`}></div>
+                  <span className="text-blue-800">
+                    {parking.status === 'active' ? 'Currently Open' : 'Currently Closed'}
                   </span>
-                ))}
+                </div>
               </div>
             </div>
-          )}
-          {/* Map placeholder */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-lg font-bold text-[#f16634] mb-4">Location</h2>
-            <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500">Map will be displayed here</p>
+
+            {/* Help & Support */}
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <h3 className="font-semibold text-gray-900 mb-3">Need Help?</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Have questions about this parking location or need assistance with booking?
+              </p>
+              <ActionButton 
+                variant="outline"
+                className="w-full py-2 text-sm"
+                onClick={() => navigate('/support')}
+              >
+                Contact Support
+              </ActionButton>
             </div>
-          </div>
-        </div>
-        {/* Sidebar */}
-        <div className="space-y-8">
-          {/* Pricing */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-lg font-bold text-[#f16634] mb-4">Pricing</h2>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Car (per hour)</span>
-                <span className="font-bold text-[#f16634]">Rp {parking.rates?.car?.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Motorcycle (per hour)</span>
-                <span className="font-bold text-[#f16634]">Rp {parking.rates?.motorcycle?.toLocaleString()}</span>
-              </div>
-            </div>
-          </div>
-          {/* Book Now */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-lg font-bold text-[#f16634] mb-4">Book Now</h2>
-            <button className="w-full bg-[#f16634] text-white py-3 rounded-full font-bold shadow hover:bg-[#d45528] transition">
-              Book This Parking
-            </button>
           </div>
         </div>
       </div>

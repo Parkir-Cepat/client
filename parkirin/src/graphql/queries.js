@@ -35,19 +35,25 @@ export const GET_NEARBY_PARKINGS = gql`
     $longitude: Float!
     $latitude: Float!
     $maxDistance: Float
-    $vehicleType: String
   ) {
     getNearbyParkings(
       longitude: $longitude
       latitude: $latitude
       maxDistance: $maxDistance
-      vehicleType: $vehicleType
     ) {
       _id
       name
       address
       location {
+        type
         coordinates
+      }
+      owner_id
+      owner {
+        email
+        name
+        role
+        saldo
       }
       capacity {
         car
@@ -67,9 +73,9 @@ export const GET_NEARBY_PARKINGS = gql`
       }
       facilities
       images
+      status
       rating
       review_count
-      status
     }
   }
 `;
