@@ -127,6 +127,11 @@ export const ROOM_UPDATED = gql`
       name
       type
       privacy
+      participants {
+        _id
+        name
+        avatar
+      }
       last_message {
         _id
         message

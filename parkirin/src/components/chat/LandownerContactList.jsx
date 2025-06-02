@@ -27,15 +27,13 @@ const LandownerContactList = ({ onContactSelect, compact = false }) => {
     landowner.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
     landowner.email.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
-
   const handleContactClick = async (landowner) => {
     try {
       // Check if there's already a private room with this landowner
       const roomResponse = await createPrivateRoom({
         variables: {
           input: {
-            user_id: landowner._id,
-            type: 'private'
+            participant_id: landowner._id
           }
         }
       });

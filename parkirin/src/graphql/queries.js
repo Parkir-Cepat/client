@@ -1,5 +1,5 @@
 // src/graphql/queries.js
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client";
 
 // User Queries
 export const GET_ME = gql`
@@ -115,16 +115,8 @@ export const GET_PARKING = gql`
 `;
 
 export const SEARCH_PARKINGS = gql`
-  query SearchParkings(
-    $query: String!
-    $vehicleType: String
-    $sortBy: String
-  ) {
-    searchParkings(
-      query: $query
-      vehicleType: $vehicleType
-      sortBy: $sortBy
-    ) {
+  query SearchParkings($query: String!, $vehicleType: String, $sortBy: String) {
+    searchParkings(query: $query, vehicleType: $vehicleType, sortBy: $sortBy) {
       _id
       name
       address
@@ -264,7 +256,8 @@ export const GET_NEARBY_PARKING_LOTS = gql`
       available {
         car
         motorcycle
-      }      rates {
+      }
+      rates {
         car
         motorcycle
       }
@@ -336,7 +329,8 @@ export const GET_PARKING_LOT = gql`
       rates {
         car
         motorcycle
-      }      operational_hours {
+      }
+      operational_hours {
         open
         close
       }
@@ -372,7 +366,8 @@ export const GET_BOOKING = gql`
           email
           avatar
         }
-      }      vehicle_type
+      }
+      vehicle_type
       start_time
       duration
       cost
@@ -555,8 +550,8 @@ export const GET_ALL_LANDOWNERS = gql`
       email
       avatar
       role
-      phoneNumber
-      location
+      created_at
+      is_email_verified
     }
   }
 `;
@@ -674,6 +669,12 @@ export const GET_MY_ROOMS = gql`
       is_full
       parking_id
       participant_count
+      participants {
+        _id
+        name
+        avatar
+        role
+      }
       last_message {
         _id
         message

@@ -26,15 +26,12 @@ const ContactOwnerButton = ({ parking, className = "", size = "default" }) => {
     if (!parking?.owner?._id) {
       console.error('No owner found for this parking');
       return;
-    }
-
-    try {
+    }    try {
       const response = await createPrivateRoom({
         variables: {
           input: {
-            user_id: parking.owner._id,
-            parking_id: parking._id,
-            type: 'private'
+            participant_id: parking.owner._id,
+            parking_id: parking._id
           }
         }
       });

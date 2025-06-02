@@ -45,23 +45,26 @@ const ChatList = ({
   const getOtherParticipant = (room) => {
     return room.participants?.find(p => p._id !== user?._id);
   };
-
   const getLastMessagePreview = (message) => {
     if (!message) return 'No messages yet';
     
-    switch (message.type) {
+    // Handle the actual message structure from GraphQL
+    const messageText = message.message || message.content || '';
+    const messageType = message.message_type || message.type || 'text';
+    
+    switch (messageType) {
       case 'text':
-        return message.content.length > 50 
-          ? message.content.substring(0, 50) + '...'
-          : message.content;
+        return messageText.length > 50 
+          ? messageText.substring(0, 50) + '...'
+          : messageText;
       case 'image':
         return '📷 Image';
       case 'file':
         return '📎 File';
       case 'system':
-        return message.content;
+        return messageText;
       default:
-        return 'Message';
+        return messageText || 'Message';
     }
   };
 
