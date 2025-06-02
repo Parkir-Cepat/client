@@ -46,14 +46,13 @@ const ChatWindow = ({
   });
 
   const [sendMessage] = useMutation(SEND_MESSAGE);
-  const [markMessagesRead] = useMutation(MARK_MESSAGES_READ);
-  // Subscriptions
+  const [markMessagesRead] = useMutation(MARK_MESSAGES_READ);  // Subscriptions
   useSubscription(MESSAGE_RECEIVED, {
     variables: { roomId },
     skip: !roomId,
-    onSubscriptionData: ({ subscriptionData }) => {
-      if (subscriptionData.data?.messageReceived) {
-        const newMessage = subscriptionData.data.messageReceived;
+    onData: ({ data }) => {
+      if (data.data?.messageReceived) {
+        const newMessage = data.data.messageReceived;
         setMessages(prev => [...prev, newMessage]);
         scrollToBottom();
         
@@ -68,9 +67,9 @@ const ChatWindow = ({
   useSubscription(MESSAGE_STATUS_UPDATED, {
     variables: { roomId },
     skip: !roomId,
-    onSubscriptionData: ({ subscriptionData }) => {
-      if (subscriptionData.data?.messageStatusUpdated) {
-        const { messageId, status } = subscriptionData.data.messageStatusUpdated;
+    onData: ({ data }) => {
+      if (data.data?.messageStatusUpdated) {
+        const { messageId, status } = data.data.messageStatusUpdated;
         setMessages(prev => 
           prev.map(msg => 
             msg._id === messageId ? { ...msg, status } : msg

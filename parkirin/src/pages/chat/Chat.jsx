@@ -7,6 +7,7 @@ import { MESSAGE_RECEIVED } from '../../graphql/subscriptions';
 import useAuthStore from '../../store/authStore';
 import { UserIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import ChatRoomSelector from '../../components/chat/ChatRoomSelector';
+import GraphQLErrorBoundary from '../../components/common/GraphQLErrorBoundary';
 
 const Chat = () => {
   const [roomId, setRoomId] = useState(null);
@@ -32,14 +33,14 @@ const Chat = () => {
       console.error('Send message error:', error);
     }
   });
-    // Subscribe to new messages with proper real-time updates
+  // Subscribe to new messages with proper real-time updates
   useSubscription(MESSAGE_RECEIVED, {
     variables: { room_id: roomId },
     skip: !roomId,
-    onSubscriptionData: ({ subscriptionData }) => {
-      console.log('New message received via subscription:', subscriptionData);
-      if (subscriptionData.data?.messageReceived) {
-        const newMessage = subscriptionData.data.messageReceived;
+    onData: ({ data }) => {
+      console.log('New message received via subscription:', data);
+      if (data.data?.messageReceived) {
+        const newMessage = data.data.messageReceived;
         
         // Add new message to state in real-time
         setMessages(prevMessages => {
