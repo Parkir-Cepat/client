@@ -497,39 +497,66 @@ export const GET_PAYMENT_METHODS = gql`
   }
 `;
 
-// Chat Queries
+// Chat & Room Queries (WhatsApp-like functionality)
 export const GET_ROOM_MESSAGES = gql`
-  query GetRoomMessages($roomId: ID!, $limit: Int, $offset: Int) {
-    getRoomMessages(room_id: $roomId, limit: $limit, offset: $offset) {
+  query GetRoomMessages($room_id: ID!, $limit: Int) {
+    getRoomMessages(room_id: $room_id, limit: $limit) {
       _id
       sender {
         _id
         name
         avatar
+        role
       }
       message
       message_type
+      read_by
       created_at
     }
   }
 `;
 
-export const GET_MY_RECENT_CHATS = gql`
-  query GetMyRecentChats {
-    getMyRecentChats {
+export const GET_PRIVATE_ROOM_WITH_USER = gql`
+  query GetPrivateRoomWithUser($userId: ID!, $parkingId: ID) {
+    getPrivateRoomWithUser(user_id: $userId, parking_id: $parkingId) {
       _id
-      sender {
+      name
+      type
+      privacy
+      participants {
         _id
         name
         avatar
+        role
       }
-      room {
-        _id
-        name
-        type
-      }
-      message
+      participant_count
       created_at
+    }
+  }
+`;
+
+export const GET_USERS_BY_ROLE = gql`
+  query GetUsersByRole($role: String!) {
+    getUsersByRole(role: $role) {
+      _id
+      name
+      email
+      avatar
+      role
+    }
+  }
+`;
+
+export const GET_ALL_LANDOWNERS = gql`
+  query GetAllLandowners {
+    getUsersByRole(role: "landowner") {
+      _id
+      name
+      email
+      avatar
+      role
+      phoneNumber
+      location
     }
   }
 `;
@@ -673,24 +700,6 @@ export const GET_PUBLIC_ROOMS = gql`
       participant_count
       is_full
       parking_id
-      created_at
-    }
-  }
-`;
-
-export const GET_PRIVATE_ROOM_WITH_USER = gql`
-  query GetPrivateRoomWithUser($userId: ID!, $parkingId: ID) {
-    getPrivateRoomWithUser(user_id: $userId, parking_id: $parkingId) {
-      _id
-      name
-      type
-      privacy
-      participants {
-        _id
-        name
-        avatar
-      }
-      participant_count
       created_at
     }
   }

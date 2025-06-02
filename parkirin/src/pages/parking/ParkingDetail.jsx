@@ -9,6 +9,7 @@ import {
   TruckIcon,
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
+import ContactOwnerButton from '../../components/chat/ContactOwnerButton';
 
 const GET_PARKING_LOT = gql`
   query GetParkingLot($id: ID!) {
@@ -18,6 +19,12 @@ const GET_PARKING_LOT = gql`
       address
       description
       images
+      owner {
+        _id
+        name
+        email
+        avatar
+      }
       location {
         coordinates
       }
@@ -32,7 +39,8 @@ const GET_PARKING_LOT = gql`
       rates {
         car
         motorcycle
-      }      operational_hours {
+      }
+      operational_hours {
         open
         close
       }
@@ -163,8 +171,7 @@ const ParkingDetail = () => {
           </div>
         </div>
         {/* Sidebar */}
-        <div className="space-y-8">
-          {/* Pricing */}
+        <div className="space-y-8">          {/* Pricing */}
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-lg font-bold text-[#f16634] mb-4">Pricing</h2>
             <div className="space-y-3">
@@ -178,6 +185,38 @@ const ParkingDetail = () => {
               </div>
             </div>
           </div>
+
+          {/* Contact Owner */}
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h2 className="text-lg font-bold text-[#f16634] mb-4">Contact Owner</h2>
+            <div className="mb-4">
+              <div className="flex items-center space-x-3 mb-2">
+                {parking.owner?.avatar ? (
+                  <img
+                    src={parking.owner.avatar}
+                    alt={parking.owner.name}
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <span className="text-sm font-medium text-orange-600">
+                      {parking.owner?.name?.charAt(0)?.toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <p className="font-medium text-gray-900">{parking.owner?.name}</p>
+                  <p className="text-sm text-gray-500">Parking Owner</p>
+                </div>
+              </div>
+            </div>
+            <ContactOwnerButton 
+              parking={parking}
+              className="w-full"
+              size="default"
+            />
+          </div>
+
           {/* Book Now */}
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-lg font-bold text-[#f16634] mb-4">Book Now</h2>

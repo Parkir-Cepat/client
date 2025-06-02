@@ -17,7 +17,7 @@ const Chat = () => {
   const location = useLocation();
   const navigate = useNavigate();  // Fetch messages for the selected room
   const { data: messagesData } = useQuery(GET_ROOM_MESSAGES, {
-    variables: { roomId, limit: 50 },
+    variables: { room_id: roomId, limit: 50 },
     skip: !roomId,
     onCompleted: (data) => {
       if (data?.getRoomMessages) {
@@ -115,14 +115,22 @@ const Chat = () => {
       // Remove optimistic message on error and restore input
       setMessages(prev => prev.filter(msg => msg._id.startsWith('temp-')));
       setNewMessage(tempMessage);
+    }  };
+
+  const handleRoomSelect = (room) => {
+    if (typeof room === 'string') {
+      // If room is a string (room ID), set it directly
+      setRoomId(room);
+    } else if (room && room._id) {
+      // If room is an object with _id, use the _id
+      setRoomId(room._id);
     }
   };
-
   return (
     <div className="flex h-[80vh] bg-white rounded-xl shadow-lg mx-auto my-8 w-full">
       {/* Room Selector Sidebar */}
       <ChatRoomSelector 
-        onRoomSelect={setRoomId} 
+        onRoomSelect={handleRoomSelect} 
         selectedRoomId={roomId} 
       />
       

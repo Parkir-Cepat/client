@@ -118,3 +118,26 @@ export const PARKING_AVAILABILITY_CHANGED = gql`
     }
   }
 `;
+
+// Room Subscriptions
+export const ROOM_UPDATED = gql`
+  subscription RoomUpdated($userId: ID!) {
+    roomUpdated(userId: $userId) {
+      _id
+      name
+      type
+      privacy
+      last_message {
+        _id
+        message
+        created_at
+        sender {
+          _id
+          name
+        }
+      }
+      participant_count
+      updated_at
+    }
+  }
+`;

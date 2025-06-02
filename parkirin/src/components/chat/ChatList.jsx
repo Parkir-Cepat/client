@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useSubscription } from '@apollo/client';
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { GET_USER_ROOMS } from '../../graphql/queries';
+import { GET_MY_ROOMS } from '../../graphql/queries';
 import { ROOM_UPDATED } from '../../graphql/subscriptions';
 import { useAuth, useDebounce } from '../../hooks';
 import { formatChatTime } from '../../utils/formatters';
@@ -17,16 +17,16 @@ const ChatList = ({
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 300);
-
-  const { data, loading, error, refetch } = useQuery(GET_USER_ROOMS, {
+  const { data, loading, error, refetch } = useQuery(GET_MY_ROOMS, {
     variables: {
       search: debouncedSearch || undefined
     },
     fetchPolicy: 'cache-and-network'
   });
-
   // Subscribe to room updates
   useSubscription(ROOM_UPDATED, {
+    variables: { userId: user?._id },
+    skip: !user?._id,
     onSubscriptionData: ({ subscriptionData }) => {
       if (subscriptionData.data?.roomUpdated) {
         refetch();
@@ -34,7 +34,7 @@ const ChatList = ({
     }
   });
 
-  const rooms = data?.getUserRooms || [];
+  const rooms = data?.getMyRooms || [];
 
   const handleRoomClick = (room) => {
     if (onRoomSelect) {

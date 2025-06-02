@@ -123,3 +123,41 @@ export const NEARBY_BOOKINGS_UPDATED = gql`
     }
   }
 `;
+
+// Real-time Chat Subscriptions (WhatsApp-like)
+export const MESSAGE_RECEIVED = gql`
+  subscription MessageReceived($room_id: ID!) {
+    messageReceived(room_id: $room_id) {
+      _id
+      sender {
+        _id
+        name
+        avatar
+        role
+      }
+      room_id
+      message
+      message_type
+      created_at
+    }
+  }
+`;
+
+export const MESSAGE_READ = gql`
+  subscription MessageRead($room_id: ID!) {
+    messageRead(room_id: $room_id) {
+      _id
+      read_by
+    }
+  }
+`;
+
+export const ROOM_UPDATED = gql`
+  subscription RoomUpdated($room_id: ID!) {
+    roomUpdated(room_id: $room_id) {
+      _id
+      name
+      participant_count
+    }
+  }
+`;

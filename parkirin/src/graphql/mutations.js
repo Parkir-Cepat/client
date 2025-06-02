@@ -175,11 +175,11 @@ export const CREATE_PRIVATE_ROOM = gql`
       name
       type
       privacy
-      creator_id
       participants {
         _id
         name
         avatar
+        role
       }
       participant_count
       created_at
@@ -192,10 +192,7 @@ export const JOIN_ROOM = gql`
     joinRoom(input: $input) {
       _id
       name
-      type
-      privacy
       participant_count
-      is_full
     }
   }
 `;
