@@ -1,4 +1,5 @@
 import { useQuery, gql } from '@apollo/client';
+import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { CalendarDaysIcon, MapPinIcon, ClockIcon, CurrencyDollarIcon, EyeIcon, QrCodeIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
@@ -31,7 +32,49 @@ const GET_BOOKING_HISTORY = gql`
 `;
 
 const BookingHistory = () => {
+  const navigate = useNavigate();
   const { loading, error, data } = useQuery(GET_BOOKING_HISTORY);
+
+  // Handle navigation to booking detail
+  const handleViewDetail = (bookingId) => {
+    try {
+      // Add loading state for better UX
+      const button = document.querySelector(`[data-booking-id="${bookingId}"]`);
+      if (button) {
+        button.disabled = true;
+        button.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2 inline"></div>Loading...';
+      }
+
+      // Navigate to booking detail page
+      navigate(`/booking/${bookingId}`, {
+        state: { from: '/booking-history' } // For back navigation
+      });
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Reset button state on error
+      const button = document.querySelector(`[data-booking-id="${bookingId}"]`);
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = '<svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Lihat Detail';
+      }
+      alert('Gagal membuka detail booking. Silakan coba lagi.');
+    }
+  };
+
+  // Handle QR code view
+  const handleViewQR = (booking) => {
+    if (booking.qr_code) {
+      // Could implement a modal or navigate to QR view
+      window.open(booking.qr_code, '_blank');
+    }
+  };
+
+  // Handle receipt download
+  const handleDownloadReceipt = (booking) => {
+    // Implement receipt download logic
+    console.log('Downloading receipt for booking:', booking._id);
+    // This could be implemented to generate and download a PDF receipt
+  };
 
   if (loading) return <LoadingSpinner size="large" />;
   if (error) return (
@@ -216,7 +259,10 @@ const BookingHistory = () => {
               <p className="text-gray-600 max-w-md mx-auto">
                 Anda belum memiliki riwayat pemesanan parkir. Mulai cari dan booking tempat parkir sekarang!
               </p>
-              <button className="mt-6 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all duration-300">
+              <button 
+                className="mt-6 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all duration-300"
+                onClick={() => navigate('/search')}
+              >
                 Cari Parkir
               </button>
             </div>
@@ -274,20 +320,29 @@ const BookingHistory = () => {
                       <div className="flex space-x-3">
                         <button 
                           className="flex-1 bg-gradient-to-r from-orange-500 to-pink-500 text-white py-2 px-4 rounded-xl text-sm font-medium hover:shadow-lg transition-all duration-300"
-                          onClick={() => window.location.href = `/booking/${booking._id}`}
+                          onClick={() => handleViewDetail(booking._id)}
+                          data-booking-id={booking._id}
                         >
                           <EyeIcon className="w-4 h-4 mr-2 inline" />
                           Lihat Detail
                         </button>
                         
                         {booking.qr_code && (
-                          <button className="px-4 py-2 border border-blue-300 text-blue-600 rounded-xl text-sm font-medium hover:bg-blue-50 transition-colors duration-200">
+                          <button 
+                            className="px-4 py-2 border border-blue-300 text-blue-600 rounded-xl text-sm font-medium hover:bg-blue-50 transition-colors duration-200"
+                            onClick={() => handleViewQR(booking)}
+                            title="Lihat QR Code"
+                          >
                             <QrCodeIcon className="w-4 h-4" />
                           </button>
                         )}
                         
                         {booking.status === 'completed' && (
-                          <button className="px-4 py-2 border border-green-300 text-green-600 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors duration-200">
+                          <button 
+                            className="px-4 py-2 border border-green-300 text-green-600 rounded-xl text-sm font-medium hover:bg-green-50 transition-colors duration-200"
+                            onClick={() => handleDownloadReceipt(booking)}
+                            title="Download Receipt"
+                          >
                             <ArrowDownTrayIcon className="w-4 h-4" />
                           </button>
                         )}
@@ -397,7 +452,8 @@ const BookingHistory = () => {
                             <div className="flex items-center justify-center space-x-2">
                               <button 
                                 className="bg-gradient-to-r from-orange-500 to-pink-500 text-white p-2 rounded-lg hover:shadow-lg transition-all duration-300 group"
-                                onClick={() => window.location.href = `/booking/${booking._id}`}
+                                onClick={() => handleViewDetail(booking._id)}
+                                data-booking-id={booking._id}
                                 title="Lihat Detail"
                               >
                                 <EyeIcon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
@@ -406,6 +462,7 @@ const BookingHistory = () => {
                               {booking.qr_code && (
                                 <button 
                                   className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 hover:shadow-lg transition-all duration-300 group"
+                                  onClick={() => handleViewQR(booking)}
                                   title="Lihat QR Code"
                                 >
                                   <QrCodeIcon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
@@ -415,6 +472,7 @@ const BookingHistory = () => {
                               {booking.status === 'completed' && (
                                 <button 
                                   className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 hover:shadow-lg transition-all duration-300 group"
+                                  onClick={() => handleDownloadReceipt(booking)}
                                   title="Download Receipt"
                                 >
                                   <ArrowDownTrayIcon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
