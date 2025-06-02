@@ -31,16 +31,16 @@ import { midtransService } from '../services/midtrans';
 import { GET_PARKING_LOT, CREATE_BOOKING, CREATE_PAYMENT } from '../apollo/queries';
 import type { ParkingLot, CreateBookingInput, CreatePaymentInput } from '../types';
 
-const steps = ['Detail Booking', 'Pembayaran', 'Konfirmasi'];
+const steps = ['Booking Details', 'Payment', 'Confirmation'];
 
 const vehicleTypes = [
-  { value: 'car', label: 'Mobil' },
-  { value: 'motorcycle', label: 'Motor' },
-  { value: 'truck', label: 'Truk' }
+  { value: 'car', label: 'Car' },
+  { value: 'motorcycle', label: 'Motorcycle' },
+  { value: 'truck', label: 'Truck' }
 ];
 
 const paymentMethods = [
-  { value: 'saldo', label: 'Saldo ParkirCepat', icon: '💰' },
+  { value: 'saldo', label: 'ParkGo Balance', icon: '💰' },
   { value: 'qris', label: 'QRIS', icon: '📱' },
   { value: 'virtual_account', label: 'Virtual Account', icon: '🏦' },
   { value: 'ewallet', label: 'E-Wallet', icon: '📲' },
@@ -118,9 +118,8 @@ const BookingPage: React.FC = () => {
       handleNext();    } catch (error) {
       console.error('Error creating booking:', error);
       if (error instanceof Error) {
-        alert(error.message);
-      } else {
-        alert('Gagal membuat booking');
+        alert(error.message);      } else {
+        alert('Failed to create booking');
       }
     } finally {
       setIsProcessing(false);
@@ -162,13 +161,12 @@ const BookingPage: React.FC = () => {
 
         if (data?.createPayment?.paymentToken) {          await midtransService.openSnapPayment(data.createPayment.paymentToken, {
             onSuccess: () => {
-              handleNext();
-            },
+              handleNext();            },
             onPending: () => {
               navigate('/bookings');
             },
             onError: () => {
-              alert('Pembayaran gagal');
+              alert('Payment failed');
             }
           });
         }
@@ -176,20 +174,18 @@ const BookingPage: React.FC = () => {
     } catch (error) {
       console.error('Error processing payment:', error);
       if (error instanceof Error) {
-        alert(error.message);
-      } else {
-        alert('Gagal memproses pembayaran');
+        alert(error.message);      } else {
+        alert('Failed to process payment');
       }
     } finally {
       setIsProcessing(false);
     }
   };
 
-  if (!parkingLotId) {
-    return (
+  if (!parkingLotId) {    return (
       <Container>
         <Alert severity="error">
-          ID tempat parkir tidak ditemukan
+          Parking lot ID not found
         </Alert>
       </Container>
     );
@@ -205,11 +201,10 @@ const BookingPage: React.FC = () => {
     );
   }
 
-  if (parkingLotError || !parkingLot) {
-    return (
+  if (parkingLotError || !parkingLot) {    return (
       <Container>
         <Alert severity="error">
-          Gagal memuat data tempat parkir
+          Failed to load parking lot data
         </Alert>
       </Container>
     );
@@ -243,17 +238,15 @@ const BookingPage: React.FC = () => {
                       <Typography variant="body2" sx={{ ml: 1 }}>
                         ({parkingLot.rating.toFixed(1)})
                       </Typography>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    </Box>                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                       <Chip 
                         size="small" 
-                        label={`${parkingLot.availableSlots} slot tersedia`}
+                        label={`${parkingLot.availableSlots} slots available`}
                         color="success"
                       />
                       <Chip 
                         size="small" 
-                        label={`Rp ${parkingLot.tariff.toLocaleString('id-ID')}/jam`}
+                        label={`$${parkingLot.tariff.toLocaleString('en-US')}/hour`}
                         color="primary"
                       />
                     </Box>
@@ -261,17 +254,16 @@ const BookingPage: React.FC = () => {
                 </Card>
               </Box>
               <Box flex={1}>
-                <Card>
-                  <CardContent>
+                <Card>                  <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Detail Booking
+                      Booking Details
                     </Typography>
 
                     <Box sx={{ mb: 2 }}>
                       <TextField
                         fullWidth
                         select
-                        label="Jenis Kendaraan"
+                        label="Vehicle Type"
                         value={bookingData.vehicleType}
                         onChange={(e) => setBookingData({ ...bookingData, vehicleType: e.target.value })}
                       >
@@ -285,10 +277,9 @@ const BookingPage: React.FC = () => {
                       </TextField>
                     </Box>
 
-                    <Box sx={{ mb: 2 }}>
-                      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={id}>
+                    <Box sx={{ mb: 2 }}>                      <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={id}>
                         <DateTimePicker
-                          label="Waktu Mulai"
+                          label="Start Time"
                           value={bookingData.startTime}
                           onChange={(newValue) => {
                             if (newValue) {
@@ -303,13 +294,11 @@ const BookingPage: React.FC = () => {
                           }}
                         />
                       </LocalizationProvider>
-                    </Box>
-
-                    <Box sx={{ mb: 2 }}>
+                    </Box>                    <Box sx={{ mb: 2 }}>
                       <TextField
                         fullWidth
                         type="number"
-                        label="Durasi (jam)"
+                        label="Duration (hours)"
                         value={bookingData.duration}
                         onChange={(e) => setBookingData({ ...bookingData, duration: parseInt(e.target.value) || 1 })}
                         inputProps={{ min: 1, max: 24 }}
@@ -319,17 +308,17 @@ const BookingPage: React.FC = () => {
                     <Divider sx={{ my: 2 }} />
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography>Tarif per jam:</Typography>
-                      <Typography>Rp {parkingLot.tariff.toLocaleString('id-ID')}</Typography>
+                      <Typography>Rate per hour:</Typography>
+                      <Typography>${parkingLot.tariff.toLocaleString('en-US')}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography>Durasi:</Typography>
-                      <Typography>{bookingData.duration} jam</Typography>
+                      <Typography>Duration:</Typography>
+                      <Typography>{bookingData.duration} hours</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
                       <Typography variant="h6">Total:</Typography>
                       <Typography variant="h6" color="primary">
-                        Rp {totalCost.toLocaleString('id-ID')}
+                        ${totalCost.toLocaleString('en-US')}
                       </Typography>
                     </Box>
                   </CardContent>
@@ -344,10 +333,9 @@ const BookingPage: React.FC = () => {
           <Stack spacing={3}>
             <Stack direction="row" spacing={3}>
               <Box flex={2}>
-                <Card>
-                  <CardContent>
+                <Card>                  <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Pilih Metode Pembayaran
+                      Choose Payment Method
                     </Typography>
                     <Stack direction="row" flexWrap="wrap" gap={2}>
                       {paymentMethods.map((method) => (
@@ -369,7 +357,7 @@ const BookingPage: React.FC = () => {
                               </Typography>
                               {method.value === 'saldo' && (
                                 <Typography variant="body2" color="text.secondary">
-                                  Saldo: Rp {user?.saldo.toLocaleString('id-ID')}
+                                  Balance: ${user?.saldo.toLocaleString('en-US')}
                                 </Typography>
                               )}
                             </CardContent>
@@ -381,15 +369,14 @@ const BookingPage: React.FC = () => {
                 </Card>
               </Box>
               <Box flex={1}>
-                <Card>
-                  <CardContent>
+                <Card>                  <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Ringkasan Booking
+                      Booking Summary
                     </Typography>
 
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Tempat Parkir
+                        Parking Lot
                       </Typography>
                       <Typography variant="body1">
                         {parkingLot.name}
@@ -398,25 +385,25 @@ const BookingPage: React.FC = () => {
 
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Waktu
+                        Time
                       </Typography>
                       <Typography variant="body1">
-                        {bookingData.startTime.toLocaleDateString('id-ID')} {bookingData.startTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        {bookingData.startTime.toLocaleDateString('en-US')} {bookingData.startTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </Typography>
                     </Box>
 
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Durasi
+                        Duration
                       </Typography>
                       <Typography variant="body1">
-                        {bookingData.duration} jam
+                        {bookingData.duration} hours
                       </Typography>
                     </Box>
 
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Kendaraan
+                        Vehicle
                       </Typography>
                       <Typography variant="body1">
                         {vehicleTypes.find(v => v.value === bookingData.vehicleType)?.label}
@@ -426,9 +413,9 @@ const BookingPage: React.FC = () => {
                     <Divider sx={{ my: 2 }} />
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
-                      <Typography variant="h6">Total Bayar:</Typography>
+                      <Typography variant="h6">Total Payment:</Typography>
                       <Typography variant="h6" color="primary">
-                        Rp {totalCost.toLocaleString('id-ID')}
+                        ${totalCost.toLocaleString('en-US')}
                       </Typography>
                     </Box>
                   </CardContent>
@@ -439,21 +426,20 @@ const BookingPage: React.FC = () => {
         );
 
       case 2:
-        return (
-          <Box textAlign="center">
+        return (          <Box textAlign="center">
             <CheckCircle sx={{ fontSize: 80, color: 'success.main', mb: 2 }} />
             <Typography variant="h4" gutterBottom>
-              Booking Berhasil!
+              Booking Successful!
             </Typography>
             <Typography variant="body1" color="text.secondary" paragraph>
-              Booking Anda telah dikonfirmasi. Gunakan QR code untuk masuk ke area parkir.
+              Your booking has been confirmed. Use the QR code to enter the parking area.
             </Typography>
 
             {createdBooking && (
               <Card sx={{ maxWidth: 400, mx: 'auto', mt: 3 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    Detail Booking
+                    Booking Details
                   </Typography>
                   <Typography variant="body2">
                     Booking ID: {createdBooking._id}
@@ -469,7 +455,7 @@ const BookingPage: React.FC = () => {
                     onClick={() => navigate(`/booking/${createdBooking._id}`)}
                     disabled={false} // Set a default value
                   >
-                    Lihat QR Code
+                    View QR Code
                   </Button>
                 </CardContent>
               </Card>
@@ -482,11 +468,10 @@ const BookingPage: React.FC = () => {
     }
   };
 
-  return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
+  return (    <Container maxWidth="lg" sx={{ py: 3 }}>
       <Paper elevation={2} sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
-          Booking Tempat Parkir
+          Book Parking Space
         </Typography>
 
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
@@ -506,7 +491,7 @@ const BookingPage: React.FC = () => {
             disabled={activeStep === 0}
             onClick={handleBack}
           >
-            Kembali
+            Back
           </Button>
 
           <Box>
@@ -516,7 +501,7 @@ const BookingPage: React.FC = () => {
                 onClick={handleNext}
                 disabled={!parkingLot.vehicleTypes.includes(bookingData.vehicleType) || bookingData.duration < 1}
               >
-                Lanjut
+                Next
               </Button>
             )}
             {activeStep === 1 && (
@@ -526,7 +511,7 @@ const BookingPage: React.FC = () => {
                 disabled={Boolean(isProcessing || (bookingData.paymentMethod === 'saldo' && user && user.saldo < totalCost))}
                 startIcon={isProcessing ? <CircularProgress size={20} /> : null}
               >
-                {isProcessing ? 'Memproses...' : 'Buat Booking'}
+                {isProcessing ? 'Processing...' : 'Create Booking'}
               </Button>
             )}
             {activeStep === 2 && (
@@ -536,7 +521,7 @@ const BookingPage: React.FC = () => {
                 disabled={isProcessing}
                 startIcon={isProcessing ? <CircularProgress size={20} /> : null}
               >
-                {isProcessing ? 'Memproses...' : 'Bayar Sekarang'}
+                {isProcessing ? 'Processing...' : 'Pay Now'}
               </Button>
             )}
             {activeStep === steps.length - 1 && (
@@ -544,7 +529,7 @@ const BookingPage: React.FC = () => {
                 variant="contained"
                 onClick={() => navigate('/bookings')}
               >
-                Lihat Semua Booking
+                View All Bookings
               </Button>
             )}
           </Box>

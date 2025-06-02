@@ -7,8 +7,8 @@
  */
 export const formatVehicleType = (vehicleType) => {
   const types = {
-    car: 'Mobil',
-    motorcycle: 'Motor'
+    car: 'Car',
+    motorcycle: 'Motorcycle'
   };
   return types[vehicleType] || vehicleType;
 };
@@ -20,12 +20,12 @@ export const formatVehicleType = (vehicleType) => {
  */
 export const formatBookingStatus = (status) => {
   const statusMap = {
-    pending: 'Menunggu Konfirmasi',
-    confirmed: 'Dikonfirmasi',
-    active: 'Sedang Berlangsung',
-    completed: 'Selesai',
-    cancelled: 'Dibatalkan',
-    expired: 'Kedaluwarsa'
+    pending: 'Pending Confirmation',
+    confirmed: 'Confirmed',
+    active: 'Active',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+    expired: 'Expired'
   };
   return statusMap[status] || status;
 };
@@ -37,10 +37,10 @@ export const formatBookingStatus = (status) => {
  */
 export const formatPaymentStatus = (status) => {
   const statusMap = {
-    pending: 'Menunggu Pembayaran',
-    success: 'Berhasil',
-    failed: 'Gagal',
-    expired: 'Kedaluwarsa'
+    pending: 'Pending Payment',
+    success: 'Success',
+    failed: 'Failed',
+    expired: 'Expired'
   };
   return statusMap[status] || status;
 };
@@ -119,7 +119,7 @@ export const formatPhoneNumber = (phone) => {
  */
 export const formatOperationalHours = (hours) => {
   if (!hours || !hours.open || !hours.close) {
-    return 'Tidak tersedia';
+    return 'Not available';
   }
   
   return `${hours.open} - ${hours.close}`;
@@ -142,14 +142,14 @@ export const formatRating = (rating) => {
  */
 export const formatFacilities = (facilities) => {
   if (!facilities || facilities.length === 0) {
-    return 'Tidak ada fasilitas';
+    return 'No facilities available';
   }
   
   if (facilities.length <= 3) {
     return facilities.join(', ');
   }
   
-  return `${facilities.slice(0, 3).join(', ')}, +${facilities.length - 3} lainnya`;
+  return `${facilities.slice(0, 3).join(', ')}, +${facilities.length - 3} more`;
 };
 
 /**
@@ -161,8 +161,7 @@ export const formatFacilities = (facilities) => {
 export const formatBookingTime = (startTime, duration) => {
   const start = new Date(startTime);
   const end = new Date(start.getTime() + duration * 60 * 60 * 1000);
-  
-  const timeOptions = {
+    const timeOptions = {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false
@@ -174,9 +173,9 @@ export const formatBookingTime = (startTime, duration) => {
     year: 'numeric'
   };
   
-  const startTime12 = start.toLocaleTimeString('id-ID', timeOptions);
-  const endTime12 = end.toLocaleTimeString('id-ID', timeOptions);
-  const dateStr = start.toLocaleDateString('id-ID', dateOptions);
+  const startTime12 = start.toLocaleTimeString('en-US', timeOptions);
+  const endTime12 = end.toLocaleTimeString('en-US', timeOptions);
+  const dateStr = start.toLocaleDateString('en-US', dateOptions);
   
   // If same day
   if (start.toDateString() === end.toDateString()) {
@@ -184,7 +183,7 @@ export const formatBookingTime = (startTime, duration) => {
   }
   
   // If different days
-  const endDateStr = end.toLocaleDateString('id-ID', dateOptions);
+  const endDateStr = end.toLocaleDateString('en-US', dateOptions);
   return `${dateStr} ${startTime12} - ${endDateStr} ${endTime12}`;
 };
 
@@ -197,21 +196,20 @@ export const formatChatTime = (timestamp) => {
   const date = new Date(timestamp);
   const now = new Date();
   const diff = now - date;
-  
-  // Less than 1 minute
+    // Less than 1 minute
   if (diff < 60000) {
-    return 'Baru saja';
+    return 'Just now';
   }
   
   // Less than 1 hour
   if (diff < 3600000) {
     const minutes = Math.floor(diff / 60000);
-    return `${minutes} menit yang lalu`;
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
   }
   
   // Same day
   if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString('id-ID', {
+    return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
@@ -222,7 +220,7 @@ export const formatChatTime = (timestamp) => {
   const yesterday = new Date(now);
   yesterday.setDate(yesterday.getDate() - 1);
   if (date.toDateString() === yesterday.toDateString()) {
-    return `Kemarin ${date.toLocaleTimeString('id-ID', {
+    return `Yesterday ${date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
@@ -231,8 +229,8 @@ export const formatChatTime = (timestamp) => {
   
   // This week
   if (diff < 604800000) { // 7 days
-    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    return `${days[date.getDay()]} ${date.toLocaleTimeString('id-ID', {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return `${days[date.getDay()]} ${date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false
@@ -240,7 +238,7 @@ export const formatChatTime = (timestamp) => {
   }
   
   // Older than a week
-  return date.toLocaleDateString('id-ID', {
+  return date.toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
@@ -261,15 +259,14 @@ export const formatDate = (date, options = {}) => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
   if (isNaN(dateObj.getTime())) return '';
-  
-  const defaultOptions = {
+    const defaultOptions = {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
     ...options
   };
   
-  return dateObj.toLocaleDateString('id-ID', defaultOptions);
+  return dateObj.toLocaleDateString('en-US', defaultOptions);
 };
 
 /**
@@ -284,15 +281,14 @@ export const formatTime = (date, options = {}) => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
   if (isNaN(dateObj.getTime())) return '';
-  
-  const defaultOptions = {
+    const defaultOptions = {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
     ...options
   };
   
-  return dateObj.toLocaleTimeString('id-ID', defaultOptions);
+  return dateObj.toLocaleTimeString('en-US', defaultOptions);
 };
 
 /**
@@ -324,8 +320,7 @@ export const formatDateTime = (date, options = {}) => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   
   if (isNaN(dateObj.getTime())) return '';
-  
-  const defaultOptions = {
+    const defaultOptions = {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -335,5 +330,5 @@ export const formatDateTime = (date, options = {}) => {
     ...options
   };
   
-  return dateObj.toLocaleDateString('id-ID', defaultOptions);
+  return dateObj.toLocaleDateString('en-US', defaultOptions);
 };

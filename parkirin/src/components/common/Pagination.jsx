@@ -25,16 +25,15 @@ const Pagination = ({
   };
 
   const visiblePages = getVisiblePages();
-
   const PageButton = ({ page, isActive, disabled, children, onClick }) => (
     <button
       onClick={() => onClick && onClick(page)}
       disabled={disabled}
       className={classNames(
-        'relative inline-flex items-center px-4 py-2 text-sm font-medium border transition-colors duration-150',
+        'relative inline-flex items-center px-4 py-2 text-sm font-medium border transition-all duration-200 hover:scale-105',
         {
-          'z-10 bg-blue-50 border-blue-500 text-blue-600': isActive,
-          'bg-white border-gray-300 text-gray-500 hover:bg-gray-50': !isActive && !disabled,
+          'z-10 bg-primary-50 border-primary-500 text-primary-600 shadow-md': isActive,
+          'bg-white border-gray-300 text-gray-500 hover:bg-primary-50 hover:border-primary-300 hover:text-primary-600': !isActive && !disabled,
           'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed': disabled
         }
       )}
