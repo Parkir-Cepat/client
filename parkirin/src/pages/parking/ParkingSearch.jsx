@@ -144,18 +144,10 @@ const ParkingSearch = () => {
         // Add user location marker
         if (userLocation) {
           try {
-            const userMarker = new window.google.maps.Marker({
+            const userMarker = new window.google.maps.marker.AdvancedMarkerElement({
               position: { lat: userLocation.latitude, lng: userLocation.longitude },
               map: map.current,
-              title: 'Your Location',
-              icon: {
-                path: window.google.maps.SymbolPath.CIRCLE,
-                fillColor: '#4285F4',
-                fillOpacity: 1,
-                strokeColor: 'white',
-                strokeWeight: 2,
-                scale: 8
-              }
+              title: 'Your Location'
             });
             
             markers.current.push(userMarker);

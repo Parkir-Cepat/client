@@ -11,7 +11,6 @@ const ParkingGrid = ({
   userLocation,
   favorites = [],
   onFavorite,
-  onBook,
   emptyMessage = 'No parking spaces found',
   className = ''
 }) => {
@@ -51,15 +50,13 @@ const ParkingGrid = ({
     <div className={classNames(
       'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6',
       className
-    )}>
-      {parkings.map((parking) => (
+    )}>      {parkings.map((parking) => (
         <ParkingCard
           key={parking.id}
           parking={parking}
           userLocation={userLocation}
           isFavorite={favorites.includes(parking.id)}
           onFavorite={onFavorite}
-          onBook={onBook}
         />
       ))}
     </div>

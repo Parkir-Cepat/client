@@ -4,7 +4,6 @@ import AuthLayout from './layouts/AuthLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import useAuthStore from './store/authStore.js';
-import TestDashboard from './components/TestDashboard';
 
 // Lazy load components
 const Login = React.lazy(() => import('./pages/auth/Login'));

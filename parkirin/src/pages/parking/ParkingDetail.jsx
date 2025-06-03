@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@apollo/client';
-import { gql } from '@apollo/client';
+import { GET_PARKING_LOT } from '../../graphql/queries';
 import { 
   MapPinIcon, 
   ClockIcon, 
@@ -10,46 +10,6 @@ import {
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 import ContactOwnerButton from '../../components/chat/ContactOwnerButton';
-
-const GET_PARKING_LOT = gql`
-  query GetParkingLot($id: ID!) {
-    getParkingLot(id: $id) {
-      _id
-      name
-      address
-      description
-      images
-      owner {
-        _id
-        name
-        email
-        avatar
-      }
-      location {
-        coordinates
-      }
-      available {
-        car
-        motorcycle
-      }
-      capacity {
-        car
-        motorcycle
-      }
-      rates {
-        car
-        motorcycle
-      }
-      operational_hours {
-        open
-        close
-      }
-      facilities
-      rating
-      status
-    }
-  }
-`;
 
 const ParkingDetail = () => {
   const { id } = useParams();
@@ -62,12 +22,11 @@ const ParkingDetail = () => {
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     </div>
   );
-
   if (error) return (
     <div className="text-red-600 p-4">Error: {error.message}</div>
   );
 
-  const parking = data?.getParkingLot;
+  const parking = data?.getParking;
 
   if (!parking) return (
     <div className="text-center p-8">

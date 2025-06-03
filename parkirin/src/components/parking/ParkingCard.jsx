@@ -10,7 +10,6 @@ const ParkingCard = ({
   parking,
   userLocation,
   onFavorite,
-  onBook,
   isFavorite = false,
   showActions = true,
   className = ''
@@ -215,30 +214,56 @@ const ParkingCard = ({
               </span>
             )}
           </div>
-        )}
-
-        {/* Actions */}
+        )}        {/* Actions */}
         {showActions && (
-          <div className="flex space-x-2">
-            <Link to={`/parking/${id}`} className="flex-1">
-              <Button
-                variant="outline"
-                size="small"
-                className="w-full"
-              >
-                View Details
-              </Button>
-            </Link>
-            <Button
-              variant="primary"
-              size="small"
-              className="flex-1"
-              onClick={() => onBook?.(parking)}
-              disabled={availableSpaces === 0 || !isOpen()}
+          <div className="flex space-x-3 pt-2 border-t border-gray-100">
+            {/* Details Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsModalOpen(true);
+              }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 text-gray-700 font-medium rounded-lg transition-all duration-200 hover:shadow-md"
+              aria-label={`View details for ${name} parking lot`}
             >
-              {availableSpaces === 0 ? 'Full' : 'Book Now'}
-            </Button>
-          </div>        )}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Details</span>
+            </button>
+            
+            {/* Book Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (availableSpaces === 0) {
+                  alert('Sorry, this parking lot is currently full.');
+                  return;
+                }
+                if (!isOpen()) {
+                  alert('Sorry, this parking lot is currently closed.');
+                  return;
+                }
+                // Navigate to booking page with parking ID
+                window.location.href = `/booking?parkingLotId=${id}&vehicleType=car&duration=2`;
+              }}
+              disabled={availableSpaces === 0 || !isOpen()}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 font-medium rounded-lg transition-all duration-200 hover:shadow-md ${
+                availableSpaces === 0 || !isOpen()
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg transform hover:scale-105'
+              }`}
+              aria-label={`Book parking at ${name}`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>
+                {availableSpaces === 0 ? 'Full' : !isOpen() ? 'Closed' : 'Book Now'}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
     </Card>
     

@@ -204,3 +204,57 @@ export const validateOperationalHours = (openTime, closeTime) => {
   
   return { isValid: true, message: 'Valid operational hours' };
 };
+
+/**
+ * Validate vehicle type
+ * @param {string} vehicleType - Vehicle type to validate
+ * @returns {boolean} True if valid vehicle type
+ */
+export const validateVehicleType = (vehicleType) => {
+  const validTypes = ['car', 'motorcycle'];
+  return validTypes.includes(vehicleType);
+};
+
+/**
+ * Validate booking time
+ * @param {string} date - Date string (YYYY-MM-DD format)
+ * @param {string} time - Time string (HH:MM format)
+ * @returns {object} Validation result
+ */
+export const validateBookingTime = (date, time) => {
+  if (!date || !time) {
+    return { isValid: false, message: 'Date and time are required' };
+  }
+  
+  const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  
+  if (!dateRegex.test(date)) {
+    return { isValid: false, message: 'Invalid date format (use YYYY-MM-DD)' };
+  }
+  
+  if (!timeRegex.test(time)) {
+    return { isValid: false, message: 'Invalid time format (use HH:MM)' };
+  }
+  
+  const selectedDateTime = new Date(`${date}T${time}:00`);
+  const now = new Date();
+  
+  if (isNaN(selectedDateTime.getTime())) {
+    return { isValid: false, message: 'Invalid date or time' };
+  }
+  
+  if (selectedDateTime <= now) {
+    return { isValid: false, message: 'Booking time must be in the future' };
+  }
+  
+  // Check if booking is too far in the future (e.g., max 3 months)
+  const maxFutureDate = new Date();
+  maxFutureDate.setMonth(maxFutureDate.getMonth() + 3);
+  
+  if (selectedDateTime > maxFutureDate) {
+    return { isValid: false, message: 'Booking cannot be more than 3 months in advance' };
+  }
+  
+  return { isValid: true, message: 'Valid booking time' };
+};

@@ -558,7 +558,7 @@ class GoogleMapsService {
         } catch (markerError) {
           console.error('Error creating marker, using basic marker:', markerError);
           // Basic fallback marker
-          marker = new window.google.maps.Marker({
+          marker = new window.google.maps.marker.AdvancedMarkerElement({
             position: { lat, lng },
             map: map,
             title: spot.name,
