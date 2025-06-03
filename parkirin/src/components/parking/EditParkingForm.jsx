@@ -75,26 +75,47 @@ const EditParkingForm = ({ parking, onClose, onSuccess }) => {
       });
     }
   }, [parking]);
-
   const validateForm = () => {
     const newErrors = {};
     
     if (!formData.name.trim()) newErrors.name = 'Nama parking lot wajib diisi';
     if (!formData.address.trim()) newErrors.address = 'Alamat wajib diisi';
+    if (formData.location.coordinates[0] === 0 || formData.location.coordinates[1] === 0) {
+      newErrors.location = 'Koordinat lokasi wajib diisi';
+    }
+    if (formData.capacity.car < 1) newErrors.carCapacity = 'Kapasitas mobil minimal 1';
+    if (formData.capacity.motorcycle < 1) newErrors.motorcycleCapacity = 'Kapasitas motor minimal 1';
     if (formData.rates.car < 1000) newErrors.carRate = 'Tarif mobil minimal Rp 1.000';
     if (formData.rates.motorcycle < 500) newErrors.motorcycleRate = 'Tarif motor minimal Rp 500';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-  const handleSubmit = async (e) => {
+  };  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) return;
     
     setLoading(true);
     try {
-      // Only include fields that are accepted by the server's UpdateParkingInput type
+      // Log the mutation parameters to debug
+      console.log('Update mutation params:', {
+        id: parking._id,
+        input: {
+          name: formData.name,
+          address: formData.address,
+          rates: {
+            car: parseFloat(formData.rates.car),
+            motorcycle: parseFloat(formData.rates.motorcycle)
+          },
+          operational_hours: {
+            open: formData.operational_hours.open,
+            close: formData.operational_hours.close
+          },
+          facilities: formData.facilities,
+          images: formData.images
+        }
+      });
+      
       const { data } = await updateParking({
         variables: {
           id: parking._id,
@@ -259,21 +280,30 @@ const EditParkingForm = ({ parking, onClose, onSuccess }) => {
               />
               {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
             </div>
-          </div>
-
-          {/* Location Selection - Read Only since we can't update it on the server */}
+          </div>          {/* Location Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Lokasi Parkir
+              Lokasi Parkir *
             </label>
             <div className="space-y-3">
-              <div className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg transition-colors border-gray-300 bg-gray-50 text-gray-700">
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('Pilih Lokasi di Peta clicked');
+                  setShowLocationPicker(true);
+                }}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg transition-colors ${
+                  formData.location.coordinates[0] === 0 && formData.location.coordinates[1] === 0
+                    ? 'border-gray-300 hover:border-orange-400 text-gray-600'
+                    : 'border-green-300 bg-green-50 text-green-700'
+                } ${errors.location ? 'border-red-300' : ''}`}
+              >
                 <MapPinIcon className="w-5 h-5" />
-                {formData.location.coordinates[0] !== 0 && formData.location.coordinates[1] !== 0
-                  ? `Lokasi: ${formData.location.coordinates[1].toFixed(6)}, ${formData.location.coordinates[0].toFixed(6)}`
-                  : 'Lokasi tidak tersedia'
+                {formData.location.coordinates[0] === 0 && formData.location.coordinates[1] === 0
+                  ? 'Pilih Lokasi di Peta'
+                  : `Lokasi: ${formData.location.coordinates[1].toFixed(6)}, ${formData.location.coordinates[0].toFixed(6)}`
                 }
-              </div>
+              </button>
               
               {formData.location.coordinates[0] !== 0 && formData.location.coordinates[1] !== 0 && (
                 <div className="bg-gray-50 rounded-lg p-3">
@@ -284,37 +314,43 @@ const EditParkingForm = ({ parking, onClose, onSuccess }) => {
                 </div>
               )}
             </div>
+            {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
             <p className="text-xs text-gray-500 mt-1">
-              Lokasi tidak dapat diubah dalam update ini
+              Klik tombol di atas untuk mengubah lokasi menggunakan peta interaktif
             </p>
-          </div>
-
-          {/* Capacity - Read Only since we can't update it on the server */}
+          </div>          {/* Capacity */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4">Kapasitas Parkir</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Kapasitas Mobil
+                  Kapasitas Mobil *
                 </label>
                 <input
                   type="number"
+                  min="1"
                   value={formData.capacity.car}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 bg-gray-50 rounded-lg text-gray-700"
+                  onChange={(e) => handleInputChange('capacity.car', parseInt(e.target.value) || 0)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                    errors.carCapacity ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
-                <p className="text-xs text-gray-500 mt-1">Kapasitas tidak dapat diubah dalam update ini</p>
+                {errors.carCapacity && <p className="text-red-500 text-xs mt-1">{errors.carCapacity}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Kapasitas Motor
+                  Kapasitas Motor *
                 </label>
                 <input
                   type="number"
+                  min="1"
                   value={formData.capacity.motorcycle}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 bg-gray-50 rounded-lg text-gray-700"
+                  onChange={(e) => handleInputChange('capacity.motorcycle', parseInt(e.target.value) || 0)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
+                    errors.motorcycleCapacity ? 'border-red-300' : 'border-gray-300'
+                  }`}
                 />
+                {errors.motorcycleCapacity && <p className="text-red-500 text-xs mt-1">{errors.motorcycleCapacity}</p>}
               </div>
             </div>
           </div>
