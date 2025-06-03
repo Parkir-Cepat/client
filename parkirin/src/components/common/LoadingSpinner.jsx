@@ -156,19 +156,7 @@ const LoadingSpinner = ({
             color === 'white' ? 'text-white' : colorClasses[color].split(' ')[1]
           )}>
             {text}
-          </p>        )}
-      </div>
-
-      <style>{`
-        @keyframes loading-bars {
-          0% {
-            height: 30%;
-          }
-          100% {
-            height: 100%;
-          }
-        }
-      `}</style>
+          </p>        )}      </div>
     </div>
   );
 };

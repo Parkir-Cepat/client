@@ -3,7 +3,8 @@ import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { PlusIcon, PencilIcon, TrashIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import CreateParkingForm from '../../components/parking/CreateParkingForm';
-import SimpleParkingMap from '../../components/parking/SimpleParkingMap';
+import EditParkingForm from '../../components/parking/EditParkingForm';
+import { ParkingMap } from '../../components/parking';
 
 const GET_MY_PARKINGS = gql`
   query GetMyParkings {
@@ -49,6 +50,8 @@ const DELETE_PARKING_LOT = gql`
 
 const ManageParking = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingParking, setEditingParking] = useState(null);
   const { data, loading, error, refetch } = useQuery(GET_MY_PARKINGS);
   const [deleteParkingLot] = useMutation(DELETE_PARKING_LOT);
 
@@ -66,23 +69,22 @@ const ManageParking = () => {
     }
   };
 
+  const handleEdit = (parking) => {
+    setEditingParking(parking);
+    setShowEditForm(true);
+  };
+
+  const handleEditSuccess = (updatedParking) => {
+    refetch(); // Refresh data
+    alert(`Parking lot "${updatedParking.name}" berhasil diupdate!`);
+  };
+
   const handleCreateSuccess = (newParking) => {
     refetch(); // Refresh data
     alert(`Parking lot "${newParking.name}" berhasil dibuat!`);
   };
+
   console.log('Fetched parking data:', data); // Debugging line to check fetched data
-  
-  // Debug specific parking data
-  if (data?.getMyParkings) {
-    data.getMyParkings.forEach((parking, index) => {
-      console.log(`Parking ${index + 1}:`, {
-        name: parking.name,
-        images: parking.images,
-        location: parking.location,
-        coordinates: parking.location?.coordinates
-      });
-    });
-  }
 
   if (loading) return (
     <div className="flex justify-center p-8">
@@ -125,15 +127,16 @@ const ManageParking = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data?.getMyParkings?.map((parking) => (            <div key={parking._id} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow">              {/* Image Section */}
+          {data?.getMyParkings?.map((parking) => (            <div key={parking._id} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow">
+              {/* Image Section */}
               <div className="relative h-48">
                 {parking.images && parking.images.length > 0 ? (
                   <img
                     src={parking.images[0]}
                     alt={parking.name}
-                    className="w-full h-full object-cover"                    onError={(e) => {
-                      console.log('Image failed to load, using fallback:', parking.images[0]);
-                      e.target.src = '/images/parking-default.svg';
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = '/images/parking-default.jpg';
                     }}
                   />
                 ) : (
@@ -144,7 +147,7 @@ const ManageParking = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
                         </svg>
                       </div>
-                      <p className="text-sm text-gray-500 font-medium">No Image Available</p>
+                      <p className="text-sm text-gray-500 font-medium">Parking Area</p>
                     </div>
                   </div>
                 )}
@@ -167,13 +170,22 @@ const ManageParking = () => {
                     <MapPinIcon className="w-4 h-4 text-gray-400 mt-0.5 mr-1 flex-shrink-0" />
                     <p className="text-gray-600 text-sm line-clamp-2">{parking.address}</p>
                   </div>
-                </div>                {/* Mini Map */}
-                <div className="mb-4 h-32 rounded-lg overflow-hidden border border-gray-200">
-                  <SimpleParkingMap
-                    parking={parking}
-                    height="128px"
-                  />
                 </div>
+
+                {/* Mini Map */}
+                {parking.location?.coordinates && (
+                  <div className="mb-4 h-32 rounded-lg overflow-hidden border border-gray-200">
+                    <ParkingMap
+                      parkingLots={[parking]}
+                      center={[parking.location.coordinates[0], parking.location.coordinates[1]]}
+                      zoom={15}
+                      height="128px"
+                      showUserLocation={false}
+                      showNavigationControls={false}
+                      fitBounds={false}
+                    />
+                  </div>
+                )}
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="bg-blue-50 rounded-lg p-3">
@@ -203,9 +215,9 @@ const ManageParking = () => {
                     <span className="text-sm text-gray-600 ml-1">{parking.rating?.toFixed(1) || '0.0'}</span>
                     <span className="text-xs text-gray-400 ml-1">({parking.review_count || 0})</span>
                   </div>
-                  
-                  <div className="flex space-x-2">
+                    <div className="flex space-x-2">
                     <button 
+                      onClick={() => handleEdit(parking)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                       title="Edit"
                     >
@@ -224,12 +236,18 @@ const ManageParking = () => {
             </div>
           ))}
         </div>
-      )}
-
-      {showCreateForm && (
+      )}      {showCreateForm && (
         <CreateParkingForm 
           onClose={() => setShowCreateForm(false)}
           onSuccess={handleCreateSuccess}
+        />
+      )}
+
+      {showEditForm && editingParking && (
+        <EditParkingForm 
+          parking={editingParking}
+          onClose={() => setShowEditForm(false)}
+          onSuccess={handleEditSuccess}
         />
       )}
     </div>
