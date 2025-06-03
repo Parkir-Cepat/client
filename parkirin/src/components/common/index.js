@@ -10,3 +10,4 @@ export { default as Dropdown } from './Dropdown';
 export { default as Tooltip } from './Tooltip';
 export { default as Pagination } from './Pagination';
 export { default as ErrorBoundary } from './ErrorBoundary';
+export { default as LogoGroup } from './LogoGroup';

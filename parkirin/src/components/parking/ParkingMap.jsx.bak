@@ -1,0 +1,402 @@
+import React, { useState, useEffect, useRef } from 'react';
+import GoogleMapsService from '../../services/googleMapsService';
+import { MAP_DEFAULTS } from '../../utils/constants';
+import { LoadingSpinner, Button, Badge } from '../common';
+
+const ParkingMap = ({
+  parkingLots = [],
+  userLocation = null,
+  onParkingClick = null,
+  height = '400px',
+  showUserLocation = true,
+  showNavigationControls = true,
+  fitBounds = true,
+  zoom = MAP_DEFAULTS.ZOOM,
+  center = [MAP_DEFAULTS.CENTER.longitude, MAP_DEFAULTS.CENTER.latitude],
+  className = ''
+}) => {
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const markers = useRef([]);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [mapStyle, setMapStyle] = useState('default');
+
+  const mapStyles = {
+    default: [{
+      featureType: 'all',
+      elementType: 'all',
+      stylers: [{ saturation: -80 }]
+    }, {
+      featureType: 'road.arterial',
+      elementType: 'geometry',
+      stylers: [{ color: '#fcdbc8' }]
+    }, {
+      featureType: 'poi',
+      elementType: 'labels',
+      stylers: [{ visibility: 'simplified' }]
+    }],
+    night: [{
+      featureType: 'all',
+      elementType: 'labels.text.fill',
+      stylers: [{ color: '#ffffff' }]
+    }, {
+      featureType: 'all',
+      elementType: 'labels.text.stroke',
+      stylers: [{ color: '#000000' }, { lightness: 13 }]
+    }, {
+      featureType: 'water',
+      elementType: 'all',
+      stylers: [{ color: '#021019' }]
+    }],
+    satellite: []
+  };
+
+  // Initialize Google Map
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return;
+
+    const initializeMap = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('Starting map initialization...');
+        await GoogleMapsService.loadGoogleMaps();
+        
+        console.log('Google Maps loaded, checking availability...');
+        if (!window.google || !window.google.maps) {
+          throw new Error('Google Maps API not available');
+        }
+
+        // Use fallback center if userLocation is not available
+        const mapCenter = userLocation && userLocation.latitude && userLocation.longitude
+          ? { lat: userLocation.latitude, lng: userLocation.longitude }
+          : { lat: center[1], lng: center[0] };
+
+        console.log('Creating map with center:', mapCenter);
+
+        map.current = new window.google.maps.Map(mapContainer.current, {
+          center: mapCenter,
+          zoom: zoom,
+          styles: mapStyles.default,
+          mapTypeControl: true,
+          mapTypeControlOptions: {
+            style: window.google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+            position: window.google.maps.ControlPosition.TOP_RIGHT,
+          },
+          zoomControl: showNavigationControls,
+          zoomControlOptions: {
+            position: window.google.maps.ControlPosition.RIGHT_TOP,
+          },
+          streetViewControl: showNavigationControls,
+          fullscreenControl: showNavigationControls,
+        });
+
+        setMapLoaded(true);
+        console.log('Map initialized successfully');
+      } catch (err) {
+        console.error('Error initializing map:', err);
+        setError(err.message || 'Failed to load map');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeMap();
+
+    // Cleanup function
+    return () => {
+      if (map.current) {
+        // Clear any markers and listeners
+        clearMarkers();
+        setMapLoaded(false);
+        map.current = null;
+      }
+    };
+  }, [center, zoom, userLocation, showNavigationControls, mapStyles]);
+
+  // Add markers for user location and parking lots
+  useEffect(() => {
+    if (!mapLoaded || !map.current) return;
+
+    const addMarkers = async () => {
+      try {
+        clearMarkers();
+
+        // Add user location marker if available
+        if (showUserLocation && userLocation && userLocation.latitude && userLocation.longitude) {
+          const userPosition = { lat: userLocation.latitude, lng: userLocation.longitude };
+          
+          // Create user marker with custom style
+          const userMarker = new window.google.maps.Marker({
+            position: userPosition,
+            map: map.current,
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: '#f16634',
+              fillOpacity: 1,
+              strokeColor: 'white',
+              strokeWeight: 2,
+            },
+            zIndex: 1000,
+            title: 'Your Location'
+          });
+
+          // Add accuracy circle
+          new window.google.maps.Circle({
+            map: map.current,
+            center: userPosition,
+            radius: 100, // Radius in meters
+            fillColor: '#f16634',
+            fillOpacity: 0.15,
+            strokeColor: '#f16634',
+            strokeOpacity: 0.3,
+            strokeWeight: 1,
+          });
+
+          markers.current.push(userMarker);
+        }
+
+        // Add parking lot markers
+        if (parkingLots && parkingLots.length > 0) {
+          const bounds = new window.google.maps.LatLngBounds();
+          
+          parkingLots.forEach(parking => {
+            if (!parking.location || !parking.location.coordinates) return;
+            
+            const [lng, lat] = parking.location.coordinates;
+            const position = { lat, lng };
+            
+            // Determine marker color based on availability
+            const getMarkerColor = () => {
+              const availableSpots = parking.totalSpots - parking.occupiedSpots;
+              if (availableSpots === 0) return '#ef4444'; // Red - full
+              if (availableSpots < parking.totalSpots * 0.2) return '#f59e0b'; // Yellow - almost full
+              return '#10b981'; // Green - available
+            };
+            
+            // Custom marker
+            const markerSvg = `
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
+                <g fill="none" fill-rule="evenodd">
+                  <path fill="${getMarkerColor()}" d="M18 36c-1.333-2-8-9.334-8-16a8 8 0 1 1 16 0c0 6.667-6.667 14-8 16z"/>
+                  <path fill="white" d="M18 24a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"/>
+                  <path fill="${getMarkerColor()}" d="M18 22a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
+                </g>
+              </svg>
+            `;
+            
+            const marker = new window.google.maps.Marker({
+              position,
+              map: map.current,
+              icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(markerSvg),
+                scaledSize: new window.google.maps.Size(36, 36),
+                anchor: new window.google.maps.Point(18, 36),
+              },
+              animation: window.google.maps.Animation.DROP,
+              title: parking.name
+            });
+
+            // Create info window
+            const contentString = `
+              <div class="bg-white p-3 rounded-lg shadow-lg min-w-[200px]">
+                <h2 class="text-orange-600 font-bold text-lg">${parking.name}</h2>
+                <p class="text-gray-600 text-sm">${parking.address}</p>
+                <div class="flex items-center mt-1">
+                  <span class="text-sm font-medium mr-1">Availability:</span>
+                  <span class="px-2 py-0.5 rounded-full text-xs font-medium ${
+                    parking.occupiedSpots >= parking.totalSpots 
+                      ? 'bg-red-100 text-red-800' 
+                      : 'bg-green-100 text-green-800'
+                  }">
+                    ${parking.totalSpots - parking.occupiedSpots}/${parking.totalSpots} spots
+                  </span>
+                </div>
+                <p class="text-orange-600 font-bold mt-1">Rp ${parking.price.toLocaleString('id-ID')}/hour</p>
+                <button class="mt-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors">
+                  View Details
+                </button>
+              </div>
+            `;
+            
+            const infoWindow = new window.google.maps.InfoWindow({
+              content: contentString,
+              ariaLabel: parking.name,
+            });
+            
+            // Add click listener
+            marker.addListener('click', () => {
+              // Close all open info windows
+              markers.current.forEach(m => {
+                if (m.infoWindow) m.infoWindow.close();
+              });
+              
+              // Open this info window
+              infoWindow.open({
+                anchor: marker,
+                map: map.current,
+              });
+              
+              marker.infoWindow = infoWindow;
+              
+              if (onParkingClick) {
+                onParkingClick(parking);
+              }
+            });
+            
+            // Extend bounds to include this marker
+            bounds.extend(position);
+            markers.current.push(marker);
+            marker.infoWindow = infoWindow;
+          });
+          
+          // Fit map to bounds if we have more than one marker
+          if (fitBounds && markers.current.length > 1) {
+            map.current.fitBounds(bounds);
+            
+            // Don't zoom in too far
+            const listener = window.google.maps.event.addListener(map.current, 'idle', () => {
+              if (map.current.getZoom() > 16) {
+                map.current.setZoom(16);
+              }
+              window.google.maps.event.removeListener(listener);
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error adding markers:', err);
+        setError(err.message || 'Failed to add markers to map');
+      }
+    };
+
+    addMarkers();
+  }, [mapLoaded, parkingLots, userLocation, showUserLocation, fitBounds, onParkingClick]);
+
+  // Update map style when it changes
+  useEffect(() => {
+    if (map.current && mapLoaded) {
+      map.current.setOptions({
+        styles: mapStyles[mapStyle]
+      });
+    }
+  }, [mapStyle, mapLoaded, mapStyles]);  // Function to clear all markers
+  const clearMarkers = () => {
+    if (markers.current) {
+      markers.current.forEach(marker => {
+        if (marker) {
+          marker.setMap(null);
+          if (marker.infoWindow) {
+            marker.infoWindow.close();
+          }
+        }
+      });
+      markers.current = [];
+    }
+  };
+
+  // Function to toggle map style
+  const toggleMapStyle = () => {
+    const styles = Object.keys(mapStyles);
+    const currentIndex = styles.indexOf(mapStyle);
+    const nextIndex = (currentIndex + 1) % styles.length;
+    setMapStyle(styles[nextIndex]);
+  };
+
+  return (
+    <div className={`relative overflow-hidden rounded-xl shadow-lg ${className}`}>
+      {/* Map container */}
+      <div 
+        ref={mapContainer} 
+        className="w-full transition-all duration-300 bg-gray-100"
+        style={{ height }}
+      />
+      
+      {/* Loading overlay */}
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-70 backdrop-blur-sm z-10">
+          <div className="text-center">
+            <LoadingSpinner size="lg" color="#f16634" />
+            <p className="mt-2 text-gray-600 font-medium">Loading map...</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Error message */}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
+          <div className="max-w-md p-6 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 text-red-500">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Map Loading Failed</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()}
+              variant="primary"
+              className="w-full"
+            >
+              Reload Page
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Map controls */}
+      {mapLoaded && !loading && !error && (
+        <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+          <Button
+            onClick={toggleMapStyle}
+            variant="secondary"
+            className="w-10 h-10 rounded-full shadow-lg bg-white bg-opacity-80 backdrop-blur-sm p-0 flex items-center justify-center hover:bg-opacity-100"
+            aria-label="Change map style"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+          </Button>
+          
+          {showUserLocation && userLocation && (
+            <Button
+              onClick={() => {
+                if (map.current) {
+                  map.current.panTo({ lat: userLocation.latitude, lng: userLocation.longitude });
+                  map.current.setZoom(15);
+                }
+              }}
+              variant="primary"
+              className="w-10 h-10 rounded-full shadow-lg bg-orange-500 p-0 flex items-center justify-center"
+              aria-label="Center on your location"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+              </svg>
+            </Button>
+          )}
+        </div>
+      )}
+      
+      {/* Map style badge */}
+      {mapLoaded && !loading && !error && (
+        <Badge 
+          variant="info" 
+          className="absolute top-4 right-4 bg-white bg-opacity-80 backdrop-blur-sm shadow-md"
+        >
+          {mapStyle.charAt(0).toUpperCase() + mapStyle.slice(1)} Map
+        </Badge>
+      )}
+    </div>
+  );
+};
+
+export default ParkingMap;
+        }
+      });
+      markers.current = [];
+    }
+  };

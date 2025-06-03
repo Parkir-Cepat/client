@@ -57,6 +57,20 @@ export const ERROR_MESSAGES = {
   UNKNOWN_ERROR: 'An unknown error occurred. Please try again.'
 };
 
+// Parking Facilities
+export const PARKING_FACILITIES = {
+  SECURITY: 'security',
+  COVERED: 'covered',
+  CCTV: 'cctv',
+  LIGHTING: 'lighting',
+  ELEVATOR: 'elevator',
+  DISABLED_ACCESS: 'disabled_access',
+  ELECTRIC_CHARGING: 'electric_charging',
+  WASH_SERVICE: 'wash_service',
+  VALET: 'valet',
+  RESTROOM: 'restroom'
+};
+
 // Success Messages
 export const SUCCESS_MESSAGES = {
   LOGIN_SUCCESS: 'Successfully logged in!',

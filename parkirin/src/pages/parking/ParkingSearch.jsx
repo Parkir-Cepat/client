@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@apollo/client';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { Card, Badge, Button, LoadingSpinner } from '../../components/common';
+import { ParkingSearchBox, ParkingLotGrid } from '../../components/parking';
 import GoogleMapsService from '../../services/googleMapsService';
 import { GET_NEARBY_PARKINGS } from '../../graphql/queries';
 
@@ -24,9 +25,19 @@ const ParkingSearch = () => {
     maxPrice: 100000
   });
   const [userLocation, setUserLocation] = useState(null);
-
+  const [selectedParkingLot, setSelectedParkingLot] = useState(null); // Used in marker click handler
+  const [viewMode, setViewMode] = useState('grid');
+  const [favorites, setFavorites] = useState([]);
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [popularLocations] = useState([
+    { name: "Jakarta", count: 120 },
+    { name: "Bandung", count: 85 },
+    { name: "Surabaya", count: 73 },
+    { name: "Yogyakarta", count: 64 },
+    { name: "Bali", count: 50 }
+  ]);
   // GraphQL query
-  const { loading, error, data } = useQuery(GET_NEARBY_PARKINGS, {
+  const { loading, data } = useQuery(GET_NEARBY_PARKINGS, {
     variables: {
       longitude: viewport.longitude,
       latitude: viewport.latitude,
@@ -73,14 +84,13 @@ const ParkingSearch = () => {
       } catch (error) {
         console.error('Error initializing Google Maps:', error);
         setMapError(error.message);
-      }
-    };
+      }    };
 
     // Add delay to ensure component is mounted
     const timeoutId = setTimeout(initMap, 100);
     
     return () => clearTimeout(timeoutId);
-  }, []); // Remove dependencies to prevent re-initialization
+  }, [viewport.latitude, viewport.longitude, viewport.zoom]); // Include all dependencies
 
   // Get user's location
   useEffect(() => {
@@ -101,245 +111,298 @@ const ParkingSearch = () => {
         console.log('User location obtained:', { latitude, longitude });
         
         setUserLocation({ latitude, longitude });
-        setViewport(prev => ({
-          ...prev,
-          latitude,
-          longitude
-        }));
-
+        setViewport({ latitude, longitude, zoom: 14 });
+        
         // Update map center if map is loaded
         if (map.current) {
           map.current.setCenter({ lat: latitude, lng: longitude });
+          map.current.setZoom(14);
+            // Add user marker
+          GoogleMapsService.addMarker(map.current, {
+            position: { lat: latitude, lng: longitude },
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: "#4285F4",
+              fillOpacity: 1,
+              strokeColor: "#FFFFFF",
+              strokeWeight: 2
+            },
+            title: "Your Location"
+          });
         }
       },
       (error) => {
-        console.error('Error getting location:', error);
-        // Continue with default location
+        console.error('Error getting user location:', error.message);
       },
       options
     );
-  }, []);
+  }, [mapLoaded]);
 
-  // Clear existing markers helper
-  const clearMarkers = () => {
-    markers.current.forEach(marker => {
-      if (marker.setMap) {
-        marker.setMap(null);
-      }
-    });
+  // Update markers when parking data changes
+  useEffect(() => {
+    if (!map.current || !data?.nearbyParkingLots) return;
+    
+    // Clear existing markers
+    markers.current.forEach(marker => marker.setMap(null));
     markers.current = [];
+    
+    // Add markers for each parking lot
+    data.nearbyParkingLots.forEach(lot => {
+      if (!lot.coordinates || !lot.coordinates.coordinates) return;
+      
+      const [longitude, latitude] = lot.coordinates.coordinates;
+      
+      const marker = GoogleMapsService.addMarker(map.current, {
+        position: { lat: latitude, lng: longitude },
+        title: lot.name,
+        icon: {
+          path: "M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87 -3.13,-7 -7,-7zM12,11.5c-1.38,0 -2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5 2.5,1.12 2.5,2.5 -1.12,2.5 -2.5,2.5z",
+          fillColor: "#f16634",
+          fillOpacity: 1,
+          strokeColor: "#FFFFFF",
+          strokeWeight: 1,
+          scale: 2,
+          anchor: new window.google.maps.Point(12, 22)
+        }
+      });
+      
+      // Add click listener to marker
+      marker.addListener('click', () => {
+        setSelectedParkingLot(lot);
+        
+        // Center map on selected parking lot
+        map.current.panTo({ lat: latitude, lng: longitude });
+        map.current.setZoom(16);
+      });
+      
+      markers.current.push(marker);
+    });
+  }, [data]);
+
+  const handleSearch = (searchData) => {
+    // Save to recent searches
+    const newSearch = {
+      location: searchData.location,
+      dateTime: searchData.dateTime,
+      duration: searchData.duration
+    };
+    
+    setRecentSearches(prev => {
+      const filtered = prev.filter(s => s.location !== searchData.location);
+      return [newSearch, ...filtered].slice(0, 5);
+    });
+    
+    // TODO: Implement geocoding to get coordinates from location string
+    // For now, we'll just use the map center
+    console.log('Search data:', searchData);
   };
 
-  // Add markers for parking spots and user location
-  useEffect(() => {
-    const addMarkers = async () => {
-      if (!map.current || !mapLoaded || !GoogleMapsService.isGoogleMapsLoaded()) {
-        return;
+  const handleFavoriteToggle = (id) => {
+    setFavorites(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(favId => favId !== id);
+      } else {
+        return [...prev, id];
       }
+    });
+  };
 
-      try {
-        // Clear existing markers
-        clearMarkers();
-
-        // Add user location marker
-        if (userLocation) {
-          try {
-            const userMarker = new window.google.maps.Marker({
-              position: { lat: userLocation.latitude, lng: userLocation.longitude },
-              map: map.current,
-              title: 'Your Location',
-              icon: {
-                path: window.google.maps.SymbolPath.CIRCLE,
-                fillColor: '#4285F4',
-                fillOpacity: 1,
-                strokeColor: 'white',
-                strokeWeight: 2,
-                scale: 8
-              }
-            });
-            
-            markers.current.push(userMarker);
-            console.log('User location marker added');
-          } catch (error) {
-            console.error('Error creating user location marker:', error);
-          }
-        }
-
-        // Add parking spot markers
-        if (data?.getNearbyParkings) {
-          try {
-            const parkingMarkers = await GoogleMapsService.createParkingMarkers(
-              map.current,
-              data.getNearbyParkings,
-              (parkingData) => {
-                console.log('Parking marker clicked:', parkingData);
-                // Handle parking selection
-              }
-            );
-            
-            markers.current.push(...parkingMarkers);
-            console.log(`Added ${parkingMarkers.length} parking markers`);
-
-            // Fit map to show all markers
-            if (parkingMarkers.length > 0) {
-              GoogleMapsService.fitBoundsToMarkers(map.current, markers.current);
-            }
-          } catch (error) {
-            console.error('Error creating parking markers:', error);
-          }
-        }
-      } catch (error) {
-        console.error('Error in addMarkers:', error);
-      }
-    };
-
-    addMarkers();
-  }, [mapLoaded, data, userLocation]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      clearMarkers();
-    };
-  }, []);
-
-  if (mapError) {
-    return (
-      <div className="h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to Load Map</h3>
-          <p className="text-gray-600 mb-4">{mapError}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) return <LoadingSpinner size="large" />;
-  if (error) return <div>Error loading parking spots: {error.message}</div>;
+  // Transform data for ParkingLotGrid component
+  const parkingLots = data?.nearbyParkingLots?.map(lot => ({
+    ...lot,
+    isFavorite: favorites.includes(lot._id)
+  })) || [];
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-[#f9fafb]">
-      <div className="grid grid-cols-1 md:grid-cols-3 h-full">
-        {/* Filters */}
-        <div className="p-6 bg-white border-r border-gray-100 rounded-xl shadow-lg m-4 md:m-6 md:mr-0">
-          <h2 className="text-xl font-bold text-[#f16634] mb-6">Search Filters</h2>
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search Radius (km)</label>
-              <input
-                type="range"
-                min="0.5"
-                max="5"
-                step="0.5"
-                value={searchParams.radius / 1000}
-                onChange={(e) => setSearchParams(prev => ({
-                  ...prev,
-                  radius: e.target.value * 1000
-                }))}
-                className="w-full accent-[#f16634]"
-              />
-              <span className="text-sm text-[#f16634] font-bold">{searchParams.radius / 1000} km</span>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
-              <select
-                value={searchParams.vehicleType}
-                onChange={(e) => setSearchParams(prev => ({
-                  ...prev,
-                  vehicleType: e.target.value
-                }))}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634] sm:text-sm rounded-md"
-              >
-                <option value="all">All</option>
-                <option value="car">Car</option>
-                <option value="motorcycle">Motorcycle</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Price Range (Rp)</label>
-              <div className="mt-1 grid grid-cols-2 gap-4">
+    <div className="space-y-6 animate-fadeIn">
+      {/* Page header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Find Parking</h1>
+        <p className="text-gray-600">Search for available parking spots near your destination</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Search Panel */}
+        <div className="lg:col-span-1 space-y-6">
+          <ParkingSearchBox 
+            onSearch={handleSearch}
+            recentSearches={recentSearches}
+            popularLocations={popularLocations}
+            loading={loading}
+            className="shadow-md hover:shadow-lg transition-shadow"
+          />
+          
+          {/* Filters Card */}
+          <Card className="p-6 shadow-md hover:shadow-lg transition-shadow">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
+            
+            <div className="space-y-4">
+              {/* Vehicle Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Vehicle Type</label>
+                <div className="flex gap-2">
+                  <button
+                    className={`px-4 py-2 text-sm font-medium rounded-lg border ${
+                      searchParams.vehicleType === 'all'
+                        ? 'bg-orange-50 text-orange-600 border-orange-300'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setSearchParams(prev => ({ ...prev, vehicleType: 'all' }))}
+                  >
+                    All
+                  </button>
+                  <button
+                    className={`px-4 py-2 text-sm font-medium rounded-lg border ${
+                      searchParams.vehicleType === 'car'
+                        ? 'bg-orange-50 text-orange-600 border-orange-300'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setSearchParams(prev => ({ ...prev, vehicleType: 'car' }))}
+                  >
+                    Car
+                  </button>
+                  <button
+                    className={`px-4 py-2 text-sm font-medium rounded-lg border ${
+                      searchParams.vehicleType === 'motorcycle'
+                        ? 'bg-orange-50 text-orange-600 border-orange-300'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setSearchParams(prev => ({ ...prev, vehicleType: 'motorcycle' }))}
+                  >
+                    Motorcycle
+                  </button>
+                </div>
+              </div>
+              
+              {/* Distance Filter */}
+              <div>
+                <div className="flex justify-between">
+                  <label className="block text-sm font-medium text-gray-700">Distance</label>
+                  <span className="text-sm text-gray-500">{searchParams.radius / 1000} km</span>
+                </div>
                 <input
-                  type="number"
-                  value={searchParams.minPrice}
-                  onChange={(e) => setSearchParams(prev => ({
-                    ...prev,
-                    minPrice: parseFloat(e.target.value)
-                  }))}
-                  placeholder="Min"
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634] sm:text-sm"
-                />
-                <input
-                  type="number"
-                  value={searchParams.maxPrice}
-                  onChange={(e) => setSearchParams(prev => ({
-                    ...prev,
-                    maxPrice: parseFloat(e.target.value)
-                  }))}
-                  placeholder="Max"
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634] sm:text-sm"
+                  type="range"
+                  min="500"
+                  max="5000"
+                  step="500"
+                  value={searchParams.radius}
+                  onChange={(e) => setSearchParams(prev => ({ ...prev, radius: parseInt(e.target.value) }))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500 mt-2"
                 />
               </div>
-            </div>
-          </div>
-          {/* Results List */}
-          <div className="mt-8">
-            <h3 className="text-lg font-bold text-[#f16634] mb-4">Available Parking Spots</h3>
-            <div className="space-y-4">
-              {data?.getNearbyParkings?.map((spot) => (
-                <div
-                  key={spot._id}
-                  className="bg-white p-4 rounded-xl shadow border border-gray-100 hover:shadow-lg transition-shadow flex flex-col gap-2"
-                >
-                  <h4 className="font-bold text-[#f16634] text-lg mb-1">{spot.name}</h4>
-                  <p className="text-sm text-gray-500 mb-1">{spot.address}</p>
-                  <div className="flex flex-wrap gap-2 items-center text-sm">
-                    <span className="bg-[#f16634]/10 text-[#f16634] px-2 py-1 rounded-full font-bold">Car: Rp {spot.rates?.car || 0}/hour</span>
-                    <span className="bg-[#f16634]/10 text-[#f16634] px-2 py-1 rounded-full font-bold">Motorcycle: Rp {spot.rates?.motorcycle || 0}/hour</span>
-                    <span className="text-gray-500">Cars: {spot.available?.car || 0} | Motorcycles: {spot.available?.motorcycle || 0} available</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 items-center text-sm">
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-bold">{spot.status || 'Open'}</span>
-                    <span className="flex items-center gap-1 text-yellow-600 font-bold">
-                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 15.585l6.146 3.233-.927-7.037L20 6.798l-6.884-.645L10 0 6.884 6.153 0 6.798l4.781 4.983-.927 7.037L10 15.585z" clipRule="evenodd" /></svg>
-                      {spot.rating || 'N/A'} ({spot.review_count || 0} reviews)
-                    </span>
-                  </div>
+              
+              {/* Price Filter */}
+              <div>
+                <div className="flex justify-between">
+                  <label className="block text-sm font-medium text-gray-700">Price Range</label>
+                  <span className="text-sm text-gray-500">
+                    Rp {searchParams.minPrice.toLocaleString('id-ID')} - Rp {searchParams.maxPrice.toLocaleString('id-ID')}
+                  </span>
                 </div>
-              ))}
+                <div className="mt-2">
+                  {/* Double range slider would be ideal here, but for simplicity using separate sliders */}
+                  <input
+                    type="range"
+                    min="0"
+                    max="100000"
+                    step="5000"
+                    value={searchParams.minPrice}
+                    onChange={(e) => setSearchParams(prev => ({ 
+                      ...prev, 
+                      minPrice: parseInt(e.target.value),
+                      maxPrice: Math.max(prev.maxPrice, parseInt(e.target.value))
+                    }))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500 mb-3"
+                  />
+                  <input
+                    type="range"
+                    min="0"
+                    max="100000"
+                    step="5000"
+                    value={searchParams.maxPrice}
+                    onChange={(e) => setSearchParams(prev => ({ 
+                      ...prev, 
+                      maxPrice: parseInt(e.target.value),
+                      minPrice: Math.min(prev.minPrice, parseInt(e.target.value))
+                    }))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                  />
+                </div>
+              </div>
+              
+              {/* Filter Actions */}
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  variant="outline" 
+                  size="medium"
+                  className="flex-1"
+                  onClick={() => setSearchParams({
+                    radius: 2000,
+                    vehicleType: 'all',
+                    minPrice: 0,
+                    maxPrice: 100000
+                  })}
+                >
+                  Reset
+                </Button>
+                <Button 
+                  variant="primary" 
+                  size="medium" 
+                  className="flex-1"
+                >
+                  Apply
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>        {/* Map */}
-        <div className="md:col-span-2 p-4 md:p-6">
-          <div className="bg-white rounded-xl shadow-lg h-full">
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="text-xl font-bold text-gray-900">Parking Locations</h2>
-            </div>
-            <div className="relative h-[calc(100%-80px)]">
-              {!mapLoaded && (
+          </Card>
+        </div>
+        
+        {/* Map and Results */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Map Container */}
+          <Card className="overflow-hidden shadow-md">
+            <div className="h-[400px] relative">
+              {!mapLoaded && !mapError && (
                 <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                  <LoadingSpinner size="large" variant="pulse" text="Loading map..." />
+                </div>
+              )}
+              
+              {mapError && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 p-4">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading map...</p>
+                    <div className="text-red-500 text-3xl mb-2">⚠️</div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-1">Map could not be loaded</h3>
+                    <p className="text-gray-600 text-sm">{mapError}</p>
                   </div>
                 </div>
               )}
-              <div
-                ref={mapContainer}
-                className="w-full h-full rounded-lg"
-                style={{ minHeight: '400px' }}
+              
+              <div 
+                ref={mapContainer} 
+                className="w-full h-full"
+                style={{ display: mapError ? 'none' : 'block' }}
               />
             </div>
+          </Card>
+          
+          {/* Results */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                {loading ? 'Searching...' : `${parkingLots.length} Parking Lots Found`}
+              </h2>
+            </div>
+            
+            <ParkingLotGrid
+              parkingLots={parkingLots}
+              loading={loading}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              onFavoriteToggle={handleFavoriteToggle}
+              className="mt-4"
+            />
           </div>
         </div>
       </div>

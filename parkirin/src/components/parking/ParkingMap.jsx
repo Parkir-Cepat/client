@@ -20,7 +20,6 @@ const ParkingMap = ({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   // Initialize Google Map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -89,7 +88,8 @@ const ParkingMap = ({
       // Don't destroy the map instance to avoid re-initialization issues
       // map.current = null;
     };
-  }, []); // Keep empty dependency array
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Keep empty dependency array to prevent re-initialization
 
   // Add user location marker separately after map is loaded
   useEffect(() => {

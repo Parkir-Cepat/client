@@ -3,6 +3,7 @@ import { useMutation, gql } from '@apollo/client';
 import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import useAuthStore from '../../store/authStore';
+import { Button, Input } from '../../components/common';
 
 const LOGIN_MUTATION = gql`
   mutation Login($input: LoginInput!) {
@@ -52,7 +53,7 @@ const Login = () => {
     },
   });
 
-  const [googleAuth] = useMutation(GOOGLE_AUTH_MUTATION, {
+  const [googleAuth, { loading: googleLoading }] = useMutation(GOOGLE_AUTH_MUTATION, {
     onCompleted: (data) => {
       const { token, user } = data.googleAuth;
       localStorage.setItem('token', token);
@@ -66,6 +67,7 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setError('');
     login({
       variables: {
         input: {
@@ -76,33 +78,31 @@ const Login = () => {
     });
   };
 
-  const handleGoogleSuccess = (response) => {
+  const handleGoogleLogin = (credentialResponse) => {
     googleAuth({
       variables: {
-        token: response.credential,
+        token: credentialResponse.credential,
       },
     });
   };
 
   return (
-    <div className="space-y-8">
-      {/* Logo Parkirin */}
-      <div className="flex justify-center mb-2">
-        <img src="https://www.citypng.com/public/uploads/preview/creative-graphic-pinterest-red-p-letter-701751695135355tq5j7kknmm.png" alt="Parkirin Logo" className="h-12 w-12 rounded-lg shadow" />
-      </div>
-      <div>
-        <h2 className="mt-4 text-center text-3xl font-extrabold text-[#f16634]">Sign in to Parkirin</h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Atau{' '}
-          <Link to="/register" className="font-semibold text-[#f16634] hover:underline">
-            buat akun baru
-          </Link>
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
+        <p className="mt-2 text-sm text-gray-600">
+          Sign in to access your account
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4">
-          <div className="flex">
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
             <div className="ml-3">
               <p className="text-sm text-red-700">{error}</p>
             </div>
@@ -110,67 +110,92 @@ const Login = () => {
         </div>
       )}
 
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        <div className="rounded-xl shadow-sm space-y-4 bg-[#f9fafb] p-6">
-          <div>
-            <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          label="Email Address"
+          type="email"
+          id="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          placeholder="your@email.com"
+          autoComplete="email"
+          fullWidth
+        />
+
+        <Input
+          label="Password"
+          type="password"
+          id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          placeholder="••••••••"
+          autoComplete="current-password"
+          fullWidth
+          withToggle
+        />
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <input
-              id="email-address"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634]"
-              placeholder="Email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-300 rounded"
             />
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+              Remember me
+            </label>
           </div>
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634]"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+          
+          <div className="text-sm">
+            <Link to="/forgot-password" className="font-medium text-orange-600 hover:text-orange-500">
+              Forgot your password?
+            </Link>
           </div>
         </div>
 
-        <div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 bg-[#f16634] text-white rounded-lg font-semibold shadow hover:bg-[#d45528] disabled:bg-gray-300 disabled:cursor-not-allowed transition"
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </div>
+        <Button
+          type="submit"
+          variant="primary"
+          size="large"
+          fullWidth
+          disabled={loading || googleLoading}
+          loading={loading}
+        >
+          Sign in
+        </Button>
       </form>
 
-      <div className="mt-6">
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Atau lanjutkan dengan</span>
-          </div>
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
         </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-2 bg-white text-gray-500">Or continue with</span>
+        </div>
+      </div>
 
-        <div className="mt-6">
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={() => setError('Google Sign In failed')}
-            />
-          </div>
-        </div>
+      <div className="flex justify-center">
+        <GoogleLogin
+          onSuccess={handleGoogleLogin}
+          onError={() => setError('Google login failed')}
+          useOneTap
+          theme="outline"
+          shape="rectangular"
+          text="signin_with"
+          locale="en"
+        />
+      </div>
+
+      <div className="text-center mt-4">
+        <p className="text-sm text-gray-600">
+          Don't have an account?{' '}
+          <Link to="/register" className="font-medium text-orange-600 hover:text-orange-500">
+            Sign up now
+          </Link>
+        </p>
       </div>
     </div>
   );

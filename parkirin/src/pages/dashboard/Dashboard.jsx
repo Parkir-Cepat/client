@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@apollo/client';
 import { useAuth } from '../../hooks';
 import { StatCard, QuickActions, RecentActivity } from '../../components/dashboard';
-import { LoadingSpinner } from '../../components/common';
+import { LoadingSpinner, Card } from '../../components/common';
 import { GET_DASHBOARD_STATS, GET_RECENT_ACTIVITY } from '../../graphql/queries';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -25,7 +25,7 @@ const Dashboard = () => {
   if (statsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="large" text="Loading dashboard..." />
+        <LoadingSpinner size="large" variant="logo" text="Loading dashboard..." />
       </div>
     );
   }
@@ -33,11 +33,11 @@ const Dashboard = () => {
   if (statsError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+        <Card variant="error" className="max-w-lg mx-auto text-center p-8">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Dashboard</h2>
           <p className="text-gray-600">{statsError.message}</p>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -75,7 +75,7 @@ const Dashboard = () => {
             value: typeof stats.totalParkingLots === 'number' ? stats.totalParkingLots : 0,
             change: typeof stats.parkingLotsChange === 'number' ? stats.parkingLotsChange : 0,
             changeType: 'positive',
-            color: 'blue',
+            color: 'orange',
             icon: () => (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -99,7 +99,7 @@ const Dashboard = () => {
             value: typeof stats.activeBookings === 'number' ? stats.activeBookings : 0,
             change: typeof stats.bookingsChange === 'number' ? stats.bookingsChange : 0,
             changeType: 'neutral',
-            color: 'yellow',
+            color: 'blue',
             icon: () => (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -157,7 +157,7 @@ const Dashboard = () => {
             value: typeof stats.activeBookings === 'number' ? stats.activeBookings : 0,
             change: null,
             changeType: 'neutral',
-            color: 'blue',
+            color: 'orange',
             icon: () => (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -169,7 +169,7 @@ const Dashboard = () => {
             value: typeof stats.totalBookings === 'number' ? stats.totalBookings : 0,
             change: typeof stats.bookingsChange === 'number' ? stats.bookingsChange : 0,
             changeType: 'positive',
-            color: 'purple',
+            color: 'blue',
             icon: () => (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -181,7 +181,7 @@ const Dashboard = () => {
             value: formatCurrency(typeof stats.totalSpent === 'number' ? stats.totalSpent : 0),
             change: typeof stats.spentChange === 'number' ? stats.spentChange : 0,
             changeType: 'neutral',
-            color: 'yellow',
+            color: 'purple',
             icon: () => (
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
@@ -195,21 +195,30 @@ const Dashboard = () => {
   const userStats = getStatsForRole();
 
   return (
-    <div className="space-y-8 p-4 sm:p-8">
+    <div className="space-y-8 animate-fadeIn">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#f16634] to-[#f89b6c] rounded-xl p-8 text-white shadow-md">
-        <h1 className="text-3xl font-bold">
-          Welcome back, {user?.name}! <span className="align-middle"></span>
-        </h1>
-        <p className="text-white/90 mt-2 text-lg">
-          {user?.role === 'landowner' 
-            ? 'Manage your parking lots and track your earnings'
-            : user?.role === 'admin'
-            ? 'Monitor the platform and manage users'
-            : 'Find and book parking spots easily'
-          }
-        </p>
-      </div>
+      <Card 
+        variant="gradient" 
+        className="border-none overflow-hidden"
+      >
+        <div className="relative p-8">
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full transform translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full transform -translate-x-1/3 translate-y-1/3"></div>
+          
+          <h1 className="text-3xl font-bold text-white relative z-10">
+            Welcome back, {user?.name}! <span className="align-middle"></span>
+          </h1>
+          <p className="text-white/90 mt-2 text-lg relative z-10">
+            {user?.role === 'landowner' 
+              ? 'Manage your parking lots and track your earnings'
+              : user?.role === 'admin'
+              ? 'Monitor the platform and manage users'
+              : 'Find and book parking spots easily'
+            }
+          </p>
+        </div>
+      </Card>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -223,7 +232,7 @@ const Dashboard = () => {
             icon={stat.icon}
             color={stat.color}
             loading={statsLoading}
-            className="shadow-lg rounded-xl border-0"
+            className="shadow-lg rounded-xl border border-gray-100 hover:shadow-xl transition-all"
           />
         ))}
       </div>
@@ -232,7 +241,10 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Quick Actions */}
         <div className="lg:col-span-1">
-          <QuickActions userRole={user?.role} className="rounded-xl shadow-md border-0" />
+          <QuickActions 
+            userRole={user?.role} 
+            className="rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-all"
+          />
         </div>
 
         {/* Recent Activity */}
@@ -240,7 +252,7 @@ const Dashboard = () => {
           <RecentActivity 
             activities={activities} 
             loading={activityLoading}
-            className="rounded-xl shadow-md border-0"
+            className="rounded-xl shadow-md border border-gray-100 hover:shadow-lg transition-all"
           />
         </div>
       </div>

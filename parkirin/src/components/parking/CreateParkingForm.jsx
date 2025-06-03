@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PlusIcon, TrashIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { CREATE_PARKING } from '../../graphql/mutations';
 import { GET_MY_PARKINGS } from '../../graphql/queries';
+import LocationPicker from './LocationPicker.jsx';
 
 const CreateParkingForm = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -29,10 +30,10 @@ const CreateParkingForm = ({ onClose, onSuccess }) => {
     facilities: [],
     images: []
   });
-
   const [newFacility, setNewFacility] = useState('');
   const [newImage, setNewImage] = useState('');
   const [errors, setErrors] = useState({});
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
 
   const facilityOptions = [
     'CCTV Security',
@@ -153,12 +154,27 @@ const CreateParkingForm = ({ onClose, onSuccess }) => {
       setNewImage('');
     }
   };
-
   const removeImage = (index) => {
     setFormData(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index)
     }));
+  };
+
+  const handleLocationSelect = (locationData) => {
+    setFormData(prev => ({
+      ...prev,
+      location: {
+        coordinates: locationData.coordinates
+      },
+      address: locationData.address || prev.address // Update address if provided
+    }));
+    setShowLocationPicker(false);
+    
+    // Clear location error if exists
+    if (errors.location) {
+      setErrors(prev => ({ ...prev, location: null }));
+    }
   };
 
   return (
@@ -214,42 +230,40 @@ const CreateParkingForm = ({ onClose, onSuccess }) => {
               />
               {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address}</p>}
             </div>
-          </div>
-
-          {/* Location Coordinates */}
+          </div>          {/* Location Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Koordinat Lokasi *
+              Lokasi Parkir *
             </label>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <input
-                  type="number"
-                  step="any"
-                  value={formData.location.coordinates[1]}
-                  onChange={(e) => handleInputChange('location.coordinates', [formData.location.coordinates[0], parseFloat(e.target.value) || 0])}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    errors.location ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Latitude (contoh: -6.200000)"
-                />
-              </div>
-              <div>
-                <input
-                  type="number"
-                  step="any"
-                  value={formData.location.coordinates[0]}
-                  onChange={(e) => handleInputChange('location.coordinates', [parseFloat(e.target.value) || 0, formData.location.coordinates[1]])}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 ${
-                    errors.location ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Longitude (contoh: 106.816666)"
-                />
-              </div>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowLocationPicker(true)}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg transition-colors ${
+                  formData.location.coordinates[0] === 0 && formData.location.coordinates[1] === 0
+                    ? 'border-gray-300 hover:border-orange-400 text-gray-600'
+                    : 'border-green-300 bg-green-50 text-green-700'
+                } ${errors.location ? 'border-red-300' : ''}`}
+              >
+                <MapPinIcon className="w-5 h-5" />
+                {formData.location.coordinates[0] === 0 && formData.location.coordinates[1] === 0
+                  ? 'Pilih Lokasi di Peta'
+                  : `Lokasi Dipilih: ${formData.location.coordinates[1].toFixed(6)}, ${formData.location.coordinates[0].toFixed(6)}`
+                }
+              </button>
+              
+              {formData.location.coordinates[0] !== 0 && formData.location.coordinates[1] !== 0 && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-sm text-gray-600">
+                    <div>Latitude: {formData.location.coordinates[1].toFixed(6)}</div>
+                    <div>Longitude: {formData.location.coordinates[0].toFixed(6)}</div>
+                  </div>
+                </div>
+              )}
             </div>
             {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
             <p className="text-xs text-gray-500 mt-1">
-              Tip: Gunakan Google Maps untuk mendapatkan koordinat yang akurat
+              Klik tombol di atas untuk memilih lokasi menggunakan peta interaktif
             </p>
           </div>
 
@@ -463,10 +477,25 @@ const CreateParkingForm = ({ onClose, onSuccess }) => {
               ) : (
                 'Buat Parking Lot'
               )}
-            </button>
-          </div>
+            </button>          </div>
         </form>
       </div>
+
+      {/* Location Picker Modal */}
+      {showLocationPicker && (
+        <LocationPicker
+          onLocationSelect={handleLocationSelect}
+          onClose={() => setShowLocationPicker(false)}
+          initialLocation={
+            formData.location.coordinates[0] !== 0 && formData.location.coordinates[1] !== 0
+              ? {
+                  lat: formData.location.coordinates[1],
+                  lng: formData.location.coordinates[0]
+                }
+              : null
+          }
+        />
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../common';
+import { Button, Card } from '../common';
 
 const QuickActions = ({ userRole = 'user', className = '' }) => {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ const QuickActions = ({ userRole = 'user', className = '' }) => {
       label: 'Find Parking',
       description: 'Search for available parking spots nearby',
       icon: '🔍',
-      color: 'blue',
+      color: 'orange',
       onClick: () => navigate('/parking/search')
     },
     {
@@ -28,7 +28,7 @@ const QuickActions = ({ userRole = 'user', className = '' }) => {
       label: 'Wallet',
       description: 'Manage your payments and transactions',
       icon: '💳',
-      color: 'purple',
+      color: 'blue',
       onClick: () => navigate('/wallet')
     },
     {
@@ -36,7 +36,7 @@ const QuickActions = ({ userRole = 'user', className = '' }) => {
       label: 'Messages',
       description: 'Chat with parking lot owners',
       icon: '💬',
-      color: 'yellow',
+      color: 'purple',
       onClick: () => navigate('/chat')
     }
   ];
@@ -47,106 +47,112 @@ const QuickActions = ({ userRole = 'user', className = '' }) => {
       label: 'Manage Parking',
       description: 'Add or edit your parking lots',
       icon: '🏢',
-      color: 'blue',
+      color: 'orange',
       onClick: () => navigate('/parking/manage')
+    },
+    {
+      id: 'add-parking',
+      label: 'Add New Lot',
+      description: 'List a new parking space',
+      icon: '➕',
+      color: 'green',
+      onClick: () => navigate('/parking/create')
     },
     {
       id: 'view-earnings',
       label: 'Earnings',
       description: 'View your income and analytics',
       icon: '💰',
-      color: 'green',
+      color: 'blue',
       onClick: () => navigate('/wallet')
     },
     {
-      id: 'bookings-received',
-      label: 'Bookings',
-      description: 'Manage incoming booking requests',
-      icon: '📅',
-      color: 'purple',
-      onClick: () => navigate('/bookings/received')
-    },
-    {
-      id: 'customer-chat',
-      label: 'Customer Chat',
-      description: 'Communicate with your customers',
+      id: 'messages',
+      label: 'Messages',
+      description: 'Respond to user inquiries',
       icon: '💬',
-      color: 'yellow',
+      color: 'purple',
       onClick: () => navigate('/chat')
     }
   ];
 
   const adminActions = [
     {
-      id: 'user-management',
-      label: 'User Management',
-      description: 'Manage users and permissions',
+      id: 'manage-users',
+      label: 'Manage Users',
+      description: 'View and manage platform users',
       icon: '👥',
-      color: 'blue',
+      color: 'orange',
       onClick: () => navigate('/admin/users')
     },
     {
-      id: 'parking-approval',
-      label: 'Parking Approval',
-      description: 'Review and approve parking lots',
-      icon: '✅',
+      id: 'manage-parking',
+      label: 'Parking Lots',
+      description: 'Manage all parking spaces',
+      icon: '🏢',
       color: 'green',
-      onClick: () => navigate('/admin/parking-approval')
+      onClick: () => navigate('/admin/parking')
     },
     {
-      id: 'system-analytics',
-      label: 'Analytics',
-      description: 'View system-wide analytics',
+      id: 'financials',
+      label: 'Financials',
+      description: 'Review platform finances',
       icon: '📊',
-      color: 'purple',
-      onClick: () => navigate('/admin/analytics')
+      color: 'blue',
+      onClick: () => navigate('/admin/financials')
     },
     {
-      id: 'support',
-      label: 'Support',
-      description: 'Handle customer support requests',
-      icon: '🎧',
-      color: 'yellow',
-      onClick: () => navigate('/admin/support')
+      id: 'settings',
+      label: 'Settings',
+      description: 'Configure platform settings',
+      icon: '⚙️',
+      color: 'purple',
+      onClick: () => navigate('/admin/settings')
     }
   ];
 
-  const getActions = () => {
-    switch (userRole) {
-      case 'landowner':
-        return landownerActions;
-      case 'admin':
-        return adminActions;
-      default:
-        return userActions;
-    }
+  const actionsByRole = {
+    user: userActions,
+    landowner: landownerActions,
+    admin: adminActions,
   };
 
-  const actions = getActions();
+  const actions = actionsByRole[userRole] || userActions;
+
+  const getColorClass = (color) => {
+    const colorClasses = {
+      orange: 'bg-orange-100 text-orange-600 border-orange-200',
+      blue: 'bg-blue-100 text-blue-600 border-blue-200',
+      green: 'bg-green-100 text-green-600 border-green-200',
+      purple: 'bg-purple-100 text-purple-600 border-purple-200',
+      yellow: 'bg-yellow-100 text-yellow-600 border-yellow-200',
+    };
+    return colorClasses[color] || colorClasses.orange;
+  };
 
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {actions.map((action) => (
-          <div
-            key={action.id}
-            className="p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors cursor-pointer group"
-            onClick={action.onClick}
-          >
-            <div className="flex items-start space-x-3">
-              <div className="text-2xl">{action.icon}</div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                  {action.label}
-                </h4>
-                <p className="text-xs text-gray-500 mt-1">{action.description}</p>
+    <Card className={className}>
+      <div className="p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-5">Quick Actions</h2>
+        <div className="space-y-3">
+          {actions.map((action) => (
+            <button
+              key={action.id}
+              onClick={action.onClick}
+              className="w-full group flex items-center p-3 rounded-lg border hover:shadow-md transition duration-200 hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+            >
+              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${getColorClass(action.color)}`}>
+                <span className="text-xl">{action.icon}</span>
               </div>
-            </div>
-          </div>
-        ))}
+              <div className="text-left">
+                <div className="font-medium text-gray-900 group-hover:text-orange-600 transition-colors">{action.label}</div>
+                <div className="text-xs text-gray-500">{action.description}</div>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+    </Card>
   );
 };
 

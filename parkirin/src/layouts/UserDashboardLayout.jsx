@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   HomeIcon,
@@ -8,15 +8,27 @@ import {
   UserIcon,
   ChatBubbleLeftRightIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  BellIcon
 } from '@heroicons/react/24/outline';
 import useAuthStore from '../store/authStore';
+import { Badge, Button, LogoGroup } from '../components/common';
 
 const UserDashboardLayout = ({ children }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Handle scroll effect for header
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -33,55 +45,145 @@ const UserDashboardLayout = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen flex bg-[#f9fafb]">
+    <div className="min-h-screen flex bg-gray-50">
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-20 lg:hidden" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
       {/* Sidebar */}
-      <div className={`fixed z-30 inset-y-0 left-0 w-60 bg-[#f16634] shadow-lg flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
-        <div className="flex items-center h-16 px-4 font-bold text-white text-xl border-b border-[#f16634]/30">
-          <img src='/assets/logo_ParkGo.png' className='h-8 mr-2' alt="ParkGo Logo" /> Parkirin
+      <div className={`fixed z-30 inset-y-0 left-0 w-72 bg-gradient-to-b from-orange-500 to-orange-600 shadow-xl flex flex-col transition-all duration-300 ease-in-out lg:static lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+        <div className="flex items-center h-16 px-6 font-bold text-white text-xl border-b border-white/10">
+          <LogoGroup size="medium" variant="light" />
           <button className="ml-auto lg:hidden" onClick={() => setSidebarOpen(false)}>
             <XMarkIcon className="h-6 w-6 text-white" />
           </button>
         </div>
-        <nav className="flex-1 px-2 py-4 space-y-1">
+        
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto scrollbar-thin">
           {navigation.map(item => (
             <Link
               key={item.name}
               to={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition font-normal text-base
-                ${location.pathname === item.href ? 'bg-white text-[#f16634] font-bold shadow' : 'text-white hover:bg-white/10'}
-              `}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition duration-200 font-medium text-base
+                ${location.pathname === item.href 
+                  ? 'bg-white text-orange-600 shadow-md' 
+                  : 'text-white hover:bg-white/10'
+                }`}
               onClick={() => setSidebarOpen(false)}
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className={`h-5 w-5 ${location.pathname === item.href ? 'text-orange-500' : ''}`} />
               <span>{item.name}</span>
             </Link>
           ))}
         </nav>
-        <div className="mt-auto flex flex-col items-center gap-2 px-4 pb-6">
-          <img src={user?.avatar || '/avatar-default.png'} alt="avatar" className="h-10 w-10 rounded-full border-2 border-white mb-1" />
-          <div className="text-white font-semibold text-sm text-center leading-tight">{user?.name || 'User'}</div>
-          <div className="text-xs text-white/70 text-center mb-1">{user?.email}</div>
-          <span className="px-3 py-1 bg-white text-[#f16634] rounded-full text-xs font-bold shadow mb-1">Balance: {user?.saldo ? `Rp ${user.saldo.toLocaleString('id-ID')}` : 'Rp 0'}</span>
-          <button
-            onClick={handleLogout}
-            className="w-full px-4 py-2 border-2 border-white text-white rounded-full text-sm font-semibold hover:bg-white hover:text-[#f16634] transition"
+        
+        <div className="mt-auto border-t border-white/10 pt-4 pb-6 px-6">
+          <div className="flex items-start gap-4 mb-4">
+            <img 
+              src={user?.avatar || '/avatar-default.png'} 
+              alt="avatar" 
+              className="h-12 w-12 rounded-full border-2 border-white object-cover shadow-md" 
+            />
+            <div className="flex-1">
+              <div className="text-white font-semibold">{user?.name || 'User'}</div>
+              <div className="text-xs text-white/70 mb-1 truncate">{user?.email}</div>
+              <Badge variant="light" size="small">
+                User Account
+              </Badge>
+            </div>
+          </div>
+          
+          <div className="mb-4 px-3 py-2 bg-white/10 rounded-lg">
+            <span className="text-xs text-white/70">Current Balance</span>
+            <div className="text-white font-bold text-lg">
+              {user?.saldo ? `Rp ${user.saldo.toLocaleString('id-ID')}` : 'Rp 0'}
+            </div>
+          </div>
+          
+          <Button 
+            variant="glass" 
+            size="medium" 
+            fullWidth 
+            onClick={handleLogout} 
+            icon={<LogoutIcon className="h-4 w-4" />}
           >
             Logout
-          </button>
+          </Button>
         </div>
       </div>
-      {/* Hamburger for mobile */}
-      <button className="fixed top-4 left-4 z-40 lg:hidden bg-[#f16634] p-2 rounded-full shadow-lg" onClick={() => setSidebarOpen(true)}>
-        <Bars3Icon className="h-6 w-6 text-white" />
-      </button>
-      {/* Main Content */}
-      <main className="flex-1 min-h-screen ml-0 lg:ml-60 py-6 px-2 sm:px-4">
-        <div className="w-full">
+      
+      {/* Header */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        <header className={`sticky top-0 z-20 px-4 lg:pl-6 pr-6 h-16 flex items-center transition-all duration-200 ${scrolled ? 'bg-white/80 backdrop-blur shadow-sm' : 'bg-transparent'}`}>
+          {/* Mobile menu button */}
+          <button 
+            className="lg:hidden mr-4 text-gray-600" 
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Bars3Icon className="h-6 w-6" />
+          </button>
+          
+          {/* Page title - can be dynamic based on current route */}
+          <h1 className="text-xl font-semibold text-gray-800">
+            {navigation.find(item => item.href === location.pathname)?.name || 'Dashboard'}
+          </h1>
+          
+          <div className="ml-auto flex items-center space-x-4">
+            {/* Notifications */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => navigate('/notifications')}
+            >
+              <BellIcon className="h-5 w-5 text-gray-600" />
+              <Badge variant="danger" size="dot" className="absolute top-0 right-0" />
+            </Button>
+            
+            {/* Profile - mobile only */}
+            <div className="lg:hidden">
+              <img 
+                src={user?.avatar || '/avatar-default.png'} 
+                alt="avatar" 
+                className="h-8 w-8 rounded-full border border-gray-200 cursor-pointer shadow-sm"
+                onClick={() => navigate('/profile')}
+              />
+            </div>
+          </div>
+        </header>
+        
+        {/* Main content */}
+        <main className="flex-1 p-4 lg:p-6 max-w-7xl mx-auto w-full animate-fadeIn">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
+
+// Simple logout icon component
+const LogoutIcon = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    {...props}
+  >
+    <path
+      fillRule="evenodd"
+      d="M3 4.25A2.25 2.25 0 015.25 2h5.5A2.25 2.25 0 0113 4.25v2a.75.75 0 01-1.5 0v-2a.75.75 0 00-.75-.75h-5.5a.75.75 0 00-.75.75v11.5c0 .414.336.75.75.75h5.5a.75.75 0 00.75-.75v-2a.75.75 0 011.5 0v2A2.25 2.25 0 0110.75 18h-5.5A2.25 2.25 0 013 15.75V4.25z"
+      clipRule="evenodd"
+    />
+    <path
+      fillRule="evenodd"
+      d="M19 10a.75.75 0 00-.75-.75H8.704l1.048-.943a.75.75 0 10-1.004-1.114l-2.5 2.25a.75.75 0 000 1.114l2.5 2.25a.75.75 0 101.004-1.114l-1.048-.943h9.546A.75.75 0 0019 10z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
 
 export default UserDashboardLayout;
