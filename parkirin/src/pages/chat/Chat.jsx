@@ -65,8 +65,8 @@ const Chat = () => {
     
     if (roomFromUrl && roomFromUrl !== roomId) {
       setRoomId(roomFromUrl);
-      // Clean URL after selecting room
-      navigate('/dashboard/chat', { replace: true });
+      // Hapus navigasi yang menyebabkan redirect ke dashboard
+      // navigate('/dashboard/chat', { replace: true });
     }
   }, [location.search, roomId, navigate]);
 

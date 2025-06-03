@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useSubscription } from '@apollo/client';
+import { useQuery, useSubscription, useMutation } from '@apollo/client';
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { GET_MY_ROOMS } from '../../graphql/queries';
 import { ROOM_UPDATED } from '../../graphql/subscriptions';
@@ -7,6 +7,7 @@ import { useAuth, useDebounce } from '../../hooks';
 import { formatChatTime } from '../../utils/formatters';
 import { Badge } from '../common';
 import GraphQLErrorBoundary from '../common/GraphQLErrorBoundary';
+import { LEAVE_ROOM } from '../../graphql/mutations';
 
 const ChatList = ({
   onRoomSelect,
@@ -33,6 +34,8 @@ const ChatList = ({
       }
     }
   });
+
+  const [leaveRoom] = useMutation(LEAVE_ROOM);
 
   const rooms = data?.getMyRooms || [];
 
@@ -65,6 +68,15 @@ const ChatList = ({
         return messageText;
       default:
         return messageText || 'Message';
+    }
+  };
+
+  const handleDeleteRoom = async (roomId) => {
+    try {
+      await leaveRoom({ variables: { roomId } });
+      refetch(); // Refresh daftar room
+    } catch (error) {
+      alert('Gagal menghapus room: ' + (error?.message || 'Unknown error'));
     }
   };
 
@@ -194,6 +206,17 @@ const ChatList = ({
                                 {room.unreadCount > 99 ? '99+' : room.unreadCount}
                               </Badge>
                             )}
+                            {/* Tombol hapus room */}
+                            <button
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleDeleteRoom(room._id);
+                              }}
+                              className="ml-2 text-red-500 hover:text-red-700 text-xs px-2 py-1 border border-red-200 rounded"
+                              title="Hapus Room"
+                            >
+                              Hapus
+                            </button>
                           </div>
                         </div>
 

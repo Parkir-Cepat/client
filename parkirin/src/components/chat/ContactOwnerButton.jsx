@@ -39,7 +39,7 @@ const ContactOwnerButton = ({ parking, className = "", size = "default" }) => {
       if (response.data?.createPrivateRoom) {
         const room = response.data.createPrivateRoom;
         // Navigate to chat with the created/found room
-        navigate(`/dashboard/chat?room=${room._id}`);
+        navigate(`/chat?room=${room._id}`);
       }
     } catch (error) {
       console.error('Error creating private room:', error);
