@@ -235,10 +235,12 @@ const CreateParkingForm = ({ onClose, onSuccess }) => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Lokasi Parkir *
             </label>
-            <div className="space-y-3">
-              <button
+            <div className="space-y-3">              <button
                 type="button"
-                onClick={() => setShowLocationPicker(true)}
+                onClick={() => {
+                  console.log('Pilih Lokasi di Peta clicked');
+                  setShowLocationPicker(true);
+                }}
                 className={`w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed rounded-lg transition-colors ${
                   formData.location.coordinates[0] === 0 && formData.location.coordinates[1] === 0
                     ? 'border-gray-300 hover:border-orange-400 text-gray-600'
@@ -482,8 +484,8 @@ const CreateParkingForm = ({ onClose, onSuccess }) => {
       </div>
 
       {/* Location Picker Modal */}
-      {showLocationPicker && (
-        <LocationPicker
+      {showLocationPicker && (        <LocationPicker
+          isOpen={showLocationPicker}
           onLocationSelect={handleLocationSelect}
           onClose={() => setShowLocationPicker(false)}
           initialLocation={

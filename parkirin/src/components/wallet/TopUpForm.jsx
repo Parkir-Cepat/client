@@ -1,6 +1,6 @@
 // src/components/wallet/TopUpForm.jsx
 import React, { useState } from 'react';
-import { CashIcon, CreditCardIcon, QrcodeIcon } from '@heroicons/react/24/outline';
+import { BanknotesIcon, CreditCardIcon, QrCodeIcon } from '@heroicons/react/24/outline';
 import Card from '../common/Card';
 import Button from '../common/Button';
 
@@ -17,12 +17,11 @@ const TopUpForm = ({ onSubmit, isSubmitting = false }) => {
       });
     }
   };
-
   // Payment method options with icons
   const paymentOptions = [
-    { value: 'QRIS', label: 'QRIS', icon: <QrcodeIcon className="h-5 w-5" /> },
+    { value: 'QRIS', label: 'QRIS', icon: <QrCodeIcon className="h-5 w-5" /> },
     { value: 'VIRTUAL_ACCOUNT', label: 'Virtual Account', icon: <CreditCardIcon className="h-5 w-5" /> },
-    { value: 'EWALLET', label: 'E-Wallet', icon: <CashIcon className="h-5 w-5" /> }
+    { value: 'EWALLET', label: 'E-Wallet', icon: <BanknotesIcon className="h-5 w-5" /> }
   ];
 
   // Predefined amounts for quick selection

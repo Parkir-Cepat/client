@@ -1,6 +1,6 @@
 // src/components/wallet/WalletBalanceCard.jsx
 import React from 'react';
-import { CurrencyDollarIcon, TrendingUpIcon } from '@heroicons/react/24/outline';
+import { CurrencyDollarIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
 import Card from '../common/Card';
 
 const WalletBalanceCard = ({ balance = 0 }) => {
@@ -42,7 +42,7 @@ const WalletBalanceCard = ({ balance = 0 }) => {
       </div>
       <div className="p-4 bg-white border-t border-orange-100">
         <div className="flex items-center justify-center text-sm text-orange-600">
-          <TrendingUpIcon className="w-4 h-4 mr-1" />
+          <ArrowTrendingUpIcon className="w-4 h-4 mr-1" />
           <span>Top up to enjoy seamless parking payments</span>
         </div>
       </div>

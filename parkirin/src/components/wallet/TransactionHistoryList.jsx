@@ -1,7 +1,7 @@
 // src/components/wallet/TransactionHistoryList.jsx
 import React from 'react';
 import { 
-  CashIcon,
+  BanknotesIcon,
   ClockIcon,
   CheckCircleIcon,
   XCircleIcon
@@ -15,7 +15,7 @@ const TransactionHistoryList = ({ transactions = [] }) => {
       <Card className="text-center py-8" rounded="xl">
         <div className="flex flex-col items-center">
           <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-            <CashIcon className="w-8 h-8 text-gray-400" />
+            <BanknotesIcon className="w-8 h-8 text-gray-400" />
           </div>
           <p className="text-gray-500">No transactions yet</p>
         </div>
@@ -68,7 +68,7 @@ const TransactionHistoryList = ({ transactions = [] }) => {
                 transaction.status === 'COMPLETED' ? 'bg-green-100' : 
                 transaction.status === 'PENDING' ? 'bg-yellow-100' : 'bg-red-100'
               }`}>
-                <CashIcon className={`h-5 w-5 ${
+                <BanknotesIcon className={`h-5 w-5 ${
                   transaction.status === 'COMPLETED' ? 'text-green-600' : 
                   transaction.status === 'PENDING' ? 'text-yellow-600' : 'text-red-600'
                 }`} />
