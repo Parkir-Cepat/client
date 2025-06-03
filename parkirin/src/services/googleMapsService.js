@@ -16,77 +16,117 @@ class GoogleMapsService {
   /**
    * Load Google Maps JavaScript API with better error handling
    * @returns {Promise<void>}
-   */
-  async loadGoogleMaps() {
+   */  async loadGoogleMaps() {
     if (this.isLoaded) {
       return Promise.resolve();
-    }    if (this.isLoading) {
+    }
+
+    if (this.isLoading) {
       return this.loadPromise;
     }
 
     this.isLoading = true;
-    this.loadPromise = new Promise((resolve, reject) => {
+    
+    try {
       // Check if Google Maps is already loaded
       if (window.google && window.google.maps && window.google.maps.Map) {
         this.isLoaded = true;
         this.isLoading = false;
-        resolve();
-        return;
+        return Promise.resolve();
       }
 
       // Get API key from environment or server
-      this.getApiKey().then(apiKey => {
-        if (!apiKey) {
-          throw new Error('Google Maps API key not found');
+      const apiKey = await this.getApiKey();
+      if (!apiKey) {
+        throw new Error('Google Maps API key not found');
+      }
+
+      // Validate API key format
+      if (!apiKey.startsWith('AIza') || apiKey.length < 35) {
+        throw new Error('Invalid Google Maps API key format');
+      }
+
+      console.log('Using Google Maps API key:', apiKey.substring(0, 8) + '...');      // Create promise for script loading
+      this.loadPromise = new Promise((resolve, reject) => {
+        // Remove any existing Google Maps scripts to avoid conflicts
+        const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+        if (existingScript) {
+          existingScript.remove();
         }
 
         // Create script element with proper error handling
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&loading=async&v=weekly`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&v=weekly&callback=initGoogleMaps`;
         script.async = true;
         script.defer = true;
-        
-        script.onload = () => {
-          // Wait for Google Maps to be fully available
+
+        // Create global callback function
+        window.initGoogleMaps = () => {
+          console.log('Google Maps callback triggered');
           this.waitForGoogleMaps().then(() => {
             this.isLoaded = true;
             this.isLoading = false;
+            console.log('Google Maps API loaded successfully');
+            delete window.initGoogleMaps; // Clean up
             resolve();
-          }).catch(reject);
+          }).catch((error) => {
+            this.isLoading = false;
+            console.error('Google Maps API failed to initialize:', error);
+            delete window.initGoogleMaps; // Clean up
+            reject(new Error('Google Maps API failed to initialize: ' + error.message));
+          });
         };
         
-        script.onerror = (error) => {
+        script.onerror = () => {
           this.isLoading = false;
-          reject(new Error('Failed to load Google Maps API script'));
+          delete window.initGoogleMaps; // Clean up
+          reject(new Error('Failed to load Google Maps API script. Please check your API key and internet connection.'));
         };
+        
+        // Add timeout for loading
+        setTimeout(() => {
+          if (!this.isLoaded && this.isLoading) {
+            this.isLoading = false;
+            delete window.initGoogleMaps; // Clean up
+            reject(new Error('Google Maps API loading timeout. Please check your API key and internet connection.'));
+          }
+        }, 10000); // 10 second timeout
         
         document.head.appendChild(script);
-      }).catch(reject);
-    });
-
-    return this.loadPromise;
+      });
+      
+      return this.loadPromise;
+    } catch (error) {
+      this.isLoading = false;
+      throw error;
+    }
   }
-
   /**
    * Get API key from server or environment
    */
   async getApiKey() {
     // First try environment variable
-    if (import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
-      return import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const envApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    console.log('Environment API key available:', !!envApiKey);
+    if (envApiKey) {
+      console.log('Using environment API key');
+      return envApiKey;
     }
 
     // Then try server endpoint
     try {
+      console.log('Fetching API key from server...');
       const response = await fetch('/api/google-maps-key');
       if (response.ok) {
         const data = await response.json();
+        console.log('Server API key available:', !!data.apiKey);
         return data.apiKey;
       }
     } catch (error) {
       console.warn('Failed to get API key from server:', error);
     }
 
+    console.error('No Google Maps API key found!');
     return null;
   }
 
@@ -358,7 +398,6 @@ class GoogleMapsService {
       throw new Error('Failed to get directions');
     }
   }
-
   /**
    * Create a map instance with better validation
    * @param {HTMLElement} container - Map container element
@@ -401,22 +440,24 @@ class GoogleMapsService {
       const map = new window.google.maps.Map(container, mapOptions);
       
       // Wait for map to be fully initialized
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const listener = window.google.maps.event.addListener(map, 'idle', () => {
           window.google.maps.event.removeListener(listener);
+          console.log('Map initialized and ready');
           resolve(map);
         });
         
         // Timeout fallback
         setTimeout(() => {
           window.google.maps.event.removeListener(listener);
+          console.log('Map initialization timeout, returning map anyway');
           resolve(map);
         }, 5000);
       });
       
     } catch (error) {
       console.error('Map creation error:', error);
-      throw new Error('Failed to create map');
+      throw new Error('Failed to create map: ' + error.message);
     }
   }
 
@@ -467,7 +508,6 @@ class GoogleMapsService {
       });
     }
   }
-
   /**
    * Create parking markers on map with server data integration
    * @param {Object} map - Google Maps instance
@@ -482,7 +522,9 @@ class GoogleMapsService {
 
     if (!Array.isArray(parkingSpots)) {
       throw new Error('Parking spots must be an array');
-    }    const markers = [];
+    }
+
+    const markers = [];
 
     for (const spot of parkingSpots) {
       try {
@@ -506,12 +548,14 @@ class GoogleMapsService {
         } else if ((spot.available?.car === 0 && spot.capacity?.car > 0) || 
                    (spot.available?.motorcycle === 0 && spot.capacity?.motorcycle > 0)) {
           markerColor = '#ea580c'; // orange - full
-        }        let marker;
+        }
+
+        let marker;
 
         try {
-          // Try to use AdvancedMarkerElement if available
+          // Try to use AdvancedMarkerElement if available (new API)
           if (typeof window.google.maps.importLibrary === 'function') {
-            const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker");
+            const { AdvancedMarkerElement } = await window.google.maps.importLibrary("marker");
             
             // Create custom SVG content for AdvancedMarkerElement
             const markerElement = document.createElement('div');
@@ -554,9 +598,9 @@ class GoogleMapsService {
             });
           }
         } catch (markerError) {
-          console.error('Error creating marker, using basic marker:', markerError);
+          console.error('Error creating advanced marker, using basic marker:', markerError);
           // Basic fallback marker
-          marker = new window.google.maps.marker.AdvancedMarkerElement({
+          marker = new window.google.maps.Marker({
             position: { lat, lng },
             map: map,
             title: spot.name,
@@ -587,11 +631,13 @@ class GoogleMapsService {
         marker.parkingData = spot;
         
         markers.push(marker);
+        console.log(`Created marker for parking spot: ${spot.name}`);
       } catch (error) {
         console.error(`Error creating marker for parking spot ${spot._id}:`, error);
       }
     }
 
+    console.log(`Successfully created ${markers.length} parking markers`);
     return markers;
   }
 

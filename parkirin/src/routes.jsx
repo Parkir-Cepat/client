@@ -16,7 +16,7 @@ const BookingHistory = React.lazy(() => import('./pages/booking/BookingHistory')
 const Chat = React.lazy(() => import('./pages/chat/Chat'));
 const Profile = React.lazy(() => import('./pages/profile/Profile'));
 const Wallet = React.lazy(() => import('./pages/wallet/Wallet'));
-const LandownerParkingDetail = React.lazy(() => import('./pages/landownerdashboard/LandownerParkingDetail'));
+const LandownerParkingDetail = React.lazy(() => import('./pages/landowner/ParkingDetail'));
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { isAuthenticated, user } = useAuthStore();
