@@ -9,6 +9,7 @@ const ParkingLotGrid = ({
   viewMode = 'grid',
   onViewModeChange,
   onFavoriteToggle,
+  onParkingLotSelect,
   className = '' 
 }) => {
   if (loading) {
@@ -38,9 +39,11 @@ const ParkingLotGrid = ({
       </Card>
     );
   }
-
   const ListViewItem = ({ lot }) => (
-    <Card className="flex overflow-hidden hover:shadow-lg transition-shadow group">      <div 
+    <Card 
+      className="flex overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
+      onClick={() => onParkingLotSelect && onParkingLotSelect(lot)}
+    ><div 
         className="w-1/3 h-auto bg-cover bg-center"
         style={{ backgroundImage: `url(${lot.images?.[0] || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&auto=format'})` }}
       ></div>
@@ -86,8 +89,10 @@ const ParkingLotGrid = ({
           <div>
             <span className="text-lg font-bold text-orange-600">Rp {lot.price?.toLocaleString('id-ID')}</span>
             <span className="text-xs text-gray-500">/hour</span>
-          </div>
-          <Link to={`/parking/${lot._id}`}>
+          </div>          <Link 
+            to={`/parking/${lot._id}`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <Button variant="primary" size="small">
               View Details
             </Button>
@@ -96,16 +101,18 @@ const ParkingLotGrid = ({
       </div>
     </Card>
   );
-
   const GridViewItem = ({ lot }) => (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
+    <Card 
+      className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer"
+      onClick={() => onParkingLotSelect && onParkingLotSelect(lot)}
+    >
       <div className="relative">        <div 
           className="h-48 bg-cover bg-center"
           style={{ backgroundImage: `url(${lot.images?.[0] || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&auto=format'})` }}
-        ></div>
-        <button 
+        ></div>        <button 
           onClick={(e) => {
             e.preventDefault();
+            e.stopPropagation();
             onFavoriteToggle(lot._id);
           }}
           className="absolute top-3 right-3 bg-white/70 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:bg-white"
@@ -160,8 +167,10 @@ const ParkingLotGrid = ({
           <div>
             <span className="text-lg font-bold text-orange-600">Rp {lot.price?.toLocaleString('id-ID')}</span>
             <span className="text-xs text-gray-500">/hour</span>
-          </div>
-          <Link to={`/parking/${lot._id}`}>
+          </div>          <Link 
+            to={`/parking/${lot._id}`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <Button variant="primary" size="small">
               Details
             </Button>
@@ -242,6 +251,7 @@ ParkingLotGrid.propTypes = {
   viewMode: PropTypes.oneOf(['grid', 'list']),
   onViewModeChange: PropTypes.func,
   onFavoriteToggle: PropTypes.func,
+  onParkingLotSelect: PropTypes.func,
   className: PropTypes.string
 };
 
