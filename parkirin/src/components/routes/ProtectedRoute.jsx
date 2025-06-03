@@ -1,18 +1,10 @@
-// filepath: e:\Latihan-Coding\Hacktiv8\phase3\FINAL PROJECT\client\parkirin\src\components\ProtectedRoute.tsx
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import LoadingSpinner from './LoadingSpinner';
+import { useAuth } from '../../contexts/AuthContext';
+import { LoadingSpinner } from '../common';
+import PropTypes from 'prop-types';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requiredRole?: 'user' | 'landowner';
-}
-
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requiredRole 
-}) => {
+const ProtectedRoute = ({ children, requiredRole }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
@@ -34,4 +26,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   return <>{children}</>;
 };
 
-export default ProtectedRoute;
+ProtectedRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  requiredRole: PropTypes.oneOf(['user', 'landowner'])
+};
+
+export default ProtectedRoute; 

@@ -1,84 +1,56 @@
 import React from 'react';
-import { useQuery } from '@apollo/client';
-import { gql } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
 import { 
-  MapPinIcon, 
   CreditCardIcon, 
   ClockIcon, 
   UserIcon,
   ChartBarIcon,
   BuildingOffice2Icon
 } from '@heroicons/react/24/outline';
-
-const GET_ME = gql`
-  query Me {
-    me {
-      _id
-      email
-      name
-      role
-      saldo
-      avatar
-      is_email_verified
-      created_at
-    }
-  }
-`;
-
-const GET_MY_ACTIVE_BOOKINGS = gql`
-  query GetMyActiveBookings {
-    getMyActiveBookings {
-      _id
-      startTime
-      duration
-      cost
-      status
-      qrCode
-      entryQR
-      exitQR
-    }
-  }
-`;
-
-const GET_MY_PARKINGS = gql`
-  query GetMyParkings {
-    getMyParkings {
-      _id
-      name
-      status
-    }
-  }
-`;
+import { StatCard, QuickActions } from '../../components/common';
+import { useLandownerDashboard } from '../../hooks/useLandownerDashboard';
 
 const Dashboard = () => {
-  const { user } = useAuthStore();
-  const navigate = useNavigate();
-  const { data: userData, loading: userLoading } = useQuery(GET_ME);
-  const { data: bookingsData, loading: bookingsLoading } = useQuery(GET_MY_ACTIVE_BOOKINGS);
-  const { data: parkingsData, loading: parkingsLoading } = useQuery(GET_MY_PARKINGS, {
-    skip: user?.role !== 'landowner'
-  });
+  const {
+    isLoading,
+    userInfo,
+    bookings,
+    parkings,
+    formatCurrency,
+    handleNavigate
+  } = useLandownerDashboard();
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR'
-    }).format(amount || 0);
-  };
-
-  const handleNavigate = (path) => {
-    navigate(path);
-  };
-
-  if (userLoading) return (
+  if (isLoading) return (
     <div className="flex justify-center p-8">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     </div>
   );
 
-  const userInfo = userData?.me || user;
+  const stats = [
+    {
+      title: 'Wallet Balance',
+      value: formatCurrency(userInfo?.saldo),
+      icon: CreditCardIcon,
+      color: 'success'
+    },
+    {
+      title: 'Active Bookings',
+      value: bookings.length,
+      icon: ClockIcon,
+      color: 'primary'
+    },
+    {
+      title: 'My Parking Lots',
+      value: parkings.length,
+      icon: BuildingOffice2Icon,
+      color: 'secondary'
+    },
+    {
+      title: 'Total Revenue',
+      value: formatCurrency(0), // Replace with actual revenue calculation
+      icon: ChartBarIcon,
+      color: 'warning'
+    }
+  ];
 
   return (
     <div className="w-full p-4 sm:p-6">
@@ -103,65 +75,19 @@ const Dashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        {/* Wallet Balance */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Wallet Balance</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(userInfo?.saldo)}
-              </p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <CreditCardIcon className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Active Bookings */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Active Bookings</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {bookingsData?.getMyActiveBookings?.length || 0}
-              </p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <ClockIcon className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">My Parking Lots</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {parkingsLoading ? '...' : (parkingsData?.getMyParkings?.length || 0)}
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <BuildingOffice2Icon className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(0)}</p>
-            </div>
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <ChartBarIcon className="w-6 h-6 text-yellow-600" />
-            </div>
-          </div>
-        </div>
+        {stats.map((stat, index) => (
+          <StatCard
+            key={index}
+            title={stat.title}
+            value={stat.value}
+            icon={stat.icon}
+            color={stat.color}
+          />
+        ))}
       </div>
 
       {/* My Parking Lots List */}
-      {parkingsData?.getMyParkings?.length > 0 && (
+      {parkings.length > 0 && (
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">My Parking Lots</h2>
           <div className="overflow-x-auto">
@@ -174,7 +100,7 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {parkingsData.getMyParkings.map((lot) => (
+                {parkings.map((lot) => (
                   <tr key={lot._id} className="border-b">
                     <td className="px-4 py-2">{lot.name}</td>
                     <td className="px-4 py-2">
@@ -187,7 +113,7 @@ const Dashboard = () => {
                     <td className="px-4 py-2">
                       <button
                         className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-blue-700"
-                        onClick={() => navigate(`/landowner/parking/${lot._id}`)}
+                        onClick={() => handleNavigate(`/landowner/parking/${lot._id}`)}
                       >
                         View Details
                       </button>
@@ -202,16 +128,14 @@ const Dashboard = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <QuickActions userRole="landowner" />
+        
         {/* Recent Activity */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-          {bookingsLoading ? (
-            <div className="flex justify-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            </div>
-          ) : bookingsData?.getMyActiveBookings?.length > 0 ? (
+          {bookings.length > 0 ? (
             <div className="space-y-3">
-              {bookingsData.getMyActiveBookings.slice(0, 3).map((booking) => (
+              {bookings.slice(0, 3).map((booking) => (
                 <div key={booking._id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                   <div>
                     <p className="font-medium">Booking #{booking._id.slice(-6)}</p>
@@ -230,27 +154,6 @@ const Dashboard = () => {
           ) : (
             <p className="text-gray-500 text-center py-4">No recent activity</p>
           )}
-        </div>
-
-        {/* Quick Links */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => handleNavigate('/landowner/add-parking')}
-              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <BuildingOffice2Icon className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-center">Add Parking Lot</p>
-            </button>
-            <button
-              onClick={() => handleNavigate('/landowner/bookings')}
-              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <ClockIcon className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-              <p className="text-sm font-medium text-center">View Bookings</p>
-            </button>
-          </div>
         </div>
       </div>
     </div>

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import LoadingSpinner from './LoadingSpinner';
+import { useAuth } from '../../contexts/AuthContext';
+import { LoadingSpinner } from '../common';
+import PropTypes from 'prop-types';
 
 const PublicRoute = ({ children, redirectTo = '/' }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -18,6 +19,11 @@ const PublicRoute = ({ children, redirectTo = '/' }) => {
   }
 
   return <>{children}</>;
+};
+
+PublicRoute.propTypes = {
+  children: PropTypes.node.isRequired,
+  redirectTo: PropTypes.string
 };
 
 export default PublicRoute; 
