@@ -90,13 +90,13 @@ const ManageParking = () => {
   return (
     <div className="w-full p-4 sm:p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Kelola Parking Lot Saya</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Manage My Parking Lots</h1>
         <button
           onClick={() => setShowCreateForm(true)}
           className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
         >
           <PlusIcon className="w-5 h-5 mr-2" />
-          Tambah Parking Lot Baru
+          Add New Parking Lot
         </button>
       </div>
 
@@ -106,13 +106,13 @@ const ManageParking = () => {
             <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
               <PlusIcon className="w-8 h-8 text-gray-400" />
             </div>
-            <p className="text-gray-500 text-lg mb-2">Belum ada parking lot</p>
-            <p className="text-gray-400 mb-4">Buat parking lot pertama Anda untuk mulai mendapatkan penghasilan</p>
+            <p className="text-gray-500 text-lg mb-2">No parking lots yet</p>
+            <p className="text-gray-400 mb-4">Create your first parking lot to start earning</p>
             <button
               onClick={() => setShowCreateForm(true)}
               className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
             >
-              Buat Parking Lot Sekarang
+              Create Parking Lot Now
             </button>
           </div>
         </div>
@@ -143,11 +143,11 @@ const ManageParking = () => {
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="bg-blue-50 rounded-lg p-3">
-                    <p className="text-xs text-blue-600 font-medium">Slot Mobil</p>
+                    <p className="text-xs text-blue-600 font-medium">Car Slots</p>
                     <p className="text-lg font-bold text-blue-800">{parking.available.car}/{parking.capacity.car}</p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-3">
-                    <p className="text-xs text-green-600 font-medium">Slot Motor</p>
+                    <p className="text-xs text-green-600 font-medium">Motorcycle Slots</p>
                     <p className="text-lg font-bold text-green-800">{parking.available.motorcycle}/{parking.capacity.motorcycle}</p>
                   </div>
                 </div>

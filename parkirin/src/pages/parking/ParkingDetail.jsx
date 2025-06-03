@@ -45,15 +45,14 @@ const ParkingDetail = () => {
       <p className="text-gray-500">Parking lot not found</p>
     </div>
   );
-
   const handleBook = async () => {
     const confirm = await Swal.fire({
-      title: 'Konfirmasi Booking',
-      text: 'Apakah Anda yakin ingin melakukan booking lahan parkir ini?',
+      title: 'Booking Confirmation',
+      text: 'Are you sure you want to book this parking lot?',
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Ya, Booking',
-      cancelButtonText: 'Batal',
+      confirmButtonText: 'Yes, Book',
+      cancelButtonText: 'Cancel',
     });
     if (!confirm.isConfirmed) return;
     try {
@@ -188,12 +187,11 @@ const ParkingDetail = () => {
                     src={`https://www.google.com/maps?q=${lat},${lng}&z=17&output=embed`}
                     allowFullScreen
                   />
-                </div>
-                <button
+                </div>                <button
                   className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition"
                   onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank')}
                 >
-                  Arahkan ke Lokasi
+                  Get Directions
                 </button>
               </>
             ) : (

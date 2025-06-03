@@ -75,10 +75,10 @@ const ChatList = ({
   const handleDeleteRoom = async (roomId) => {
     try {
       await leaveRoom({ variables: { roomId } });
-      refetch(); // Refresh daftar room
+      refetch(); // Refresh room list
     } catch (error) {
       await Swal.fire({
-        title: 'Gagal menghapus room',
+        title: 'Failed to delete room',
         text: error?.message || 'Unknown error',
         icon: 'error',
       });
@@ -218,9 +218,9 @@ const ChatList = ({
                                 handleDeleteRoom(room._id);
                               }}
                               className="ml-2 text-red-500 hover:text-red-700 text-xs px-2 py-1 border border-red-200 rounded"
-                              title="Hapus Room"
+                              title="Delete Room"
                             >
-                              Hapus
+                              Delete
                             </button>
                           </div>
                         </div>

@@ -38,13 +38,6 @@ const LandownerDashboardLayout = ({ children }) => {
       description: 'Kelola properti parkir Anda'
     },
     { 
-      name: 'Earnings', 
-      href: '/landownerdashboard/earnings', 
-      icon: CurrencyDollarIcon, 
-      iconSolid: CurrencyDollarIconSolid,
-      description: 'Statistik & Pendapatan'
-    },
-    { 
       name: 'Customer Support', 
       href: '/chat', 
       icon: ChatBubbleLeftRightIcon, 

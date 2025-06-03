@@ -138,11 +138,10 @@ const Chat = () => {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {!roomId ? (
-          <div className="flex-1 flex items-center justify-center p-8">
-            <div className="text-center text-gray-500">
+          <div className="flex-1 flex items-center justify-center p-8">            <div className="text-center text-gray-500">
               <ChatBubbleLeftRightIcon className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Pilih Chat Room</h3>
-              <p>Pilih room dari sidebar atau buat room baru untuk mulai chat</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Select Chat Room</h3>
+              <p>Choose a room from the sidebar or create a new room to start chatting</p>
             </div>
           </div>
         ) : (
@@ -157,10 +156,9 @@ const Chat = () => {
               </div>
             </div>
               {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f9fafb]">
-              {messages.length === 0 ? (
+            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f9fafb]">              {messages.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
-                  <p>Belum ada pesan. Mulai percakapan!</p>
+                  <p>No messages yet. Start a conversation!</p>
                 </div>
               ) : (
                 messages.map((message) => {
@@ -241,12 +239,11 @@ const Chat = () => {
             
             {/* Message Input */}
             <div className="p-4 bg-white border-t border-gray-200">
-              <form onSubmit={handleSendMessage} className="flex space-x-3">
-                <input
+              <form onSubmit={handleSendMessage} className="flex space-x-3">                <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Ketik pesan..."
+                  placeholder="Type a message..."
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:ring-2 focus:ring-[#f16634] focus:border-[#f16634] outline-none"
                 />
                 <button
@@ -254,7 +251,7 @@ const Chat = () => {
                   disabled={!newMessage.trim()}
                   className="px-6 py-3 bg-[#f16634] text-white rounded-full font-semibold hover:bg-[#d45528] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  Kirim
+                  Send
                 </button>
               </form>
             </div>

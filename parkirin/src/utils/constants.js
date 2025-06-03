@@ -49,8 +49,7 @@ export const MAP_DEFAULTS = {
 };
 
 // Error Messages
-export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Network error. Please check your connection.',
+export const ERROR_MESSAGES = {  NETWORK_ERROR: 'Network error. Please check your connection.',
   UNAUTHORIZED: 'You are not authorized to perform this action.',
   NOT_FOUND: 'The requested resource was not found.',
   VALIDATION_ERROR: 'Please check your input and try again.',

@@ -33,15 +33,14 @@ const Notifications = () => {
   const handleMarkAllAsRead = () => {
     markAllAsRead();
   };
-
   const handleDelete = async (notificationId) => {
     const confirm = await Swal.fire({
-      title: 'Konfirmasi Hapus',
-      text: 'Apakah Anda yakin ingin menghapus notifikasi ini?',
+      title: 'Delete Confirmation',
+      text: 'Are you sure you want to delete this notification?',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Ya, Hapus',
-      cancelButtonText: 'Batal',
+      confirmButtonText: 'Yes, Delete',
+      cancelButtonText: 'Cancel',
     });
     if (!confirm.isConfirmed) return;
     deleteNotification({ variables: { notificationId } });

@@ -83,12 +83,11 @@ const Dashboard = () => {
   return (
     <div className="w-full p-4 sm:p-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-xl p-6 text-white mb-6">
-        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-xl p-6 text-white mb-6">        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Selamat datang kembali, {userInfo?.name}!</h1>
+            <h1 className="text-2xl font-bold">Welcome back, {userInfo?.name}!</h1>
             <p className="text-orange-100 mt-1">
-              {userInfo?.role === 'landowner' ? 'Kelola parking lot Anda' : 'Temukan dan booking parkir'}
+              {userInfo?.role === 'landowner' ? 'Manage your parking lots' : 'Find and book parking'}
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -189,19 +188,17 @@ const Dashboard = () => {
             </div>
           </>
         )}
-      </div>
-
-      {/* Daftar Parking Lot Landowner */}
+      </div>      {/* My Parking Lots List */}
       {userInfo?.role === 'landowner' && parkingsData?.getMyParkings?.length > 0 && (
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Daftar Parking Lot Saya</h2>
+          <h2 className="text-lg font-semibold mb-4">My Parking Lots</h2>
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="px-4 py-2 text-left">Nama</th>
+                  <th className="px-4 py-2 text-left">Name</th>
                   <th className="px-4 py-2 text-left">Status</th>
-                  <th className="px-4 py-2 text-left">Aksi</th>
+                  <th className="px-4 py-2 text-left">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -215,12 +212,11 @@ const Dashboard = () => {
                         {lot.status}
                       </span>
                     </td>
-                    <td className="px-4 py-2">
-                      <button
+                    <td className="px-4 py-2">                      <button
                         className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-blue-700"
                         onClick={() => navigate(`/landownerdashboard/parking/${lot._id}`)}
                       >
-                        Lihat Detail
+                        View Details
                       </button>
                     </td>
                   </tr>
@@ -263,11 +259,9 @@ const Dashboard = () => {
           ) : (
             <p className="text-gray-500 text-center py-4">No recent activity</p>
           )}
-        </div>
-
-        {/* Quick Actions */}
+        </div>        {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Aksi Cepat</h2>
+          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
           <div className="space-y-3">
             {userInfo?.role === 'landowner' ? (
               <>
@@ -275,39 +269,38 @@ const Dashboard = () => {
                   onClick={() => handleNavigate('/parking')}
                   className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
                 >
-                  <p className="font-medium text-gray-900">Tambah Parking Lot Baru</p>
-                  <p className="text-sm text-gray-600">Buat tempat parkir baru untuk disewakan</p>
+                  <p className="font-medium text-gray-900">Add New Parking Lot</p>
+                  <p className="text-sm text-gray-600">Create a new parking space for rent</p>
                 </button>
                 <button 
                   onClick={() => handleNavigate('/parking')}
                   className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
                 >
-                  <p className="font-medium text-gray-900">Kelola Parking Lot</p>
-                  <p className="text-sm text-gray-600">Lihat dan edit parking lot Anda</p>
+                  <p className="font-medium text-gray-900">Manage Parking Lots</p>
+                  <p className="text-sm text-gray-600">View and edit your parking lots</p>
                 </button>
                 <button 
                   onClick={() => handleNavigate('/dashboard/chat')}
                   className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
                 >
-                  <p className="font-medium text-gray-900">Chat dengan Customer</p>
-                  <p className="text-sm text-gray-600">Komunikasi dengan pelanggan</p>
+                  <p className="font-medium text-gray-900">Chat with Customers</p>
+                  <p className="text-sm text-gray-600">Communicate with customers</p>
                 </button>
               </>
-            ) : (
-              <>
+            ) : (              <>
                 <button 
                   onClick={() => handleNavigate('/search')}
                   className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
                 >
-                  <p className="font-medium text-gray-900">Cari Parkir</p>
-                  <p className="text-sm text-gray-600">Temukan tempat parkir terdekat</p>
+                  <p className="font-medium text-gray-900">Find Parking</p>
+                  <p className="text-sm text-gray-600">Find the nearest parking spaces</p>
                 </button>
                 <button 
                   onClick={() => handleNavigate('/wallet')}
                   className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
                 >
-                  <p className="font-medium text-gray-900">Top Up Saldo</p>
-                  <p className="text-sm text-gray-600">Tambah saldo ke dompet Anda</p>
+                  <p className="font-medium text-gray-900">Top Up Balance</p>
+                  <p className="text-sm text-gray-600">Add balance to your wallet</p>
                 </button>
               </>
             )}
@@ -315,8 +308,8 @@ const Dashboard = () => {
               onClick={() => handleNavigate('/profile')}
               className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
             >
-              <p className="font-medium text-gray-900">Lihat Profil</p>
-              <p className="text-sm text-gray-600">Update informasi profil Anda</p>
+              <p className="font-medium text-gray-900">View Profile</p>
+              <p className="text-sm text-gray-600">Update your profile information</p>
             </button>
           </div>
         </div>

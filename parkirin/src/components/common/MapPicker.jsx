@@ -210,7 +210,7 @@ const MapPicker = ({
         onSelect(newPosition);
         setSearchQuery('');
       } else {
-        setSearchError('Lokasi tidak ditemukan. Coba dengan kata kunci yang lebih spesifik.');
+        setSearchError('Location not found. Try with a more specific keyword.');
       }
     } catch (error) {
       console.warn('Geocoding search error:', error.message);
@@ -220,14 +220,14 @@ const MapPicker = ({
         setTimeout(() => {
           handleSearch(retryCount + 1);
         }, 1000 * (retryCount + 1));
-        setSearchError(`Mencoba ulang pencarian... (${retryCount + 1}/3)`);
+        setSearchError(`Retrying search... (${retryCount + 1}/3)`);
         return;
       } else if (error.message === 'API_KEY_ERROR') {
-        setSearchError('Konfigurasi API key bermasalah. Hubungi administrator.');
+        setSearchError('API key configuration issue. Contact administrator.');
       } else if (error.message.includes('RATE_LIMIT')) {
-        setSearchError('Terlalu banyak pencarian. Coba lagi dalam beberapa saat.');
+        setSearchError('Too many search requests. Please try again later.');
       } else {
-        setSearchError('Pencarian gagal. Coba dengan nama tempat yang lebih spesifik atau periksa koneksi internet.');
+        setSearchError('Search failed. Try with a more specific place name or check your internet connection.');
       }
     } finally {
       setIsSearching(false);
@@ -262,22 +262,20 @@ const MapPicker = ({
   };
 
   if (loadError) {
-    return (
-      <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
+    return (      <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
         <div className="text-center">
-          <p className="text-red-600 font-medium">Gagal memuat peta</p>
-          <p className="text-sm text-gray-500 mt-1">Periksa koneksi internet Anda</p>
+          <p className="text-red-600 font-medium">Failed to load map</p>
+          <p className="text-sm text-gray-500 mt-1">Please check your internet connection</p>
         </div>
       </div>
     );
   }
 
   if (!isLoaded) {
-    return (
-      <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
+    return (      <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-gray-600">Memuat peta...</p>
+          <p className="text-gray-600">Loading map...</p>
         </div>
       </div>
     );
@@ -297,7 +295,7 @@ const MapPicker = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Cari alamat, mall, gedung perkantoran, atau landmark..."
+                  placeholder="Search for address, mall, office building, or landmark..."
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-sm"
                 />
                 <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-3.5" />
@@ -320,10 +318,10 @@ const MapPicker = ({
             {searchError && (
               <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3">
                 <p className="text-red-600 text-sm flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  {searchError}
+                  {searchError.replace('Lokasi tidak ditemukan', 'Location not found')
+                 .replace('Mencoba ulang pencarian...', 'Retrying search...')
+                 .replace('Konfigurasi API key bermasalah', 'API key configuration issue')
+                 .replace('Terlalu banyak pencarian', 'Too many search requests')}
                 </p>
               </div>
             )}
@@ -397,7 +395,7 @@ const MapPicker = ({
         {/* Map overlay with instructions */}
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-sm border border-gray-200 max-w-xs">
           <p className="text-xs text-gray-600 leading-relaxed">
-            <span className="font-medium text-gray-800">💡 Tip:</span> Klik pada peta atau seret marker hijau untuk memilih lokasi yang tepat
+            <span className="font-medium text-gray-800">💡 Tip:</span> Click on the map or drag the green marker to select the exact location
           </p>
         </div>
       </div>{selectedAddress && (
@@ -408,18 +406,18 @@ const MapPicker = ({
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <p className="text-green-800 font-semibold text-sm">✓ Lokasi Parking Lot Terpilih</p>
+                <p className="text-green-800 font-semibold text-sm">✓ Selected Parking Location</p>
                 <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Valid</span>
               </div>
               <p className="text-green-700 text-sm mb-2 leading-relaxed">{selectedAddress}</p>
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div className="bg-white/60 rounded p-2">
-                  <p className="text-green-600 font-medium">Koordinat:</p>
+                  <p className="text-green-600 font-medium">Coordinates:</p>
                   <p className="text-green-700 font-mono">{markerPosition.lat.toFixed(6)}, {markerPosition.lng.toFixed(6)}</p>
                 </div>
                 <div className="bg-white/60 rounded p-2">
                   <p className="text-green-600 font-medium">Status:</p>
-                  <p className="text-green-700">Siap untuk disimpan</p>
+                  <p className="text-green-700">Ready to save</p>
                 </div>
               </div>
             </div>

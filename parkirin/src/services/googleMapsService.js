@@ -23,7 +23,16 @@ class GoogleMapsService {
     }
 
     if (this.isLoading) {
-      return this.loadPromise;
+           <div style="margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <span style="font-size: 14px; color: #374151;">💰 Car Rate:</span>
+            <span style="font-size: 14px; font-weight: 500;">${formatCurrency(carRate)}/hour</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-size: 14px; color: #374151;">💰 Motorcycle Rate:</span>
+            <span style="font-size: 14px; font-weight: 500;">${formatCurrency(motorcycleRate)}/hour</span>
+          </div>
+        </div>this.loadPromise;
     }
 
     this.isLoading = true;
@@ -625,16 +634,15 @@ class GoogleMapsService {
         </div>
         
         <div style="margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span style="font-size: 14px; color: #374151;">🚗 Mobil:</span>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">            <span style="font-size: 14px; color: #374151;">🚗 Car:</span>
             <span style="font-size: 14px; font-weight: 500; color: ${carAvailable > 0 ? '#16a34a' : '#dc2626'};">
-              ${carAvailable} tersedia
+              ${carAvailable} available
             </span>
           </div>
           <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span style="font-size: 14px; color: #374151;">🏍️ Motor:</span>
+            <span style="font-size: 14px; color: #374151;">🏍️ Motorcycle:</span>
             <span style="font-size: 14px; font-weight: 500; color: ${motorcycleAvailable > 0 ? '#16a34a' : '#dc2626'};">
-              ${motorcycleAvailable} tersedia
+              ${motorcycleAvailable} available
             </span>
           </div>
         </div>

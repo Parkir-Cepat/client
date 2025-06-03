@@ -57,9 +57,8 @@ const LandownerParkingDetail = () => {
               onClick={() => {
                 const [lng, lat] = parking.location.coordinates;
                 window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
-              }}
-            >
-              Lihat di Google Maps
+              }}            >
+              View on Google Maps
             </button>
           </div>
           <div className="mb-4">
@@ -116,8 +115,7 @@ const LandownerParkingDetail = () => {
                 <th className="px-4 py-2 text-left">User</th>
                 <th className="px-4 py-2 text-left">Vehicle</th>
                 <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Payment</th>
-                <th className="px-4 py-2 text-left">Aksi</th>
+                <th className="px-4 py-2 text-left">Payment</th>                <th className="px-4 py-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -139,21 +137,21 @@ const LandownerParkingDetail = () => {
                   <td className="px-4 py-2">{booking.payment?.status === 'paid' ? 'Paid' : 'Unpaid'}</td>
                   <td className="px-4 py-2">
                     {booking.status === 'pending' && (
-                      <span className="text-gray-400 text-xs">Menunggu pembayaran</span>
+                      <span className="text-gray-400 text-xs">Waiting for payment</span>
                     )}
                     {booking.status === 'confirmed' && (
                       <button
                         className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-blue-700"
                         onClick={() => handleShowQR(booking._id)}
                       >
-                        Tampilkan QR Masuk
+                        Show Entry QR
                       </button>
                     )}
                     {booking.status === 'active' && (
-                      <span className="text-green-600 text-xs font-bold">Sedang Parkir</span>
+                      <span className="text-green-600 text-xs font-bold">Currently Parked</span>
                     )}
                     {booking.status === 'completed' && (
-                      <span className="text-gray-500 text-xs">Selesai</span>
+                      <span className="text-gray-500 text-xs">Completed</span>
                     )}
                   </td>
                 </tr>

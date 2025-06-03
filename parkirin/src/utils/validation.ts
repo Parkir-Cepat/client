@@ -12,76 +12,76 @@ const plateNumberRegex = /^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{0,3}$/;
 export const loginSchema = yup.object({
   email: yup
     .string()
-    .email('Email tidak valid')
-    .required('Email wajib diisi'),
+    .email('Invalid email address')
+    .required('Email is required'),
   password: yup
     .string()
-    .min(8, 'Password minimal 8 karakter')
-    .required('Password wajib diisi'),
+    .min(8, 'Password must be at least 8 characters')
+    .required('Password is required'),
 });
 
 export const registerSchema = yup.object({
   name: yup
     .string()
-    .min(2, 'Nama minimal 2 karakter')
-    .max(50, 'Nama maksimal 50 karakter')
-    .required('Nama wajib diisi'),
+    .min(2, 'Name must be at least 2 characters')
+    .max(50, 'Name must be no more than 50 characters')
+    .required('Name is required'),
   email: yup
     .string()
-    .email('Email tidak valid')
-    .required('Email wajib diisi'),
+    .email('Invalid email address')
+    .required('Email is required'),
   password: yup
     .string()
     .matches(
       passwordRegex,
-      'Password harus mengandung minimal 8 karakter, huruf besar, huruf kecil, angka, dan karakter spesial'
+      'Password must contain at least 8 characters including uppercase, lowercase, number, and special character'
     )
-    .required('Password wajib diisi'),
+    .required('Password is required'),
   confirmPassword: yup
     .string()
-    .oneOf([yup.ref('password')], 'Konfirmasi password tidak cocok')
-    .required('Konfirmasi password wajib diisi'),
+    .oneOf([yup.ref('password')], 'Password confirmation does not match')
+    .required('Password confirmation is required'),
   role: yup
     .string()
-    .oneOf(['user', 'landowner'], 'Role tidak valid')
-    .required('Role wajib dipilih'),
+    .oneOf(['user', 'landowner'], 'Invalid role')
+    .required('Role must be selected'),
 });
 
 export const bookingSchema = yup.object({
   vehicleType: yup
     .string()
-    .oneOf(['car', 'motorcycle'], 'Jenis kendaraan tidak valid')
-    .required('Jenis kendaraan wajib dipilih'),
+    .oneOf(['car', 'motorcycle'], 'Invalid vehicle type')
+    .required('Vehicle type must be selected'),
   plateNumber: yup
     .string()
-    .matches(plateNumberRegex, 'Nomor plat tidak valid')
-    .required('Nomor plat wajib diisi'),
+    .matches(plateNumberRegex, 'Invalid plate number')
+    .required('Plate number is required'),
   startTime: yup
     .date()
-    .min(new Date(), 'Waktu mulai tidak boleh kurang dari sekarang')
-    .required('Waktu mulai wajib diisi'),
+    .min(new Date(), 'Start time cannot be in the past')
+    .required('Start time is required'),
   duration: yup
     .number()
-    .min(1, 'Durasi minimal 1 jam')
-    .max(24, 'Durasi maksimal 24 jam')
-    .required('Durasi wajib diisi'),
+    .min(1, 'Duration must be at least 1 hour')
+    .max(24, 'Duration cannot exceed 24 hours')
+    .required('Duration is required'),
 });
 
 export const profileSchema = yup.object({
   name: yup
     .string()
-    .min(2, 'Nama minimal 2 karakter')
-    .max(50, 'Nama maksimal 50 karakter')
-    .required('Nama wajib diisi'),
+    .min(2, 'Name must be at least 2 characters')
+    .max(50, 'Name must be no more than 50 characters')
+    .required('Name is required'),
   phone: yup
     .string()
-    .matches(phoneRegex, 'Nomor telepon tidak valid')
-    .required('Nomor telepon wajib diisi'),
+    .matches(phoneRegex, 'Invalid phone number')
+    .required('Phone number is required'),
   address: yup
     .string()
-    .min(10, 'Alamat minimal 10 karakter')
-    .max(200, 'Alamat maksimal 200 karakter')
-    .required('Alamat wajib diisi'),
+    .min(10, 'Address must be at least 10 characters')
+    .max(200, 'Address must be no more than 200 characters')
+    .required('Address is required'),
 });
 
 export const parkingLotSchema = yup.object({

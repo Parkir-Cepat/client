@@ -124,10 +124,10 @@ const Wallet = () => {
               onClick={() => refetchSaldo()}
               className="px-4 py-2 bg-green-600 text-white rounded-lg"
             >
-              Cek Saldo
+              Check Balance
             </button>
             <p className="text-xs text-gray-500 mt-2">
-              Setelah pembayaran berhasil, klik "Cek Saldo" untuk memperbarui saldo Anda.
+              After successful payment, click "Check Balance" to update your balance.
             </p>
           </div>
         )}
@@ -163,7 +163,9 @@ const Wallet = () => {
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-4">No transactions yet</p>
+              <div className="text-center py-8 text-gray-500">
+                <p>No transaction history yet</p>
+              </div>
             )}
           </div>
         )}
