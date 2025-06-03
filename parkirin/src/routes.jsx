@@ -9,7 +9,6 @@ import useAuthStore from './store/authStore.js';
 const Login = React.lazy(() => import('./pages/auth/Login'));
 const Register = React.lazy(() => import('./pages/auth/Register'));
 const Dashboard = React.lazy(() => import('./pages/dashboard/Dashboard'));
-const Search = React.lazy(() => import('./pages/Search'));
 const ParkingSearch = React.lazy(() => import('./pages/parking/ParkingSearch'));
 const ParkingDetail = React.lazy(() => import('./pages/parking/ParkingDetail'));
 const ManageParking = React.lazy(() => import('./pages/parking/ManageParking'));
@@ -75,13 +74,6 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <Dashboard />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/search" element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <Search />
             </DashboardLayout>
           </ProtectedRoute>
         } />
