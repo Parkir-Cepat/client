@@ -70,33 +70,49 @@ const useAuth = () => {
     }
   };
 
-  // Check if user has specific role
-  const hasRole = (role) => {
-    return user?.role === role;
+  // Normalize role to ensure consistent casing and validation
+  const normalizeRole = (role) => {
+    if (!role) return null;
+    
+    // Convert to lowercase for consistent comparison
+    const normalizedRole = role.toLowerCase();
+    
+    // Map to valid roles
+    switch (normalizedRole) {
+      case 'user':
+      case 'USER':
+        return 'user';
+      case 'landowner':
+      case 'LANDOWNER':
+        return 'landowner';
+      default:
+        return null;
+    }
   };
 
-  // Check if user has any of the specified roles
+  // Enhanced role check function
+  const hasRole = (requiredRole) => {
+    if (!user) return false;
+    
+    const userRole = normalizeRole(user.role);
+    const required = normalizeRole(requiredRole);
+    
+    return userRole === required;
+  };
+
+  // Enhanced role check for multiple roles
   const hasAnyRole = (roles) => {
-    return roles.includes(user?.role);
+    if (!user) return false;
+    const userRole = normalizeRole(user.role);
+    return roles.some(role => normalizeRole(role) === userRole);
   };
 
-  // Check if user is landowner
-  const isLandowner = () => {
-    return hasRole('landowner');
-  };
-
-  // Check if user is admin
-  const isAdmin = () => {
-    return hasRole('admin');
-  };
-
-  // Check if user is regular user
-  const isRegularUser = () => {
-    return hasRole('user');
-  };
+  // Specific role checks
+  const isLandowner = () => hasRole('landowner');
+  const isRegularUser = () => hasRole('user');
 
   return {
-    user,
+    user: user ? { ...user, role: normalizeRole(user.role) } : null,
     token,
     isAuthenticated,
     isLoading,
@@ -105,7 +121,6 @@ const useAuth = () => {
     hasRole,
     hasAnyRole,
     isLandowner,
-    isAdmin,
     isRegularUser
   };
 };

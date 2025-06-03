@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { MagnifyingGlassIcon, ChatBubbleLeftIcon } from '@heroicons/react/24/outline';
 import { GET_ALL_LANDOWNERS } from '../../graphql/queries';
@@ -12,24 +12,47 @@ const LandownerContactList = ({ onContactSelect, compact = false }) => {
   const debouncedSearch = useDebounce(searchQuery, 300);
   const { setSelectedRoom, landownerContacts, setLandownerContacts } = useChatStore();
 
+  // Ensure user is properly authenticated and has necessary role
+  useEffect(() => {
+    if (!user || !user._id) {
+      console.error('User not properly authenticated');
+      return;
+    }
+  }, [user]);
+
   const { data: landownersData, loading, error } = useQuery(GET_ALL_LANDOWNERS, {
     onCompleted: (data) => {
       if (data?.getUsersByRole) {
-        setLandownerContacts(data.getUsersByRole);
+        // Filter out any invalid landowner data
+        const validLandowners = data.getUsersByRole.filter(owner => 
+          owner && owner._id && owner.role === 'landowner'
+        );
+        setLandownerContacts(validLandowners);
       }
-    }
+    },
+    // Add fetchPolicy to ensure fresh data
+    fetchPolicy: "network-only"
   });
 
   const [createPrivateRoom] = useMutation(CREATE_PRIVATE_ROOM);
 
   // Filter landowners based on search query
   const filteredLandowners = landownerContacts.filter(landowner =>
-    landowner.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-    landowner.email.toLowerCase().includes(debouncedSearch.toLowerCase())
+    landowner.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    landowner.email?.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
   const handleContactClick = async (landowner) => {
+    if (!user?._id) {
+      console.error('User ID not available');
+      return;
+    }
+
+    if (!landowner?._id) {
+      console.error('Landowner ID not available');
+      return;
+    }
+
     try {
-      // Check if there's already a private room with this landowner
       const roomResponse = await createPrivateRoom({
         variables: {
           input: {

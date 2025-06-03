@@ -20,19 +20,8 @@ class GoogleMapsService {
   async loadGoogleMaps() {
     if (this.isLoaded) {
       return Promise.resolve();
-    }
-
-    if (this.isLoading) {
-           <div style="margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-            <span style="font-size: 14px; color: #374151;">💰 Car Rate:</span>
-            <span style="font-size: 14px; font-weight: 500;">${formatCurrency(carRate)}/hour</span>
-          </div>
-          <div style="display: flex; justify-content: space-between;">
-            <span style="font-size: 14px; color: #374151;">💰 Motorcycle Rate:</span>
-            <span style="font-size: 14px; font-weight: 500;">${formatCurrency(motorcycleRate)}/hour</span>
-          </div>
-        </div>this.loadPromise;
+    }    if (this.isLoading) {
+      return this.loadPromise;
     }
 
     this.isLoading = true;

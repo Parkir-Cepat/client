@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ChatBubbleLeftRightIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../hooks';
 import { useChatStore } from '../../store/chatStore';
@@ -9,87 +9,76 @@ const ChatTabView = ({ onRoomSelect, selectedRoomId }) => {
   const { user } = useAuth();
   const { activeView, setActiveView } = useChatStore();
   
-  // Only show contacts tab for regular users, not landowners
-  const showContactsTab = user?.role === 'user';
+  // Enhanced role check to ensure consistent behavior for OAuth and regular users
+  const isRegularUser = user && (user.role === 'user' || user.role === 'USER');
+  const showContactsTab = isRegularUser;
+
+  // Reset to chats view if contacts shouldn't be visible
+  useEffect(() => {
+    if (!showContactsTab && activeView === 'contacts') {
+      setActiveView('chats');
+    }
+  }, [showContactsTab, activeView, setActiveView]);
 
   const tabs = [
     {
       id: 'chats',
       name: 'Chats',
       icon: ChatBubbleLeftRightIcon,
-      count: null // Could be unread count
+      count: null
     }
   ];
 
-  // Add contacts tab only for regular users
   if (showContactsTab) {
     tabs.push({
       id: 'contacts',
-      name: 'Contacts',
+      name: 'Parking Owners',
       icon: UserGroupIcon,
       count: null
     });
   }
 
-  const handleTabChange = (tabId) => {
-    setActiveView(tabId);
-  };
-
-  const handleContactSelect = (room) => {
-    // Switch to chats tab when a contact is selected and a room is created
-    setActiveView('chats');
-    if (onRoomSelect) {
-      onRoomSelect(room);
-    }
-  };
-
   return (
-    <div className="flex flex-col h-full bg-white">
-      {/* Tab Navigation */}
-      {showContactsTab && (
-        <div className="flex border-b border-gray-200">
+    <div className="flex flex-col h-full">
+      <div className="border-b border-gray-200">
+        <nav className="flex space-x-4 px-4 py-3">
           {tabs.map((tab) => {
-            const isActive = activeView === tab.id;
             const Icon = tab.icon;
+            const isActive = activeView === tab.id;
             
             return (
               <button
                 key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
+                onClick={() => setActiveView(tab.id)}
+                className={`
+                  flex items-center px-3 py-2 text-sm font-medium rounded-md
+                  ${isActive
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-500 hover:text-gray-700'
+                  }
+                `}
               >
-                <Icon className="w-5 h-5 mr-2" />
+                <Icon className="h-5 w-5 mr-2" />
                 {tab.name}
-                {tab.count && (
-                  <span className="ml-2 bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full">
+                {tab.count !== null && (
+                  <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                    isActive ? 'bg-blue-200' : 'bg-gray-100'
+                  }`}>
                     {tab.count}
                   </span>
                 )}
               </button>
             );
           })}
-        </div>
-      )}
+        </nav>
+      </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 overflow-hidden">
-        {activeView === 'chats' ? (
-          <ChatList
-            onRoomSelect={onRoomSelect}
-            selectedRoomId={selectedRoomId}
-            showSearch={true}
-            compact={false}
-          />
-        ) : activeView === 'contacts' ? (
-          <LandownerContactList
-            onContactSelect={handleContactSelect}
-            compact={false}
-          />
-        ) : null}
+      <div className="flex-1 overflow-y-auto">
+        {activeView === 'contacts' && showContactsTab ? (
+          <LandownerContactList onContactSelect={onRoomSelect} />
+        ) : (
+          <ChatList onRoomSelect={onRoomSelect} selectedRoomId={selectedRoomId} />
+        )}
       </div>
     </div>
   );
