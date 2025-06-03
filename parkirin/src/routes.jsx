@@ -16,6 +16,8 @@ const BookingHistory = React.lazy(() => import('./pages/booking/BookingHistory')
 const Chat = React.lazy(() => import('./pages/chat/Chat'));
 const Profile = React.lazy(() => import('./pages/profile/Profile'));
 const Wallet = React.lazy(() => import('./pages/wallet/Wallet'));
+const LandownerParkingDetail = React.lazy(() => import('./pages/landownerdashboard/LandownerParkingDetail'));
+const Earnings = React.lazy(() => import('./pages/landownerdashboard/Earnings'));
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { isAuthenticated, user } = useAuthStore();
@@ -122,6 +124,20 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <Wallet />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/landownerdashboard/parking/:id" element={
+          <ProtectedRoute allowedRoles={['landowner']}>
+            <DashboardLayout>
+              <LandownerParkingDetail />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/landownerdashboard/earnings" element={
+          <ProtectedRoute allowedRoles={['landowner']}>
+            <DashboardLayout>
+              <Earnings />
             </DashboardLayout>
           </ProtectedRoute>
         } />

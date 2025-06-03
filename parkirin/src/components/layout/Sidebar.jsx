@@ -20,6 +20,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     landowner: [
       { name: 'Dashboard', href: '/landownerdashboard', icon: '📊' },
       { name: 'My Parkings', href: '/parking', icon: '🅿️' },
+      { name: 'Earnings', href: '/landownerdashboard/earnings', icon: '💰' },
       { name: 'Bookings', href: '/bookings', icon: '📋' },
       { name: 'Chat', href: '/dashboard/chat', icon: '💬' },
       { name: 'Profile', href: '/profile', icon: '👤' },

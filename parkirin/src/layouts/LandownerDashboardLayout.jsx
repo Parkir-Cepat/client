@@ -31,32 +31,25 @@ const LandownerDashboardLayout = ({ children }) => {
 
   const navigation = [
     { 
-      name: 'Dashboard', 
-      href: '/parking/manage', 
-      icon: ChartBarIcon, 
-      iconSolid: ChartBarIconSolid,
-      description: 'Overview & Analytics'
-    },
-    { 
       name: 'Manage Parking Lots', 
       href: '/parking/manage', 
       icon: BuildingOfficeIcon, 
       iconSolid: BuildingOfficeIconSolid,
-      description: 'Property Management'
+      description: 'Kelola properti parkir Anda'
     },
     { 
       name: 'Earnings', 
-      href: '/earnings', 
+      href: '/landownerdashboard/earnings', 
       icon: CurrencyDollarIcon, 
       iconSolid: CurrencyDollarIconSolid,
-      description: 'Revenue & Payments'
+      description: 'Statistik & Pendapatan'
     },
     { 
       name: 'Customer Support', 
       href: '/chat', 
       icon: ChatBubbleLeftRightIcon, 
       iconSolid: ChatBubbleLeftRightIconSolid,
-      description: 'Chat with Customers'
+      description: 'Chat dengan pelanggan'
     },
   ];
   return (

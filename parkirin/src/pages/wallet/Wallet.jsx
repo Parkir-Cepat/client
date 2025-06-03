@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { TOP_UP_WALLET } from '../../graphql/mutations';
+import { useLocation } from 'react-router-dom';
 
 const GET_ME = gql`
   query Me {
@@ -19,7 +20,7 @@ const GET_PAYMENT_HISTORY = gql`
       amount
       payment_method
       status
-      created_at
+      createdAt
     }
   }
 `;
@@ -27,9 +28,20 @@ const GET_PAYMENT_HISTORY = gql`
 const Wallet = () => {
   const [topUpAmount, setTopUpAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('QRIS');
-    const { data: userData, loading: userLoading } = useQuery(GET_ME);
+  const { data: userData, loading: userLoading, refetch: refetchSaldo } = useQuery(GET_ME);
   const { data: historyData, loading: historyLoading } = useQuery(GET_PAYMENT_HISTORY);
   const [topUpSaldo] = useMutation(TOP_UP_WALLET);
+  const [topUpSuccess, setTopUpSuccess] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    // Jika ada order_id dan transaction_status di query string, refetch saldo
+    const params = new URLSearchParams(location.search);
+    if (params.get('order_id') && params.get('transaction_status')) {
+      refetchSaldo();
+    }
+  }, [location.search, refetchSaldo]);
+
   const handleTopUp = async (e) => {
     e.preventDefault();
     if (!topUpAmount || topUpAmount < 10000) return;
@@ -46,6 +58,7 @@ const Wallet = () => {
 
       if (result.data?.topUpSaldo?.payment_url) {
         window.open(result.data.topUpSaldo.payment_url, '_blank');
+        setTopUpSuccess(true);
       }
     } catch (error) {
       console.error('Error during top up:', error);
@@ -100,12 +113,24 @@ const Wallet = () => {
           </div>
           <button
             type="submit"
-            disabled={!topUpAmount || topUpAmount < 10000}
-            className="w-full py-2 bg-[#f16634] text-white rounded-lg font-semibold hover:bg-[#d45528] disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+            className="w-full px-4 py-2 bg-[#f16634] text-white rounded-lg hover:bg-[#d35400] transition"
           >
-            Top Up Now
+            Top Up
           </button>
         </form>
+        {topUpSuccess && (
+          <div className="mt-4">
+            <button
+              onClick={() => refetchSaldo()}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg"
+            >
+              Cek Saldo
+            </button>
+            <p className="text-xs text-gray-500 mt-2">
+              Setelah pembayaran berhasil, klik "Cek Saldo" untuk memperbarui saldo Anda.
+            </p>
+          </div>
+        )}
       </div>
       {/* Transaction History */}
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -123,7 +148,7 @@ const Wallet = () => {
                     <p className="font-medium">{formatCurrency(transaction.amount)}</p>
                     <p className="text-sm text-gray-600">{transaction.payment_method}</p>
                     <p className="text-xs text-gray-500">
-                      {new Date(transaction.created_at).toLocaleString()}
+                      {new Date(transaction.createdAt).toLocaleString()}
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold shadow ${
