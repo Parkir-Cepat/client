@@ -28,6 +28,11 @@ const ParkingDetail = () => {
 
   const parking = data?.getParking;
 
+  // Ambil koordinat lokasi
+  const coordinates = parking?.location?.coordinates;
+  const lat = coordinates ? coordinates[1] : null;
+  const lng = coordinates ? coordinates[0] : null;
+
   if (!parking) return (
     <div className="text-center p-8">
       <p className="text-gray-500">Parking lot not found</p>
@@ -124,9 +129,32 @@ const ParkingDetail = () => {
           {/* Map placeholder */}
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-lg font-bold text-[#f16634] mb-4">Location</h2>
-            <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
-              <p className="text-gray-500">Map will be displayed here</p>
-            </div>
+            {lat && lng ? (
+              <>
+                <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center mb-4 overflow-hidden">
+                  <iframe
+                    title="Parking Location"
+                    width="100%"
+                    height="100%"
+                    className="rounded-lg"
+                    frameBorder="0"
+                    style={{ border: 0, width: '100%', height: '100%' }}
+                    src={`https://www.google.com/maps?q=${lat},${lng}&z=17&output=embed`}
+                    allowFullScreen
+                  />
+                </div>
+                <button
+                  className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold shadow hover:bg-blue-700 transition"
+                  onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank')}
+                >
+                  Arahkan ke Lokasi
+                </button>
+              </>
+            ) : (
+              <div className="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
+                <p className="text-gray-500">Map will be displayed here</p>
+              </div>
+            )}
           </div>
         </div>
         {/* Sidebar */}
