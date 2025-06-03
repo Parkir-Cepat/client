@@ -14,6 +14,9 @@ const LocationPicker = ({
   const autocompleteService = useRef(null);
   const placesService = useRef(null);
   
+  // Log initial values for debugging
+  console.log('LocationPicker initializing with:', { initialLocation, initialAddress, isOpen });
+  
   const [selectedLocation, setSelectedLocation] = useState(initialLocation);
   const [selectedAddress, setSelectedAddress] = useState(initialAddress);
   const [searchQuery, setSearchQuery] = useState('');

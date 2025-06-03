@@ -19,8 +19,7 @@ const ParkingMap = ({
   const markers = useRef([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  // Initialize Google Map
+  const [error, setError] = useState(null);  // Initialize Google Map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
@@ -30,7 +29,22 @@ const ParkingMap = ({
         setError(null);
         
         console.log('Starting map initialization...');
-        await GoogleMapsService.loadGoogleMaps();
+        
+        // Try to load the Google Maps API with a timeout
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Map loading timeout')), 10000);
+        });
+        
+        try {
+          await Promise.race([
+            GoogleMapsService.loadGoogleMaps(),
+            timeoutPromise
+          ]);
+        } catch (loadError) {
+          console.warn('GoogleMapsService failed, trying direct load:', loadError);
+          // Fallback: try direct Google Maps loading
+          await loadGoogleMapsDirect();
+        }
         
         console.log('Google Maps loaded, checking availability...');
         if (!window.google || !window.google.maps) {
@@ -47,8 +61,6 @@ const ParkingMap = ({
         map.current = new window.google.maps.Map(mapContainer.current, {
           center: mapCenter,
           zoom: zoom,
-          // Remove mapId temporarily to test without Advanced Markers
-          // mapId: "DEMO_MAP_ID", 
           styles: [
             {
               featureType: 'poi',
@@ -73,7 +85,47 @@ const ParkingMap = ({
       }
     };
 
-    // Remove timeout and initialize directly
+    const loadGoogleMapsDirect = () => {
+      return new Promise((resolve, reject) => {
+        // Check if already loaded
+        if (window.google && window.google.maps) {
+          resolve();
+          return;
+        }
+
+        // Get API key from environment
+        const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+        if (!apiKey) {
+          reject(new Error('Google Maps API key not found'));
+          return;
+        }
+
+        // Create script element
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=weekly`;
+        script.async = true;
+        script.defer = true;
+        
+        script.onload = () => {
+          // Wait for Google Maps to be fully available
+          const checkGoogleMaps = () => {
+            if (window.google && window.google.maps && window.google.maps.Map) {
+              resolve();
+            } else {
+              setTimeout(checkGoogleMaps, 100);
+            }
+          };
+          checkGoogleMaps();
+        };
+        
+        script.onerror = () => {
+          reject(new Error('Failed to load Google Maps script'));
+        };
+        
+        document.head.appendChild(script);
+      });
+    };
+
     initializeMap();
     
     return () => {
@@ -84,9 +136,6 @@ const ParkingMap = ({
         }
       });
       markers.current = [];
-      
-      // Don't destroy the map instance to avoid re-initialization issues
-      // map.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Keep empty dependency array to prevent re-initialization

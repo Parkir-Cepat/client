@@ -1,67 +1,26 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { gql } from '@apollo/client';
 import { PlusIcon, PencilIcon, TrashIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { GET_MY_PARKINGS } from '../../graphql/queries';
+import { DELETE_PARKING } from '../../graphql/mutations';
 import CreateParkingForm from '../../components/parking/CreateParkingForm';
 import EditParkingForm from '../../components/parking/EditParkingForm';
 import { ParkingMap } from '../../components/parking';
-
-const GET_MY_PARKINGS = gql`
-  query GetMyParkings {
-    getMyParkings {
-      _id
-      name
-      address
-      location {
-        type
-        coordinates
-      }
-      capacity {
-        car
-        motorcycle
-      }
-      available {
-        car
-        motorcycle
-      }
-      rates {
-        car
-        motorcycle
-      }
-      operational_hours {
-        open
-        close
-      }
-      facilities
-      images
-      status
-      rating
-      review_count
-      created_at
-    }
-  }
-`;
-
-const DELETE_PARKING_LOT = gql`
-  mutation DeleteParkingLot($id: ID!) {
-    deleteParkingLot(id: $id)
-  }
-`;
 
 const ManageParking = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingParking, setEditingParking] = useState(null);
   const { data, loading, error, refetch } = useQuery(GET_MY_PARKINGS);
-  const [deleteParkingLot] = useMutation(DELETE_PARKING_LOT);
-
+  const [deleteParking] = useMutation(DELETE_PARKING);
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus parking lot ini?')) {
       try {
-        await deleteParkingLot({
+        await deleteParking({
           variables: { id }
         });
         refetch();
+        alert('Parking lot berhasil dihapus!');
       } catch (error) {
         console.error('Error deleting parking lot:', error);
         alert('Gagal menghapus parking lot: ' + error.message);

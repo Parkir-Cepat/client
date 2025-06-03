@@ -10,18 +10,14 @@ const ParkingSearchBox = ({
   className = '' 
 }) => {
   const [location, setLocation] = useState('');
-  const [dateTime, setDateTime] = useState('');
-  const [duration, setDuration] = useState(1);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSearch({ location, dateTime, duration });
+    onSearch({ location });
   };
 
   const handleRecentSearchClick = (search) => {
     setLocation(search.location);
-    setDateTime(search.dateTime || '');
-    setDuration(search.duration || 1);
     onSearch(search);
   };
 
@@ -52,53 +48,7 @@ const ParkingSearchBox = ({
               </svg>
             }
           />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              type="datetime-local"
-              label="Date & Time"
-              value={dateTime}
-              onChange={(e) => setDateTime(e.target.value)}
-              fullWidth
-              icon={
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              }
-            />
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Duration (hours)</label>
-              <div className="flex items-center">
-                <button
-                  type="button"
-                  className="bg-gray-200 p-2 rounded-l-lg text-gray-700 hover:bg-gray-300"
-                  onClick={() => setDuration(Math.max(1, duration - 1))}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                  </svg>
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  max="24"
-                  value={duration}
-                  onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
-                  className="p-2 w-16 text-center border-t border-b border-gray-300 outline-none"
-                />
-                <button
-                  type="button"
-                  className="bg-gray-200 p-2 rounded-r-lg text-gray-700 hover:bg-gray-300"
-                  onClick={() => setDuration(Math.min(24, duration + 1))}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+  
           
           <Button
             type="submit"
@@ -161,12 +111,9 @@ const ParkingSearchBox = ({
 };
 
 ParkingSearchBox.propTypes = {
-  onSearch: PropTypes.func.isRequired,
-  recentSearches: PropTypes.arrayOf(
+  onSearch: PropTypes.func.isRequired,  recentSearches: PropTypes.arrayOf(
     PropTypes.shape({
-      location: PropTypes.string.isRequired,
-      dateTime: PropTypes.string,
-      duration: PropTypes.number
+      location: PropTypes.string.isRequired
     })
   ),
   popularLocations: PropTypes.arrayOf(

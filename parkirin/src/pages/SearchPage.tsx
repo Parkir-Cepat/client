@@ -194,7 +194,7 @@ const SearchPage: React.FC = () => {
     <Container maxWidth="xl" sx={{ py: 3 }}>
       {/* Search Header */}
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>        <Grid container spacing={2} alignItems="center">
-          <Grid size={{ xs: 12, md: 4 }}>
+          <Grid item xs={12} md={4}>
             <TextField
               fullWidth
               placeholder="Cari lokasi..."
@@ -208,9 +208,8 @@ const SearchPage: React.FC = () => {
                   </InputAdornment>
                 ),
               }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
+            />          </Grid>
+          <Grid item xs={12} md={2}>
             <TextField
               fullWidth
               select
@@ -225,7 +224,7 @@ const SearchPage: React.FC = () => {
               ))}
             </TextField>
           </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
+          <Grid item xs={12} md={2}>
             <TextField
               fullWidth
               select
@@ -244,7 +243,7 @@ const SearchPage: React.FC = () => {
               ))}
             </TextField>
           </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
+          <Grid item xs={12} md={2}>
             <Button
               variant="contained"
               fullWidth
@@ -254,7 +253,7 @@ const SearchPage: React.FC = () => {
               Cari
             </Button>
           </Grid>
-          <Grid size={{ xs: 12, md: 2 }}>
+          <Grid item xs={12} md={2}>
             <FormControlLabel
               control={
                 <Switch
@@ -265,11 +264,10 @@ const SearchPage: React.FC = () => {
               label="Tampilkan Peta"
             />
           </Grid>
-        </Grid>
-
-        {/* Advanced Filters */}
+        </Grid>        {/* Advanced Filters */}
         <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #e0e0e0' }}>
-          <Grid container spacing={3}>            <Grid size={{ xs: 12, md: 4 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
               <Typography variant="body2" gutterBottom>
                 Radius Pencarian: {searchFilters.radius} km
               </Typography>
@@ -280,7 +278,8 @@ const SearchPage: React.FC = () => {
                 max={50}
                 valueLabelDisplay="auto"
               />
-            </Grid>            <Grid size={{ xs: 12, md: 4 }}>
+            </Grid>
+            <Grid item xs={12} md={4}>
               <Typography variant="body2" gutterBottom>
                 Harga per Jam: Rp {searchFilters.minPrice.toLocaleString('id-ID')} - Rp {searchFilters.maxPrice.toLocaleString('id-ID')}
               </Typography>
@@ -296,7 +295,8 @@ const SearchPage: React.FC = () => {
                 valueLabelDisplay="auto"
                 valueLabelFormat={(value) => `Rp ${value.toLocaleString('id-ID')}`}
               />
-            </Grid>            <Grid size={{ xs: 12, md: 4 }}>
+            </Grid>
+            <Grid item xs={12} md={4}>
               <FormControlLabel
                 control={
                   <Switch
@@ -309,11 +309,20 @@ const SearchPage: React.FC = () => {
             </Grid>
           </Grid>
         </Box>
-      </Paper>
-
-      <Grid container spacing={3}>
-        {/* Map Section */}        {showMap && (
-          <Grid size={{ xs: 12, lg: 8 }}>
+                  <Switch
+                    checked={searchFilters.showAvailableOnly}
+                    onChange={(e) => setSearchFilters({ ...searchFilters, showAvailableOnly: e.target.checked })}
+                  />
+                }
+                label="Hanya yang tersedia"
+              />
+            </Grid>
+          </Grid>
+        </Box>
+      </Paper>      <Grid container spacing={3}>
+        {/* Map Section */}
+        {showMap && (
+          <Grid item xs={12} lg={8}>
             <Paper elevation={2} sx={{ p: 2, height: '500px' }}>
               <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
                 <GoogleMap
@@ -331,7 +340,8 @@ const SearchPage: React.FC = () => {
                       }}
                     />
                   )} */}
-          {/* Parking lot markers */}
+
+                  {/* Parking lot markers */}
                   {!isLoading && searchResultsList.map((parkingLot: ParkingLot) => (
                     <Marker
                       key={parkingLot._id}
@@ -383,7 +393,9 @@ const SearchPage: React.FC = () => {
         )}
 
         {/* Results Section */}
-        <Grid size={{ xs: 12, lg: showMap ? 4 : 12 }}>          <Typography variant="h5" gutterBottom>            Hasil Pencarian ({searchResultsList.length})
+        <Grid item xs={12} lg={showMap ? 4 : 12}>
+          <Typography variant="h5" gutterBottom>
+            Hasil Pencarian ({searchResultsList.length})
           </Typography>
 
           {error && (
@@ -404,12 +416,14 @@ const SearchPage: React.FC = () => {
                   </CardContent>
                 </Card>
               ))}
-            </Box>          ) : !searchResultsList.length ? (
+            </Box>
+          ) : !searchResultsList.length ? (
             <Alert severity="info">
               Tidak ada tempat parkir ditemukan. Coba ubah filter pencarian Anda.
             </Alert>
           ) : (
-            <Box sx={{ maxHeight: showMap ? '500px' : 'none', overflow: 'auto' }}>              {searchResultsList
+            <Box sx={{ maxHeight: showMap ? '500px' : 'none', overflow: 'auto' }}>
+              {searchResultsList
                 .filter((lot: ParkingLot) => !searchFilters.showAvailableOnly || ((lot.available?.car || 0) + (lot.available?.motorcycle || 0)) > 0)
                 .map(renderParkingCard)}
             </Box>
