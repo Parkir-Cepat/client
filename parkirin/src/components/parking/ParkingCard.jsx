@@ -1,9 +1,10 @@
 // src/components/parking/ParkingCard.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, Badge, Button } from '../common';
 import { formatCurrency, formatDistance } from '../../utils/formatters';
 import { classNames } from '../../utils/helpers';
+import ParkingDetailsModal from './ParkingDetailsModal';
 
 const ParkingCard = ({
   parking,
@@ -14,6 +15,8 @@ const ParkingCard = ({
   showActions = true,
   className = ''
 }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   const {
     id,
     name,
@@ -59,14 +62,23 @@ const ParkingCard = ({
     if (ratio > 0.2) return { status: 'limited', color: 'warning' };
     return { status: 'full', color: 'danger' };
   };
-
   const availability = getAvailabilityStatus();
 
+  const handleCardClick = (e) => {
+    // Prevent modal opening when clicking on action buttons or links
+    if (e.target.closest('button') || e.target.closest('a')) {
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
   return (
-    <Card
-      className={classNames('overflow-hidden hover:shadow-lg transition-shadow duration-200', className)}
-      padding="none"
-    >
+    <>
+      <Card
+        className={classNames('overflow-hidden hover:shadow-lg transition-shadow duration-200 cursor-pointer', className)}
+        padding="none"
+        onClick={handleCardClick}
+      >
       {/* Image */}
       <div className="relative h-48 bg-gray-200">
         {images && images.length > 0 ? (
@@ -226,10 +238,17 @@ const ParkingCard = ({
             >
               {availableSpaces === 0 ? 'Full' : 'Book Now'}
             </Button>
-          </div>
-        )}
+          </div>        )}
       </div>
     </Card>
+    
+    {/* Parking Details Modal */}
+    <ParkingDetailsModal
+      parkingId={id}
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+    />
+    </>
   );
 };
 

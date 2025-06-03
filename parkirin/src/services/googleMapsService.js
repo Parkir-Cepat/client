@@ -744,7 +744,6 @@ class GoogleMapsService {
     }
     return `${lat.toFixed(precision)}, ${lng.toFixed(precision)}`;
   }
-
   /**
    * Fit map bounds to show all markers
    * @param {google.maps.Map} map - Google Maps instance
@@ -773,6 +772,136 @@ class GoogleMapsService {
     // Optional: Add some padding
     const padding = { top: 50, right: 50, bottom: 50, left: 50 };
     map.fitBounds(bounds, padding);
+  }
+
+  /**
+   * Open directions to a destination in the user's preferred map app
+   * @param {Object} destination - { lat, lng } or address string
+   * @param {Object} origin - { lat, lng } or address string (optional, defaults to user location)
+   * @param {string} travelMode - 'driving', 'walking', 'transit', 'bicycling' (optional, defaults to 'driving')
+   */
+  openDirections(destination, origin = null, travelMode = 'driving') {
+    if (!destination) {
+      throw new Error('Destination is required');
+    }
+
+    try {
+      // Format destination for URL
+      let destStr = '';
+      if (typeof destination === 'string') {
+        destStr = encodeURIComponent(destination);
+      } else if (destination.lat && destination.lng) {
+        destStr = `${destination.lat},${destination.lng}`;
+      } else {
+        throw new Error('Invalid destination format');
+      }
+
+      // Format origin for URL if provided
+      let originStr = '';
+      if (origin) {
+        if (typeof origin === 'string') {
+          originStr = encodeURIComponent(origin);
+        } else if (origin.lat && origin.lng) {
+          originStr = `${origin.lat},${origin.lng}`;
+        }
+      }
+
+      // Detect platform and open appropriate map app
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      
+      // iOS devices
+      if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        let url = `maps://`;
+        if (originStr) {
+          url += `?saddr=${originStr}&daddr=${destStr}`;
+        } else {
+          url += `?daddr=${destStr}`;
+        }
+        
+        // Add travel mode for Apple Maps
+        if (travelMode === 'walking') {
+          url += `&dirflg=w`;
+        } else if (travelMode === 'transit') {
+          url += `&dirflg=r`;
+        } else {
+          url += `&dirflg=d`; // driving
+        }
+        
+        // Try to open Apple Maps, fallback to Google Maps web
+        const appleMapsLink = document.createElement('a');
+        appleMapsLink.href = url;
+        appleMapsLink.click();
+        
+        // Fallback after a delay if Apple Maps doesn't open
+        setTimeout(() => {
+          this.openGoogleMapsWeb(destStr, originStr, travelMode);
+        }, 1000);
+        
+        return;
+      }
+      
+      // Android devices
+      if (/android/i.test(userAgent)) {
+        let url = `geo:0,0?q=${destStr}`;
+        if (originStr) {
+          url = `https://www.google.com/maps/dir/${originStr}/${destStr}`;
+        } else {
+          url = `https://www.google.com/maps/dir/?api=1&destination=${destStr}`;
+        }
+        
+        // Add travel mode
+        if (travelMode === 'walking') {
+          url += `&travelmode=walking`;
+        } else if (travelMode === 'transit') {
+          url += `&travelmode=transit`;
+        } else if (travelMode === 'bicycling') {
+          url += `&travelmode=bicycling`;
+        } else {
+          url += `&travelmode=driving`;
+        }
+        
+        window.open(url, '_blank');
+        return;
+      }
+      
+      // Desktop and other devices - open Google Maps web
+      this.openGoogleMapsWeb(destStr, originStr, travelMode);
+      
+    } catch (error) {
+      console.error('Error opening directions:', error);
+      // Fallback to Google Maps web
+      this.openGoogleMapsWeb(destination, origin, travelMode);
+    }
+  }
+
+  /**
+   * Open Google Maps web interface for directions
+   * @param {string} destination - Destination string
+   * @param {string} origin - Origin string (optional)
+   * @param {string} travelMode - Travel mode
+   * @private
+   */
+  openGoogleMapsWeb(destination, origin = null, travelMode = 'driving') {
+    let url = 'https://www.google.com/maps/dir/';
+    
+    if (origin) {
+      url += `${origin}/${destination}`;
+    } else {
+      url += `?api=1&destination=${destination}`;
+    }
+    
+    // Add travel mode
+    if (travelMode === 'walking') {
+      url += url.includes('?') ? '&travelmode=walking' : '?travelmode=walking';
+    } else if (travelMode === 'transit') {
+      url += url.includes('?') ? '&travelmode=transit' : '?travelmode=transit';
+    } else if (travelMode === 'bicycling') {
+      url += url.includes('?') ? '&travelmode=bicycling' : '?travelmode=bicycling';
+    } else {
+      url += url.includes('?') ? '&travelmode=driving' : '?travelmode=driving';
+    }
+    
+    window.open(url, '_blank');
   }
 }
 

@@ -4,7 +4,7 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { useDebounce } from '../hooks/useDebounce';
 import { ParkingMap, SearchFilters, ParkingList, ParkingGrid } from '../components/parking';
 import { LoadingSpinner, Button, Card, Alert } from '../components/common';
-import { GET_NEARBY_PARKING_LOTS, SEARCH_PARKING_LOTS } from '../graphql/queries';
+import { GET_NEARBY_PARKINGS } from '../graphql/queries';
 import { 
   MapViewIcon, 
   ListBulletIcon, 
@@ -29,10 +29,37 @@ const Search = () => {
 
   const { location, loading: locationLoading, error: locationError } = useGeolocation();
   const debouncedSearch = useDebounce(searchQuery, 500);
-
   // Determine which query to use based on search
   const useNearbyQuery = !debouncedSearch && location;
   const useSearchQuery = debouncedSearch;
+
+  // Transform parking data to match ParkingCard component expectations
+  const transformParkingData = (parkingData) => {
+    if (!parkingData) return [];
+    
+    return parkingData.map(parking => ({
+      id: parking._id,
+      name: parking.name,
+      address: parking.address,
+      pricePerHour: parking.rates?.car || parking.rates?.motorcycle || 0,
+      images: parking.images || [],
+      rating: parking.rating || 0,
+      totalReviews: parking.review_count || 0,
+      availableSpaces: (parking.available?.car || 0) + (parking.available?.motorcycle || 0),
+      totalSpaces: (parking.capacity?.car || 0) + (parking.capacity?.motorcycle || 0),
+      facilities: parking.facilities || [],
+      location: parking.location?.coordinates ? {
+        lat: parking.location.coordinates[1],
+        lng: parking.location.coordinates[0]
+      } : null,
+      operationalHours: parking.operational_hours ? [{
+        dayOfWeek: 1, // Simplified for now
+        openTime: parking.operational_hours.open,
+        closeTime: parking.operational_hours.close
+      }] : [],
+      vehicleTypes: ['car', 'motorcycle'] // Default to both
+    }));
+  };
 
   // Query for nearby parking lots
   const { 
@@ -40,7 +67,7 @@ const Search = () => {
     loading: nearbyLoading, 
     error: nearbyError,
     refetch: refetchNearby
-  } = useQuery(GET_NEARBY_PARKING_LOTS, {
+  } = useQuery(GET_NEARBY_PARKINGS, {
     variables: {
       longitude: location?.longitude,
       latitude: location?.latitude,
@@ -50,30 +77,27 @@ const Search = () => {
     skip: !useNearbyQuery,
     fetchPolicy: 'cache-and-network'
   });
-
   // Query for search results
   const { 
     data: searchData, 
     loading: searchLoading, 
     error: searchError,
     refetch: refetchSearch
-  } = useQuery(SEARCH_PARKING_LOTS, {
+  } = useQuery(GET_NEARBY_PARKINGS, {
     variables: {
-      query: debouncedSearch,
-      vehicleType: filters.vehicleType || null,
-      minPrice: filters.minPrice ? parseFloat(filters.minPrice) : null,
-      maxPrice: filters.maxPrice ? parseFloat(filters.maxPrice) : null,
-      rating: filters.rating ? parseFloat(filters.rating) : null,
-      sortBy: filters.sortBy
+      longitude: location?.longitude || 106.8456,
+      latitude: location?.latitude || -6.2088,
+      maxDistance: 10000,
+      vehicleType: filters.vehicleType || null
     },
     skip: !useSearchQuery,
     fetchPolicy: 'cache-and-network'
-  });
-  // Determine current data and loading state
+  });  // Determine current data and loading state
   const currentData = useSearchQuery ? searchData : nearbyData;
   const currentLoading = useSearchQuery ? searchLoading : nearbyLoading;
   const currentError = useSearchQuery ? searchError : nearbyError;
-  const parkingLots = currentData?.searchParkings || currentData?.getNearbyParkings || [];
+  const rawParkingLots = currentData?.getNearbyParkings || [];
+  const parkingLots = transformParkingData(rawParkingLots);
 
   // Set initial map center when location is available
   useEffect(() => {
@@ -366,10 +390,9 @@ const Search = () => {
 
             {/* List View */}
             {viewMode === 'list' && (
-              <div className="space-y-6">
-                {parkingLots.length > 0 ? (
+              <div className="space-y-6">                {parkingLots.length > 0 ? (
                   <ParkingGrid 
-                    parkingLots={parkingLots}
+                    parkings={parkingLots}
                     userLocation={location}
                   />
                 ) : (
