@@ -1,26 +1,34 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { fileURLToPath, URL } from 'node:url'
 
-// https://vite.dev/config/
+// https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
-  },server: {
+  plugins: [react()],
+  server: {
     port: 5173,
-    host: true,
     proxy: {
-      '/graphql': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-      },
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
-      }
-    }
+        secure: false,
+      },
+      '/graphql': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+  resolve: {
+    alias: {
+      '@': '/src',
+      '@components': '/src/components',
+      '@pages': '/src/pages',
+      '@services': '/src/services',
+      '@utils': '/src/utils',
+      '@hooks': '/src/hooks',
+      '@store': '/src/store',
+    },
   },
   build: {
     outDir: 'dist',

@@ -1,10 +1,4 @@
-import type { GoogleCredentialResponse } from '../types/google-auth';
-
-export const initGoogleSignIn = (
-  clientId: string,
-  onSuccess: (credential: string) => Promise<void>,
-  onError: (error: string) => void
-) => {
+export const initGoogleSignIn = (clientId, onSuccess, onError) => {
   if (!window.google?.accounts?.id) {
     console.error('Google Sign-In SDK not loaded');
     onError('Google Sign-In tidak tersedia');
@@ -13,7 +7,7 @@ export const initGoogleSignIn = (
 
   window.google.accounts.id.initialize({
     client_id: clientId,
-    callback: async (response: GoogleCredentialResponse) => {
+    callback: async (response) => {
       try {
         await onSuccess(response.credential);
       } catch (err) {
@@ -24,4 +18,4 @@ export const initGoogleSignIn = (
   });
 
   window.google.accounts.id.prompt();
-};
+}; 

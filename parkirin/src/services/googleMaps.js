@@ -1,42 +1,9 @@
-import type { Coordinates } from '../types';
-
-export interface GoogleMapsConfig {
-  apiKey: string;
-  libraries: Array<'places' | 'geometry' | 'drawing' | 'visualization'>;
-  language: string;
-  region: string;
-}
-
-export interface PlaceResult {
-  place_id: string;
-  formatted_address: string;
-  name: string;
-  geometry: {
-    location: Coordinates;
-  };
-  types: string[];
-}
-
-export interface DirectionsResult {
-  routes: google.maps.DirectionsRoute[];
-  distance: {
-    text: string;
-    value: number; // in meters
-  };
-  duration: {
-    text: string;
-    value: number; // in seconds
-  };
-}
-
 class GoogleMapsService {
-  private config: GoogleMapsConfig;
-  private isLoaded: boolean = false;
-  private placesService: google.maps.places.PlacesService | null = null;
-  private directionsService: google.maps.DirectionsService | null = null;
-  private geocoder: google.maps.Geocoder | null = null;
-
   constructor() {
+    this.isLoaded = false;
+    this.placesService = null;
+    this.directionsService = null;
+    this.geocoder = null;
     this.config = {
       apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
       libraries: ['places', 'geometry'],
@@ -46,7 +13,7 @@ class GoogleMapsService {
   }
 
   // Initialize Google Maps API
-  async initialize(): Promise<void> {
+  async initialize() {
     if (this.isLoaded) {
       return Promise.resolve();
     }
@@ -80,7 +47,7 @@ class GoogleMapsService {
     });
   }
 
-  private initializeServices(): void {
+  initializeServices() {
     // Create a dummy map element for services that require it
     const dummyElement = document.createElement('div');
     const dummyMap = new google.maps.Map(dummyElement, {
@@ -94,7 +61,7 @@ class GoogleMapsService {
   }
 
   // Search places by text
-  async searchPlaces(query: string, location?: Coordinates): Promise<PlaceResult[]> {
+  async searchPlaces(query, location) {
     await this.initialize();
     
     if (!this.placesService) {
@@ -102,25 +69,25 @@ class GoogleMapsService {
     }
 
     return new Promise((resolve, reject) => {
-      const request: google.maps.places.TextSearchRequest = {
+      const request = {
         query,
         location: location ? new google.maps.LatLng(location.lat, location.lng) : undefined,
         radius: 50000, // 50km
       };
 
-      this.placesService!.textSearch(request, (results, status) => {
+      this.placesService.textSearch(request, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-          const places: PlaceResult[] = results.map(place => ({
-            place_id: place.place_id!,
-            formatted_address: place.formatted_address!,
-            name: place.name!,
+          const places = results.map(place => ({
+            place_id: place.place_id,
+            formatted_address: place.formatted_address,
+            name: place.name,
             geometry: {
               location: {
-                lat: place.geometry!.location!.lat(),
-                lng: place.geometry!.location!.lng(),
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
               },
             },
-            types: place.types!,
+            types: place.types,
           }));
           resolve(places);
         } else {
@@ -131,7 +98,7 @@ class GoogleMapsService {
   }
 
   // Get place details
-  async getPlaceDetails(placeId: string): Promise<google.maps.places.PlaceResult | null> {
+  async getPlaceDetails(placeId) {
     await this.initialize();
     
     if (!this.placesService) {
@@ -144,7 +111,7 @@ class GoogleMapsService {
         fields: ['place_id', 'name', 'formatted_address', 'geometry', 'types', 'rating', 'photos'],
       };
 
-      this.placesService!.getDetails(request, (place, status) => {
+      this.placesService.getDetails(request, (place, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && place) {
           resolve(place);
         } else if (status === google.maps.places.PlacesServiceStatus.NOT_FOUND) {
@@ -157,7 +124,7 @@ class GoogleMapsService {
   }
 
   // Calculate distance between two points
-  calculateDistance(from: Coordinates, to: Coordinates): number {
+  calculateDistance(from, to) {
     const fromLatLng = new google.maps.LatLng(from.lat, from.lng);
     const toLatLng = new google.maps.LatLng(to.lat, to.lng);
     
@@ -165,11 +132,7 @@ class GoogleMapsService {
   }
 
   // Get directions between two points
-  async getDirections(
-    origin: Coordinates,
-    destination: Coordinates,
-    travelMode: google.maps.TravelMode = google.maps.TravelMode.DRIVING
-  ): Promise<DirectionsResult> {
+  async getDirections(origin, destination, travelMode = google.maps.TravelMode.DRIVING) {
     await this.initialize();
     
     if (!this.directionsService) {
@@ -177,21 +140,21 @@ class GoogleMapsService {
     }
 
     return new Promise((resolve, reject) => {
-      const request: google.maps.DirectionsRequest = {
+      const request = {
         origin: new google.maps.LatLng(origin.lat, origin.lng),
         destination: new google.maps.LatLng(destination.lat, destination.lng),
         travelMode,
       };
 
-      this.directionsService!.route(request, (result, status) => {
+      this.directionsService.route(request, (result, status) => {
         if (status === google.maps.DirectionsStatus.OK && result) {
           const route = result.routes[0];
           const leg = route.legs[0];
           
           resolve({
             routes: result.routes,
-            distance: leg.distance!,
-            duration: leg.duration!,
+            distance: leg.distance,
+            duration: leg.duration,
           });
         } else {
           reject(new Error(`Directions failed: ${status}`));
@@ -201,7 +164,7 @@ class GoogleMapsService {
   }
 
   // Geocode address
-  async geocodeAddress(address: string): Promise<Coordinates | null> {
+  async geocodeAddress(address) {
     await this.initialize();
     
     if (!this.geocoder) {
@@ -209,7 +172,7 @@ class GoogleMapsService {
     }
 
     return new Promise((resolve, reject) => {
-      this.geocoder!.geocode({ address }, (results, status) => {
+      this.geocoder.geocode({ address }, (results, status) => {
         if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
           const location = results[0].geometry.location;
           resolve({
@@ -226,7 +189,7 @@ class GoogleMapsService {
   }
 
   // Reverse geocode coordinates
-  async reverseGeocode(coordinates: Coordinates): Promise<string | null> {
+  async reverseGeocode(coordinates) {
     await this.initialize();
     
     if (!this.geocoder) {
@@ -236,7 +199,7 @@ class GoogleMapsService {
     return new Promise((resolve, reject) => {
       const latLng = new google.maps.LatLng(coordinates.lat, coordinates.lng);
       
-      this.geocoder!.geocode({ location: latLng }, (results, status) => {
+      this.geocoder.geocode({ location: latLng }, (results, status) => {
         if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
           resolve(results[0].formatted_address);
         } else if (status === google.maps.GeocoderStatus.ZERO_RESULTS) {
@@ -248,84 +211,75 @@ class GoogleMapsService {
     });
   }
 
-  // Format distance
-  formatDistance(meters: number): string {
+  formatDistance(meters) {
     if (meters < 1000) {
       return `${Math.round(meters)} m`;
-    } else {
-      return `${(meters / 1000).toFixed(1)} km`;
     }
+    return `${(meters / 1000).toFixed(1)} km`;
   }
 
-  // Format duration
-  formatDuration(seconds: number): string {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    
-    if (hours > 0) {
-      return `${hours}j ${minutes}m`;
-    } else {
-      return `${minutes}m`;
+  formatDuration(seconds) {
+    const minutes = Math.round(seconds / 60);
+    if (minutes < 60) {
+      return `${minutes} menit`;
     }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours} jam ${remainingMinutes} menit`;
   }
 
-  // Check if coordinates are in Indonesia
-  isInIndonesia(coordinates: Coordinates): boolean {
-    // Rough bounding box for Indonesia
-    const bounds = {
+  isInIndonesia(coordinates) {
+    const indonesiaBounds = {
       north: 6,
       south: -11,
-      east: 141,
       west: 95,
+      east: 141,
     };
-    
+
     return (
-      coordinates.lat >= bounds.south &&
-      coordinates.lat <= bounds.north &&
-      coordinates.lng >= bounds.west &&
-      coordinates.lng <= bounds.east
+      coordinates.lat >= indonesiaBounds.south &&
+      coordinates.lat <= indonesiaBounds.north &&
+      coordinates.lng >= indonesiaBounds.west &&
+      coordinates.lng <= indonesiaBounds.east
     );
   }
 
   // Get nearby places
-  async getNearbyPlaces(
-    location: Coordinates,
-    radius: number = 1000,
-    type?: string
-  ): Promise<PlaceResult[]> {
+  async getNearbyPlaces(location, radius = 1000, type) {
     await this.initialize();
     
     if (!this.placesService) {
       throw new Error('Places service not initialized');
     }
 
-    return new Promise((resolve, reject) => {      const request: google.maps.places.PlaceSearchRequest = {
+    return new Promise((resolve, reject) => {
+      const request = {
         location: new google.maps.LatLng(location.lat, location.lng),
         radius,
-        type: type as string, // Use string type to avoid namespace issues
+        type,
       };
 
-      this.placesService!.nearbySearch(request, (results, status) => {
+      this.placesService.nearbySearch(request, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-          const places: PlaceResult[] = results.map(place => ({
-            place_id: place.place_id!,
-            formatted_address: place.vicinity!,
-            name: place.name!,
+          const places = results.map(place => ({
+            place_id: place.place_id,
+            formatted_address: place.vicinity,
+            name: place.name,
             geometry: {
               location: {
-                lat: place.geometry!.location!.lat(),
-                lng: place.geometry!.location!.lng(),
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
               },
             },
-            types: place.types!,
+            types: place.types,
           }));
           resolve(places);
         } else {
-          reject(new Error(`Nearby search failed: ${status}`));
+          reject(new Error(`Nearby places search failed: ${status}`));
         }
       });
     });
   }
 }
 
-export const googleMapsService = new GoogleMapsService();
+export default new GoogleMapsService(); 

@@ -1,50 +1,12 @@
-declare global {
-  interface Window {
-    snap: {
-      pay: (token: string, options?: SnapPaymentOptions) => void;
-      embed: (token: string, options: SnapEmbedOptions) => void;
-    };
-  }
-}
-
-export interface SnapPaymentOptions {
-  onSuccess?: (result: SnapResult) => void;
-  onPending?: (result: SnapResult) => void;
-  onError?: (result: SnapResult) => void;
-  onClose?: () => void;
-}
-
-export interface SnapEmbedOptions {
-  embedId: string;
-  onSuccess?: (result: SnapResult) => void;
-  onPending?: (result: SnapResult) => void;
-  onError?: (result: SnapResult) => void;
-  onClose?: () => void;
-}
-
-export interface SnapResult {
-  order_id: string;
-  status_code: string;
-  gross_amount: string;
-  payment_type: string;
-  transaction_time: string;
-  transaction_status: string;
-  fraud_status?: string;
-  finish_redirect_url?: string;
-}
-
 class MidtransService {
-  private clientKey: string;
-  private environment: 'sandbox' | 'production';
-  private isScriptLoaded: boolean = false;
-
   constructor() {
     this.clientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY || '';
     this.environment = import.meta.env.VITE_MIDTRANS_ENVIRONMENT === 'production' ? 'production' : 'sandbox';
+    this.isScriptLoaded = false;
   }
 
   // Load Midtrans Snap script
-  async loadSnapScript(): Promise<void> {
+  async loadSnapScript() {
     if (this.isScriptLoaded || window.snap) {
       return Promise.resolve();
     }
@@ -69,10 +31,7 @@ class MidtransService {
   }
 
   // Open Snap payment popup
-  async openSnapPayment(
-    snapToken: string,
-    options: SnapPaymentOptions = {}
-  ): Promise<void> {
+  async openSnapPayment(snapToken, options = {}) {
     try {
       await this.loadSnapScript();
       
@@ -105,10 +64,7 @@ class MidtransService {
   }
 
   // Embed Snap payment in element
-  async embedSnapPayment(
-    snapToken: string,
-    options: SnapEmbedOptions
-  ): Promise<void> {
+  async embedSnapPayment(snapToken, options) {
     try {
       await this.loadSnapScript();
       
@@ -142,7 +98,7 @@ class MidtransService {
   }
 
   // Helper method to format currency
-  formatCurrency(amount: number): string {
+  formatCurrency(amount) {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -187,19 +143,19 @@ class MidtransService {
   }
 
   // Validate amount
-  validateAmount(amount: number): boolean {
+  validateAmount(amount) {
     return amount >= 1000 && amount <= 500000000; // Min 1k, Max 500M
   }
 
   // Get minimum amount
-  getMinimumAmount(): number {
+  getMinimumAmount() {
     return 1000;
   }
 
   // Get maximum amount
-  getMaximumAmount(): number {
+  getMaximumAmount() {
     return 500000000;
   }
 }
 
-export const midtransService = new MidtransService();
+export const midtransService = new MidtransService(); 
