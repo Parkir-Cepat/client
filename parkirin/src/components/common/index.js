@@ -13,3 +13,4 @@ export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as StatCard } from '../dashboard/StatCard';
 export { default as QuickActions } from '../dashboard/QuickActions';
 export { default as RecentActivity } from '../dashboard/RecentActivity';
+export { default as MapPicker } from './MapPicker';

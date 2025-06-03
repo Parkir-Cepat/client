@@ -6,14 +6,47 @@ import ParkingForm from './ParkingForm';
 import { toast } from 'react-hot-toast';
 
 const EditParkingForm = ({ parkingId, initialData, onSuccess }) => {
-  const [updateParking, { loading }] = useMutation(UPDATE_PARKING);
-
-  const handleSubmit = async (formData) => {
+  const [updateParking, { loading }] = useMutation(UPDATE_PARKING);  const handleSubmit = async (formData) => {
     try {
+      // Only extract the fields allowed by UpdateParkingInput schema
+      // Note: location is NOT allowed in UpdateParkingInput per GraphQL schema
+      const allowedFields = {
+        name: formData.name,
+        address: formData.address,
+        // Transform price structure to rates structure for GraphQL schema
+        rates: formData.price ? {
+          car: formData.price.car?.hourly || 0,
+          motorcycle: formData.price.motorcycle?.hourly || 0
+        } : (formData.rates || undefined),
+        operational_hours: formData.operational_hours,
+        facilities: formData.facilities || formData.features,
+        images: formData.images,
+        status: formData.status
+        // location field removed - not allowed in UpdateParkingInput
+        // daily rates removed - not supported by GraphQL schema (only hourly rates)
+      };
+
+      // Remove undefined fields and GraphQL metadata to avoid sending null values
+      const validFormData = Object.entries(allowedFields)
+        .filter(([, value]) => value !== undefined && value !== null)
+        .reduce((acc, [key, value]) => {
+          // Remove GraphQL metadata from nested objects
+          if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            const cleanValue = { ...value };
+            delete cleanValue.__typename;
+            acc[key] = cleanValue;
+          } else {
+            acc[key] = value;
+          }
+          return acc;
+        }, {});
+
+      console.log('Submitting filtered data:', validFormData);
+      
       const { data } = await updateParking({
         variables: {
           id: parkingId,
-          input: formData
+          input: validFormData
         }
       });
 
@@ -24,6 +57,7 @@ const EditParkingForm = ({ parkingId, initialData, onSuccess }) => {
         }
       }
     } catch (error) {
+      console.error('Update error:', error);
       toast.error(error.message || 'Failed to update parking lot');
     }
   };

@@ -4,7 +4,7 @@ import { gql } from '@apollo/client';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import CreateParkingForm from '../../components/parking/CreateParkingForm';
 import EditParkingForm from '../../components/parking/EditParkingForm';
-import { LoadingSpinner } from '../../components/common';
+import { LoadingSpinner, Modal } from '../../components/common';
 import { DELETE_PARKING } from '../../graphql/mutations';
 import Swal from 'sweetalert2';
 
@@ -232,23 +232,49 @@ const ManageParking = () => {
             </div>
           ))}
         </div>
-      )}      {showCreateForm && (
-        <CreateParkingForm 
-          onClose={() => setShowCreateForm(false)}
-          onSuccess={handleCreateSuccess}
-        />
-      )}
+      )}      {/* Create Parking Modal */}
+      <Modal 
+        isOpen={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+        title="Create New Parking Lot"
+        size="xlarge"
+      >
+        <div className="max-h-[85vh] overflow-y-auto">
+          <div className="p-6">
+            <CreateParkingForm 
+              onClose={() => setShowCreateForm(false)}
+              onSuccess={handleCreateSuccess}
+            />
+          </div>
+        </div>
+      </Modal>
 
-      {showEditForm && editingParking && (
-        <EditParkingForm 
-          parking={editingParking}
-          onClose={() => {
-            setShowEditForm(false);
-            setEditingParking(null);
-          }}
-          onSuccess={handleEditSuccess}
-        />
-      )}
+      {/* Edit Parking Modal */}
+      <Modal 
+        isOpen={showEditForm && editingParking !== null}
+        onClose={() => {
+          setShowEditForm(false);
+          setEditingParking(null);
+        }}
+        title={`Edit Parking: ${editingParking?.name || ''}`}
+        size="xlarge"
+      >
+        {editingParking && (
+          <div className="max-h-[85vh] overflow-y-auto">
+            <div className="p-6">
+              <EditParkingForm 
+                parkingId={editingParking._id}
+                initialData={editingParking}
+                onSuccess={() => {
+                  setShowEditForm(false);
+                  setEditingParking(null);
+                  handleEditSuccess(editingParking);
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

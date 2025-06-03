@@ -77,18 +77,10 @@ const AppRoutes = () => {
               <Dashboard />
             </DashboardLayout>
           </ProtectedRoute>
-        } />
-        <Route path="/parking/search" element={
+        } />        <Route path="/parking/search" element={
           <ProtectedRoute>
             <DashboardLayout>
               <ParkingSearch />
-            </DashboardLayout>
-          </ProtectedRoute>
-        } />
-        <Route path="/parking/:id" element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <ParkingDetail />
             </DashboardLayout>
           </ProtectedRoute>
         } />
@@ -96,6 +88,13 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <ManageParking />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/parking/:id" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <ParkingDetail />
             </DashboardLayout>
           </ProtectedRoute>
         } />

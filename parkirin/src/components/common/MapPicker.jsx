@@ -8,47 +8,6 @@ const libraries = ['places', 'geometry'];
 // Default center to Jakarta, Indonesia
 const defaultCenter = { lat: -6.2088, lng: 106.8456 };
 
-// Custom parking lot marker icon
-const createCustomMarkerIcon = () => {
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="24" cy="24" r="22" fill="#DC2626" stroke="white" stroke-width="3"/>
-        <circle cx="24" cy="24" r="18" fill="#DC2626"/>
-        <rect x="14" y="16" width="20" height="16" rx="2" fill="white"/>
-        <text x="24" y="28" text-anchor="middle" fill="#DC2626" font-size="16" font-weight="bold" font-family="Arial">P</text>
-        <circle cx="24" cy="40" r="3" fill="#DC2626" opacity="0.6"/>
-      </svg>
-    `)}`,
-    scaledSize: new window.google.maps.Size(48, 48),
-    anchor: new window.google.maps.Point(24, 48),
-  };
-};
-
-// Animated pulse marker for active selection
-const createPulseMarkerIcon = () => {
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
-      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="24" cy="24" r="22" fill="#059669" stroke="white" stroke-width="3"/>
-        <circle cx="24" cy="24" r="18" fill="#059669"/>
-        <rect x="14" y="16" width="20" height="16" rx="2" fill="white"/>
-        <text x="24" y="28" text-anchor="middle" fill="#059669" font-size="16" font-weight="bold" font-family="Arial">P</text>
-        <circle cx="24" cy="40" r="3" fill="#059669" opacity="0.6"/>
-        <animateTransform
-          attributeName="transform"
-          attributeType="XML"
-          type="scale"
-          values="1;1.1;1"
-          dur="2s"
-          repeatCount="indefinite"/>
-      </svg>
-    `)}`,
-    scaledSize: new window.google.maps.Size(48, 48),
-    anchor: new window.google.maps.Point(24, 48),
-  };
-};
-
 const MapPicker = ({ 
   center = defaultCenter, 
   onSelect, 
@@ -60,40 +19,14 @@ const MapPicker = ({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
     libraries
   });
-
   const [markerPosition, setMarkerPosition] = useState(center);
   const [selectedAddress, setSelectedAddress] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
-  const [markerIcon, setMarkerIcon] = useState(null);
-  const [showPulse, setShowPulse] = useState(false);
   
   const mapRef = useRef(null);
-  const geocoderRef = useRef(null);
-
-  // Initialize marker icons when Google Maps loads
-  useEffect(() => {
-    if (isLoaded && window.google) {
-      setMarkerIcon(createCustomMarkerIcon());
-    }
-  }, [isLoaded]);
-  // Show pulse effect when marker position changes
-  useEffect(() => {
-    if (isLoaded && window.google) {
-      setShowPulse(true);
-      setMarkerIcon(createPulseMarkerIcon());
-      
-      const timer = setTimeout(() => {
-        setShowPulse(false);
-        setMarkerIcon(createCustomMarkerIcon());
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [markerPosition.lat, markerPosition.lng, isLoaded]);
-
-  // Initialize geocoder when map loads
+  const geocoderRef = useRef(null);  // Initialize geocoder when map loads
   const onMapLoad = (map) => {
     mapRef.current = map;
     if (window.google && window.google.maps) {
@@ -261,6 +194,12 @@ const MapPicker = ({
     }
   };
 
+  // Update markerPosition when center prop changes
+  useEffect(() => {
+    setMarkerPosition(center);
+    reverseGeocode(center);
+  }, [center]);
+
   if (loadError) {
     return (      <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg">
         <div className="text-center">
@@ -342,7 +281,7 @@ const MapPicker = ({
             </div>
           </div>
         </div>
-      )}      <div className="relative rounded-lg overflow-hidden shadow-sm border border-gray-200">
+      )}      <div className="relative rounded-lg overflow-visible shadow-sm border border-gray-200">
         <GoogleMap
           mapContainerStyle={{ ...containerStyle, height }}
           center={markerPosition}
@@ -368,14 +307,11 @@ const MapPicker = ({
               }
             ]
           }}
-        >
-          <Marker
+        >          <Marker
             position={markerPosition}
             draggable
             onDragEnd={handleDragEnd}
             title="Seret untuk mengubah posisi"
-            icon={markerIcon}
-            animation={showPulse ? window.google?.maps?.Animation?.BOUNCE : null}
           />
           
           {/* Add a subtle radius circle to show area coverage */}

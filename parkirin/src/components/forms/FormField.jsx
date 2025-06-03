@@ -19,17 +19,36 @@ const FormField = ({
   className = '',
   startIcon,
   endIcon,
+  children,
   ...props
 }) => {
   const showError = error && touched;
 
   return (
     <div className={classNames('space-y-1', className)}>
-      <Input
-        name={name}
-        label={label}
-        type={type}
-        value={value}
+      {children ? (
+        <div>
+          {label && (
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {label}
+              {required && <span className="text-red-500 ml-1">*</span>}
+            </label>
+          )}
+          {children}
+          {(showError || helperText) && (
+            <p className={classNames(
+              'text-sm mt-1',
+              showError ? 'text-red-600' : 'text-gray-500'
+            )}>
+              {showError ? error : helperText}
+            </p>
+          )}
+        </div>
+      ) : (
+        <Input
+          name={name}
+          label={label}
+          type={type}        value={value}
         onChange={onChange}
         onBlur={onBlur}
         error={showError ? error : undefined}
@@ -41,8 +60,8 @@ const FormField = ({
         endIcon={endIcon}
         {...props}
       />
-    </div>
-  );
+      )}
+    </div>  );
 };
 
 export default FormField;
