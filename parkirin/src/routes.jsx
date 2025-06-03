@@ -17,6 +17,7 @@ const BookingHistory = React.lazy(() => import('./pages/booking/BookingHistory')
 const Chat = React.lazy(() => import('./pages/chat/Chat'));
 const Profile = React.lazy(() => import('./pages/profile/Profile'));
 const Wallet = React.lazy(() => import('./pages/wallet/Wallet'));
+const TestMapsAndImages = React.lazy(() => import('./pages/TestMapsAndImages'));
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { isAuthenticated, user } = useAuthStore();
@@ -125,6 +126,13 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <Wallet />
+            </DashboardLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/test-maps-images" element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <TestMapsAndImages />
             </DashboardLayout>
           </ProtectedRoute>
         } />

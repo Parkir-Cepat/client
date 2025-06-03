@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { Card, Badge, Button } from '../common';
@@ -40,10 +40,9 @@ const ParkingLotGrid = ({
   }
 
   const ListViewItem = ({ lot }) => (
-    <Card className="flex overflow-hidden hover:shadow-lg transition-shadow group">
-      <div 
+    <Card className="flex overflow-hidden hover:shadow-lg transition-shadow group">      <div 
         className="w-1/3 h-auto bg-cover bg-center"
-        style={{ backgroundImage: `url(${lot.images?.[0] || '/default-parking.jpg'})` }}
+        style={{ backgroundImage: `url(${lot.images?.[0] || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&auto=format'})` }}
       ></div>
       <div className="p-4 flex-1">
         <div className="flex justify-between items-start">
@@ -100,10 +99,9 @@ const ParkingLotGrid = ({
 
   const GridViewItem = ({ lot }) => (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
-      <div className="relative">
-        <div 
+      <div className="relative">        <div 
           className="h-48 bg-cover bg-center"
-          style={{ backgroundImage: `url(${lot.images?.[0] || '/default-parking.jpg'})` }}
+          style={{ backgroundImage: `url(${lot.images?.[0] || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&auto=format'})` }}
         ></div>
         <button 
           onClick={(e) => {

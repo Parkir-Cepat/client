@@ -8,7 +8,7 @@ import { getMainDefinition } from '@apollo/client/utilities';
 
 // Create WebSocket link
 const wsLink = new GraphQLWsLink(createClient({
-  url: import.meta.env.VITE_WS_URL || 'ws://localhost:3000/graphql',
+  url: import.meta.env.VITE_GRAPHQL_WS_URI || 'ws://localhost:3000/graphql',
   connectionParams: () => {
     const token = localStorage.getItem('token');
     return {
@@ -19,7 +19,7 @@ const wsLink = new GraphQLWsLink(createClient({
 
 // Create HTTP link
 const httpLink = createHttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:3000/graphql',
+  uri: import.meta.env.VITE_GRAPHQL_URI || '/graphql',
   credentials: 'include'
 });
 

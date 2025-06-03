@@ -16,10 +16,9 @@ const Button = ({
   onClick,
   type = 'button',
   ...otherProps
-}) => {
-  // Filter out jsx prop to prevent it from being passed to DOM element
+}) => {  // Filter out jsx prop to prevent it from being passed to DOM element
   // eslint-disable-next-line no-unused-vars
-  const { jsx, ...props } = otherProps;
+  const { jsx, ...props } = otherProps || {};
   const baseClasses = 'inline-flex items-center justify-center font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none relative overflow-hidden';
   
   const variants = {
@@ -135,19 +134,9 @@ const Button = ({
       )}
       
       {children}
-      
-      {icon && iconPosition === 'right' && (
+        {icon && iconPosition === 'right' && (
         <span className="ml-2">{icon}</span>
       )}
-
-      <style jsx>{`
-        @keyframes ripple {
-          to {
-            transform: scale(4);
-            opacity: 0;
-          }
-        }
-      `}</style>
     </button>
   );
 };

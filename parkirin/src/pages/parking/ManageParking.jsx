@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import CreateParkingForm from '../../components/parking/CreateParkingForm';
+import SimpleParkingMap from '../../components/parking/SimpleParkingMap';
 
 const GET_MY_PARKINGS = gql`
   query GetMyParkings {
@@ -69,6 +70,19 @@ const ManageParking = () => {
     refetch(); // Refresh data
     alert(`Parking lot "${newParking.name}" berhasil dibuat!`);
   };
+  console.log('Fetched parking data:', data); // Debugging line to check fetched data
+  
+  // Debug specific parking data
+  if (data?.getMyParkings) {
+    data.getMyParkings.forEach((parking, index) => {
+      console.log(`Parking ${index + 1}:`, {
+        name: parking.name,
+        images: parking.images,
+        location: parking.location,
+        coordinates: parking.location?.coordinates
+      });
+    });
+  }
 
   if (loading) return (
     <div className="flex justify-center p-8">
@@ -111,18 +125,30 @@ const ManageParking = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data?.getMyParkings?.map((parking) => (
-            <div key={parking._id} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow">
-              {parking.images?.[0] && (
-                <img
-                  src={parking.images[0]}
-                  alt={parking.name}
-                  className="w-full h-48 object-cover"
-                />
-              )}
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">{parking.name}</h3>
+          {data?.getMyParkings?.map((parking) => (            <div key={parking._id} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow">              {/* Image Section */}
+              <div className="relative h-48">
+                {parking.images && parking.images.length > 0 ? (
+                  <img
+                    src={parking.images[0]}
+                    alt={parking.name}
+                    className="w-full h-full object-cover"                    onError={(e) => {
+                      console.log('Image failed to load, using fallback:', parking.images[0]);
+                      e.target.src = '/images/parking-default.svg';
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-md">
+                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                        </svg>
+                      </div>
+                      <p className="text-sm text-gray-500 font-medium">No Image Available</p>
+                    </div>
+                  </div>
+                )}
+                <div className="absolute top-3 left-3">
                   <span className={`px-3 py-1 text-xs rounded-full font-medium ${
                     parking.status === 'active' 
                       ? 'bg-green-100 text-green-800' 
@@ -131,8 +157,23 @@ const ManageParking = () => {
                     {parking.status === 'active' ? 'Aktif' : 'Tidak Aktif'}
                   </span>
                 </div>
-                
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{parking.address}</p>
+                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-medium">
+                  ⭐ {parking.rating?.toFixed(1) || '0.0'}
+                </div>
+              </div>              <div className="p-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{parking.name}</h3>
+                  <div className="flex items-start">
+                    <MapPinIcon className="w-4 h-4 text-gray-400 mt-0.5 mr-1 flex-shrink-0" />
+                    <p className="text-gray-600 text-sm line-clamp-2">{parking.address}</p>
+                  </div>
+                </div>                {/* Mini Map */}
+                <div className="mb-4 h-32 rounded-lg overflow-hidden border border-gray-200">
+                  <SimpleParkingMap
+                    parking={parking}
+                    height="128px"
+                  />
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="bg-blue-50 rounded-lg p-3">

@@ -3,6 +3,7 @@ export { default as ParkingGrid } from './ParkingGrid';
 export { default as ParkingList } from './ParkingList';
 export { default as ParkingLotGrid } from './ParkingLotGrid';
 export { default as ParkingMap } from './ParkingMap';
+export { default as SimpleParkingMap } from './SimpleParkingMap';
 export { default as ParkingSearchBox } from './ParkingSearchBox';
 export { default as SearchFilters } from './SearchFilters';
 export { default as ManageParking } from './ManageParking';

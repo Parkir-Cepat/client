@@ -156,11 +156,10 @@ const LoadingSpinner = ({
             color === 'white' ? 'text-white' : colorClasses[color].split(' ')[1]
           )}>
             {text}
-          </p>
-        )}
+          </p>        )}
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes loading-bars {
           0% {
             height: 30%;

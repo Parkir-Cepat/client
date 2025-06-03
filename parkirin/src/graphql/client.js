@@ -6,7 +6,7 @@ import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 
 const httpLink = new HttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_HTTP_URI || 'http://localhost:3000/graphql',
+  uri: import.meta.env.VITE_GRAPHQL_URI || '/graphql',
   credentials: 'include',
 });
 
