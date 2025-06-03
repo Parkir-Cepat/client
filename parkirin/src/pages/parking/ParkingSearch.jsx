@@ -112,14 +112,15 @@ const ParkingSearch = () => {
         
         setUserLocation({ latitude, longitude });
         setViewport({ latitude, longitude, zoom: 14 });
-        
-        // Update map center if map is loaded
+          // Update map center if map is loaded
         if (map.current) {
           map.current.setCenter({ lat: latitude, lng: longitude });
           map.current.setZoom(14);
-            // Add user marker
-          GoogleMapsService.addMarker(map.current, {
+          
+          // Add user marker
+          const userMarker = new window.google.maps.Marker({
             position: { lat: latitude, lng: longitude },
+            map: map.current,
             icon: {
               path: window.google.maps.SymbolPath.CIRCLE,
               scale: 10,
@@ -130,6 +131,11 @@ const ParkingSearch = () => {
             },
             title: "Your Location"
           });
+          
+          // Store user marker reference
+          if (!markers.current.find(m => m.title === "Your Location")) {
+            markers.current.push(userMarker);
+          }
         }
       },
       (error) => {
@@ -138,23 +144,21 @@ const ParkingSearch = () => {
       options
     );
   }, [mapLoaded]);
-
   // Update markers when parking data changes
   useEffect(() => {
-    if (!map.current || !data?.nearbyParkingLots) return;
+    if (!map.current || !data?.getNearbyParkings) return;
     
     // Clear existing markers
     markers.current.forEach(marker => marker.setMap(null));
-    markers.current = [];
-    
-    // Add markers for each parking lot
-    data.nearbyParkingLots.forEach(lot => {
-      if (!lot.coordinates || !lot.coordinates.coordinates) return;
+    markers.current = [];      // Add markers for each parking lot
+    data.getNearbyParkings.forEach(lot => {
+      if (!lot.location || !lot.location.coordinates) return;
       
-      const [longitude, latitude] = lot.coordinates.coordinates;
+      const [longitude, latitude] = lot.location.coordinates;
       
-      const marker = GoogleMapsService.addMarker(map.current, {
+      const marker = new window.google.maps.Marker({
         position: { lat: latitude, lng: longitude },
+        map: map.current,
         title: lot.name,
         icon: {
           path: "M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87 -3.13,-7 -7,-7zM12,11.5c-1.38,0 -2.5,-1.12 -2.5,-2.5s1.12,-2.5 2.5,-2.5 2.5,1.12 2.5,2.5 -1.12,2.5 -2.5,2.5z",
@@ -207,9 +211,8 @@ const ParkingSearch = () => {
       }
     });
   };
-
   // Transform data for ParkingLotGrid component
-  const parkingLots = data?.nearbyParkingLots?.map(lot => ({
+  const parkingLots = data?.getNearbyParkings?.map(lot => ({
     ...lot,
     isFavorite: favorites.includes(lot._id)
   })) || [];

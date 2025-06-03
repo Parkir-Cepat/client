@@ -24,6 +24,8 @@ const Input = forwardRef(({
   labelClassName = '',
   inputClassName = '',
   floatingLabel = false,
+  fullWidth = false,
+  icon,
   ...props
 }, ref) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -62,14 +64,13 @@ const Input = forwardRef(({
   const floatingLabelClasses = floatingLabel
     ? 'pt-5 pb-2'
     : sizes[size];
-  
-  const inputClasses = classNames(
+    const inputClasses = classNames(
     baseClasses,
     variants[inputVariant],
     floatingLabel ? floatingLabelClasses : sizes[size],
     roundedOptions[rounded],
     {
-      'pl-10': startIcon,
+      'pl-10': startIcon || icon,
       'pr-10': endIcon || (type === 'password' && showPasswordToggle),
       'opacity-50 cursor-not-allowed': disabled,
       'bg-gray-50': disabled,
@@ -90,9 +91,8 @@ const Input = forwardRef(({
   const togglePasswordVisibility = () => {
     setPasswordVisible(!passwordVisible);
   };
-
   return (
-    <div className={className}>
+    <div className={classNames(className, { 'w-full': fullWidth })}>
       {label && !floatingLabel && (
         <label className={classNames(
           "block text-sm font-medium mb-1 text-gray-700",
@@ -104,13 +104,13 @@ const Input = forwardRef(({
       )}
       
       <div className="relative">
-        {startIcon && (
+        {(startIcon || icon) && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <div className={classNames(
               "h-5 w-5",
               error ? 'text-red-400' : (isFocused ? 'text-orange-500' : 'text-gray-400')
             )}>
-              {startIcon}
+              {startIcon || icon}
             </div>
           </div>
         )}
@@ -131,11 +131,10 @@ const Input = forwardRef(({
         
         {/* Floating Label */}
         {floatingLabel && label && (
-          <label 
-            className={classNames(
+          <label            className={classNames(
               "absolute text-sm duration-200 transform -translate-y-4 top-1/2 z-10 origin-[0] pointer-events-none",
               (isFocused || value) ? "top-2 scale-75 text-orange-500" : "text-gray-500",
-              startIcon ? "left-10" : "left-4"
+              (startIcon || icon) ? "left-10" : "left-4"
             )}
           >
             {label}
