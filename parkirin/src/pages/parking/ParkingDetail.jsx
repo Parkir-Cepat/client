@@ -1,7 +1,8 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { GET_PARKING_LOT } from '../../graphql/queries';
+import { CREATE_BOOKING } from '../../graphql/mutations';
 import { 
   MapPinIcon, 
   ClockIcon, 
@@ -10,12 +11,18 @@ import {
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 import ContactOwnerButton from '../../components/chat/ContactOwnerButton';
+import { useState } from 'react';
+import Swal from 'sweetalert2';
 
 const ParkingDetail = () => {
   const { id } = useParams();
   const { data, loading, error } = useQuery(GET_PARKING_LOT, {
     variables: { id }
   });
+
+  const [vehicleType, setVehicleType] = useState('car');
+  const [duration, setDuration] = useState(60); // default 1 jam
+  const [createBooking, { loading: bookingLoading }] = useMutation(CREATE_BOOKING);
 
   if (loading) return (
     <div className="flex justify-center p-8">
@@ -38,6 +45,45 @@ const ParkingDetail = () => {
       <p className="text-gray-500">Parking lot not found</p>
     </div>
   );
+
+  const handleBook = async () => {
+    const confirm = await Swal.fire({
+      title: 'Konfirmasi Booking',
+      text: 'Apakah Anda yakin ingin melakukan booking lahan parkir ini?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Booking',
+      cancelButtonText: 'Batal',
+    });
+    if (!confirm.isConfirmed) return;
+    try {
+      const { data } = await createBooking({
+        variables: {
+          input: {
+            parking_id: parking._id,
+            vehicle_type: vehicleType,
+            start_time: new Date().toISOString(),
+            duration: Number(duration)
+          }
+        }
+      });
+      if (data?.createBooking?.booking?._id) {
+        await Swal.fire({
+          title: 'Booking Berhasil!',
+          text: 'Booking Anda telah berhasil dibuat.',
+          icon: 'success',
+        });
+        // Redirect ke halaman booking detail jika diinginkan
+        // navigate(`/booking/${data.createBooking.booking._id}`);
+      }
+    } catch (err) {
+      await Swal.fire({
+        title: 'Gagal Booking',
+        text: err.message || 'Unknown error',
+        icon: 'error',
+      });
+    }
+  };
 
   return (
     <div className="w-full py-6 px-2 sm:px-4">
@@ -207,8 +253,32 @@ const ParkingDetail = () => {
           {/* Book Now */}
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-lg font-bold text-[#f16634] mb-4">Book Now</h2>
-            <button className="w-full bg-[#f16634] text-white py-3 rounded-full font-bold shadow hover:bg-[#d45528] transition">
-              Book This Parking
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
+              <select
+                value={vehicleType}
+                onChange={e => setVehicleType(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 mb-2"
+              >
+                <option value="car">Car</option>
+                <option value="motorcycle">Motorcycle</option>
+              </select>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+              <input
+                type="number"
+                min={30}
+                step={30}
+                value={duration}
+                onChange={e => setDuration(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+              />
+            </div>
+            <button
+              className="w-full bg-[#f16634] text-white py-3 rounded-full font-bold shadow hover:bg-[#d45528] transition"
+              onClick={handleBook}
+              disabled={bookingLoading}
+            >
+              {bookingLoading ? 'Booking...' : 'Book This Parking'}
             </button>
           </div>
         </div>

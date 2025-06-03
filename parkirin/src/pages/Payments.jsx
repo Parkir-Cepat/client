@@ -4,6 +4,7 @@ import { GET_TRANSACTIONS, GET_PAYMENT_METHODS } from '../graphql/queries';
 import { ADD_PAYMENT_METHOD, DELETE_PAYMENT_METHOD, TOP_UP_WALLET } from '../graphql/mutations';
 import { LoadingSpinner, Button, Modal, Input, Card, Badge } from '../components/common';
 import { formatCurrency, formatDate, formatPaymentStatus } from '../utils/formatters';
+import Swal from 'sweetalert2';
 
 const Payments = () => {
   const [activeTab, setActiveTab] = useState('transactions'); // transactions, methods, topup
@@ -40,11 +41,19 @@ const Payments = () => {
     addPaymentMethod({ variables: { input: methodData } });
   };
 
-  const handleDeletePaymentMethod = (methodId) => {
-    if (window.confirm('Are you sure you want to delete this payment method?')) {
-      deletePaymentMethod({ variables: { paymentMethodId: methodId } });
-    }
+  const handleDelete = async (paymentMethodId) => {
+    const confirm = await Swal.fire({
+      title: 'Konfirmasi Hapus',
+      text: 'Apakah Anda yakin ingin menghapus metode pembayaran ini?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal',
+    });
+    if (!confirm.isConfirmed) return;
+    deletePaymentMethod({ variables: { paymentMethodId } });
   };
+
   const handleTopUp = () => {
     const amount = parseFloat(topUpAmount);
     if (amount > 0) {
@@ -216,7 +225,7 @@ const Payments = () => {
                         </div>
                       </div>
                       <button
-                        onClick={() => handleDeletePaymentMethod(method.id)}
+                        onClick={() => handleDelete(method.id)}
                         className="text-red-600 hover:text-red-800"
                       >
                         ✕

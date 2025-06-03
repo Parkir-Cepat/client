@@ -216,24 +216,28 @@ export const LEAVE_ROOM = gql`
 `;
 
 // Booking Mutations
-export const CREATE_BOOKING = gql`  mutation CreateBooking($input: CreateBookingInput!) {
+export const CREATE_BOOKING = gql`
+  mutation CreateBooking($input: CreateBookingInput!) {
     createBooking(input: $input) {
-      _id
-      user {
+      booking {
         _id
-        name
+        user {
+          _id
+          name
+        }
+        parking {
+          _id
+          name
+          address
+        }
+        vehicle_type
+        start_time
+        duration
+        cost
+        status
+        created_at
       }
-      parking {
-        _id
-        name
-        address
-      }
-      vehicle_type
-      start_time
-      duration
-      cost
-      status
-      created_at
+      message
     }
   }
 `;

@@ -6,6 +6,7 @@ import CreateParkingForm from '../../components/parking/CreateParkingForm';
 import EditParkingForm from '../../components/parking/EditParkingForm';
 import { LoadingSpinner } from '../../components/common';
 import { DELETE_PARKING } from '../../graphql/mutations';
+import Swal from 'sweetalert2';
 
 const GET_MY_PARKINGS = gql`
   query GetMyParkings {
@@ -51,16 +52,32 @@ const ManageParking = () => {
   const [deleteParkingLot] = useMutation(DELETE_PARKING);
   
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this parking lot?')) {
-      try {
-        await deleteParkingLot({
-          variables: { id }
-        });
-        refetch();
-      } catch (error) {
-        console.error('Error deleting parking lot:', error);
-        alert('Failed to delete parking lot: ' + error.message);
-      }
+    const confirm = await Swal.fire({
+      title: 'Konfirmasi Hapus',
+      text: 'Apakah Anda yakin ingin menghapus parking lot ini?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal',
+    });
+    if (!confirm.isConfirmed) return;
+    try {
+      await deleteParkingLot({
+        variables: { id }
+      });
+      refetch();
+      await Swal.fire({
+        title: 'Berhasil',
+        text: 'Parking lot berhasil dihapus.',
+        icon: 'success',
+      });
+    } catch (error) {
+      console.error('Error deleting parking lot:', error);
+      await Swal.fire({
+        title: 'Gagal',
+        text: 'Gagal menghapus parking lot: ' + (error.message || 'Unknown error'),
+        icon: 'error',
+      });
     }
   };
 
@@ -71,12 +88,20 @@ const ManageParking = () => {
 
   const handleCreateSuccess = (newParking) => {
     refetch(); // Refresh data
-    alert(`Parking lot "${newParking.name}" created successfully!`);
+    Swal.fire({
+      title: 'Berhasil',
+      text: `Parking lot "${newParking.name}" berhasil dibuat!`,
+      icon: 'success',
+    });
   };
 
   const handleEditSuccess = (updatedParking) => {
     refetch(); // Refresh data
-    alert(`Parking lot "${updatedParking.name}" updated successfully!`);
+    Swal.fire({
+      title: 'Berhasil',
+      text: `Parking lot "${updatedParking.name}" berhasil diperbarui!`,
+      icon: 'success',
+    });
   };
   if (loading) return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex items-center justify-center">

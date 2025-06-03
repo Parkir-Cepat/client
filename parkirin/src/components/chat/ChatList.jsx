@@ -8,6 +8,7 @@ import { formatChatTime } from '../../utils/formatters';
 import { Badge } from '../common';
 import GraphQLErrorBoundary from '../common/GraphQLErrorBoundary';
 import { LEAVE_ROOM } from '../../graphql/mutations';
+import Swal from 'sweetalert2';
 
 const ChatList = ({
   onRoomSelect,
@@ -76,7 +77,11 @@ const ChatList = ({
       await leaveRoom({ variables: { roomId } });
       refetch(); // Refresh daftar room
     } catch (error) {
-      alert('Gagal menghapus room: ' + (error?.message || 'Unknown error'));
+      await Swal.fire({
+        title: 'Gagal menghapus room',
+        text: error?.message || 'Unknown error',
+        icon: 'error',
+      });
     }
   };
 

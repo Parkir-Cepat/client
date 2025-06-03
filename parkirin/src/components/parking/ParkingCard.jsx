@@ -5,6 +5,7 @@ import { Card, Badge, Button } from '../common';
 import { formatCurrency, formatDistance } from '../../utils/formatters';
 import { classNames } from '../../utils/helpers';
 import ParkingDetailsModal from './ParkingDetailsModal';
+import Swal from 'sweetalert2';
 
 const ParkingCard = ({
   parking,
@@ -237,11 +238,19 @@ const ParkingCard = ({
               onClick={(e) => {
                 e.stopPropagation();
                 if (availableSpaces === 0) {
-                  alert('Sorry, this parking lot is currently full.');
+                  Swal.fire({
+                    title: 'Penuh',
+                    text: 'Maaf, parking lot ini sedang penuh.',
+                    icon: 'warning',
+                  });
                   return;
                 }
                 if (!isOpen()) {
-                  alert('Sorry, this parking lot is currently closed.');
+                  Swal.fire({
+                    title: 'Tutup',
+                    text: 'Maaf, parking lot ini sedang tutup.',
+                    icon: 'warning',
+                  });
                   return;
                 }
                 // Navigate to booking page with parking ID

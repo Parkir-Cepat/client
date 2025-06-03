@@ -275,8 +275,8 @@ const ParkingSearch = () => {
               <input
                 type="range"
                 min="0.5"
-                max="5"
-                step="0.5"
+                max="10000"
+                step="2"
                 value={searchParams.radius / 1000}
                 onChange={(e) =>
                   setSearchParams((prev) => ({

@@ -5,6 +5,7 @@ import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import { CREATE_PRIVATE_ROOM } from '../../graphql/mutations';
 import { GET_PRIVATE_ROOM_WITH_USER } from '../../graphql/queries';
 import useAuthStore from '../../store/authStore';
+import Swal from 'sweetalert2';
 
 const StartChatButton = ({ landowner, parkingId, variant = 'primary' }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +27,11 @@ const StartChatButton = ({ landowner, parkingId, variant = 'primary' }) => {
     }
 
     if (user._id === landowner._id) {
-      alert('Anda tidak bisa chat dengan diri sendiri');
+      Swal.fire({
+        title: 'Tidak Diperbolehkan',
+        text: 'Anda tidak bisa chat dengan diri sendiri',
+        icon: 'warning',
+      });
       return;
     }
 
@@ -57,7 +62,11 @@ const StartChatButton = ({ landowner, parkingId, variant = 'primary' }) => {
       }
     } catch (error) {
       console.error('Error starting chat:', error);
-      alert('Gagal memulai chat. Silakan coba lagi.');
+      Swal.fire({
+        title: 'Gagal',
+        text: 'Gagal memulai chat. Silakan coba lagi.',
+        icon: 'error',
+      });
     } finally {
       setIsLoading(false);
     }

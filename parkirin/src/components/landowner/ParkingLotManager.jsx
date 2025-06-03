@@ -11,6 +11,7 @@ import {
   CheckCircleIcon,
   XCircleIcon
 } from '@heroicons/react/24/outline';
+import Swal from 'sweetalert2';
 
 const ParkingLotManager = () => {
   const [parkingLots, setParkingLots] = useState([]);
@@ -114,10 +115,17 @@ const ParkingLotManager = () => {
     setShowModal(true);
   };
 
-  const handleDeleteParkingLot = (lot) => {
-    if (confirm(`Are you sure you want to delete "${lot.name}"?`)) {
-      setParkingLots(prev => prev.filter(p => p.id !== lot.id));
-    }
+  const handleDeleteParkingLot = async (lot) => {
+    const confirm = await Swal.fire({
+      title: 'Konfirmasi Hapus',
+      text: `Apakah Anda yakin ingin menghapus "${lot.name}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal',
+    });
+    if (!confirm.isConfirmed) return;
+    setParkingLots(prev => prev.filter(p => p.id !== lot.id));
   };
 
   const handleStatusToggle = (lotId) => {

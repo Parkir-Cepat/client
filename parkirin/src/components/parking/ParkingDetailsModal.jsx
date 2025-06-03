@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import googleMapsService from '../../services/googleMapsService';
 import { useAuthStore } from '../../store/authStore';
+import Swal from 'sweetalert2';
 
 const ParkingDetailsModal = ({ parkingId, isOpen, onClose }) => {
   const [directionsLoading, setDirectionsLoading] = useState(false);
@@ -53,7 +54,11 @@ const ParkingDetailsModal = ({ parkingId, isOpen, onClose }) => {
 
   const handleGetDirections = async () => {
     if (!parking?.location?.latitude || !parking?.location?.longitude) {
-      alert('Location coordinates not available');
+      await Swal.fire({
+        title: 'Lokasi Tidak Tersedia',
+        text: 'Koordinat lokasi tidak tersedia',
+        icon: 'error',
+      });
       return;
     }
 
@@ -96,7 +101,11 @@ const ParkingDetailsModal = ({ parkingId, isOpen, onClose }) => {
       }
     } catch (error) {
       console.error('Error opening directions:', error);
-      alert('Unable to open directions. Please try again.');
+      await Swal.fire({
+        title: 'Gagal Membuka Arah',
+        text: 'Tidak dapat membuka arah. Silakan coba lagi.',
+        icon: 'error',
+      });
       setDirectionsLoading(false);
     }
   };
@@ -220,8 +229,7 @@ const ParkingDetailsModal = ({ parkingId, isOpen, onClose }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-          </div>
-        </div>        {/* Content */}
+          </div>        {/* Content */}
         <div className="px-6 py-4">
           {/* Show booking form if user clicked Book Now */}
           {showBookingForm ? (

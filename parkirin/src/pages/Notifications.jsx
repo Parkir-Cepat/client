@@ -4,6 +4,7 @@ import { GET_NOTIFICATIONS, MARK_NOTIFICATION_READ, MARK_ALL_NOTIFICATIONS_READ 
 import { DELETE_NOTIFICATION } from '../graphql/mutations';
 import { LoadingSpinner, Button, Badge } from '../components/common';
 import { formatChatTime } from '../utils/formatters';
+import Swal from 'sweetalert2';
 
 const Notifications = () => {
   const [filter, setFilter] = useState('all'); // all, unread, read
@@ -33,10 +34,17 @@ const Notifications = () => {
     markAllAsRead();
   };
 
-  const handleDelete = (notificationId) => {
-    if (window.confirm('Are you sure you want to delete this notification?')) {
-      deleteNotification({ variables: { notificationId } });
-    }
+  const handleDelete = async (notificationId) => {
+    const confirm = await Swal.fire({
+      title: 'Konfirmasi Hapus',
+      text: 'Apakah Anda yakin ingin menghapus notifikasi ini?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal',
+    });
+    if (!confirm.isConfirmed) return;
+    deleteNotification({ variables: { notificationId } });
   };
 
   const getNotificationIcon = (type) => {
