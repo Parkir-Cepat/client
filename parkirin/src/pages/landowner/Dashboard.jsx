@@ -83,12 +83,11 @@ const Dashboard = () => {
   return (
     <div className="w-full p-4 sm:p-6">
       {/* Welcome Section */}
-      <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-xl p-6 text-white mb-6">        <div className="flex items-center justify-between">
+      <div className="bg-gradient-to-r from-orange-600 to-red-600 rounded-xl p-6 text-white mb-6">        
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Welcome back, {userInfo?.name}!</h1>
-            <p className="text-orange-100 mt-1">
-              {userInfo?.role === 'landowner' ? 'Manage your parking lots' : 'Find and book parking'}
-            </p>
+            <p className="text-orange-100 mt-1">Manage your parking lots</p>
           </div>
           <div className="flex items-center space-x-4">
             {userInfo?.avatar ? (
@@ -134,62 +133,35 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Role Specific Stats */}
-        {userInfo?.role === 'landowner' ? (
-          <>
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">My Parking Lots</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {parkingsLoading ? '...' : (parkingsData?.getMyParkings?.length || 0)}
-                  </p>
-                </div>
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <BuildingOffice2Icon className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">My Parking Lots</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {parkingsLoading ? '...' : (parkingsData?.getMyParkings?.length || 0)}
+              </p>
             </div>
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(0)}</p>
-                </div>
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <ChartBarIcon className="w-6 h-6 text-yellow-600" />
-                </div>
-              </div>
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <BuildingOffice2Icon className="w-6 h-6 text-purple-600" />
             </div>
-          </>
-        ) : (
-          <>
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Nearby Parking</p>
-                  <p className="text-2xl font-bold text-gray-900">12</p>
-                </div>
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <MapPinIcon className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Revenue</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(0)}</p>
             </div>
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Spent</p>
-                  <p className="text-2xl font-bold text-gray-900">{formatCurrency(0)}</p>
-                </div>
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <ChartBarIcon className="w-6 h-6 text-yellow-600" />
-                </div>
-              </div>
+            <div className="p-3 bg-yellow-100 rounded-lg">
+              <ChartBarIcon className="w-6 h-6 text-yellow-600" />
             </div>
-          </>
-        )}
-      </div>      {/* My Parking Lots List */}
-      {userInfo?.role === 'landowner' && parkingsData?.getMyParkings?.length > 0 && (
+          </div>
+        </div>
+      </div>
+
+      {/* My Parking Lots List */}
+      {parkingsData?.getMyParkings?.length > 0 && (
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">My Parking Lots</h2>
           <div className="overflow-x-auto">
@@ -212,9 +184,10 @@ const Dashboard = () => {
                         {lot.status}
                       </span>
                     </td>
-                    <td className="px-4 py-2">                      <button
+                    <td className="px-4 py-2">
+                      <button
                         className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-blue-700"
-                        onClick={() => navigate(`/landownerdashboard/parking/${lot._id}`)}
+                        onClick={() => navigate(`/landowner/parking/${lot._id}`)}
                       >
                         View Details
                       </button>
@@ -247,9 +220,7 @@ const Dashboard = () => {
                     </p>
                   </div>
                   <span className={`px-2 py-1 text-xs rounded-full ${
-                    booking.status === 'confirmed' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-yellow-100 text-yellow-800'
+                    booking.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                   }`}>
                     {booking.status}
                   </span>
@@ -259,57 +230,25 @@ const Dashboard = () => {
           ) : (
             <p className="text-gray-500 text-center py-4">No recent activity</p>
           )}
-        </div>        {/* Quick Actions */}
+        </div>
+
+        {/* Quick Links */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-          <div className="space-y-3">
-            {userInfo?.role === 'landowner' ? (
-              <>
-                <button 
-                  onClick={() => handleNavigate('/parking')}
-                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
-                >
-                  <p className="font-medium text-gray-900">Add New Parking Lot</p>
-                  <p className="text-sm text-gray-600">Create a new parking space for rent</p>
-                </button>
-                <button 
-                  onClick={() => handleNavigate('/parking')}
-                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
-                >
-                  <p className="font-medium text-gray-900">Manage Parking Lots</p>
-                  <p className="text-sm text-gray-600">View and edit your parking lots</p>
-                </button>
-                <button 
-                  onClick={() => handleNavigate('/dashboard/chat')}
-                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
-                >
-                  <p className="font-medium text-gray-900">Chat with Customers</p>
-                  <p className="text-sm text-gray-600">Communicate with customers</p>
-                </button>
-              </>
-            ) : (              <>
-                <button 
-                  onClick={() => handleNavigate('/search')}
-                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
-                >
-                  <p className="font-medium text-gray-900">Find Parking</p>
-                  <p className="text-sm text-gray-600">Find the nearest parking spaces</p>
-                </button>
-                <button 
-                  onClick={() => handleNavigate('/wallet')}
-                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
-                >
-                  <p className="font-medium text-gray-900">Top Up Balance</p>
-                  <p className="text-sm text-gray-600">Add balance to your wallet</p>
-                </button>
-              </>
-            )}
-            <button 
-              onClick={() => handleNavigate('/profile')}
-              className="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-orange-50 hover:border-orange-200 transition-colors"
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={() => handleNavigate('/landowner/add-parking')}
+              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              <p className="font-medium text-gray-900">View Profile</p>
-              <p className="text-sm text-gray-600">Update your profile information</p>
+              <BuildingOffice2Icon className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-center">Add Parking Lot</p>
+            </button>
+            <button
+              onClick={() => handleNavigate('/landowner/bookings')}
+              className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <ClockIcon className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+              <p className="text-sm font-medium text-center">View Bookings</p>
             </button>
           </div>
         </div>
@@ -318,4 +257,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Dashboard; 

@@ -5,7 +5,7 @@ import { GET_PARKING, GET_PARKING_BOOKINGS } from '../../graphql/queries';
 import { GENERATE_BOOKING_QR } from '../../graphql/mutations';
 import Swal from 'sweetalert2';
 
-const LandownerParkingDetail = () => {
+const ParkingDetail = () => {
   const { id } = useParams();
   const { data: parkingData, loading: parkingLoading, error: parkingError } = useQuery(GET_PARKING, { variables: { id } });
   const { data: bookingsData, loading: bookingsLoading } = useQuery(GET_PARKING_BOOKINGS, { variables: { parking_id: id } });
@@ -115,7 +115,8 @@ const LandownerParkingDetail = () => {
                 <th className="px-4 py-2 text-left">User</th>
                 <th className="px-4 py-2 text-left">Vehicle</th>
                 <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Payment</th>                <th className="px-4 py-2 text-left">Actions</th>
+                <th className="px-4 py-2 text-left">Payment</th>                
+                <th className="px-4 py-2 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -164,4 +165,4 @@ const LandownerParkingDetail = () => {
   );
 };
 
-export default LandownerParkingDetail; 
+export default ParkingDetail; 

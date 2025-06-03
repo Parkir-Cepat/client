@@ -9,7 +9,7 @@ import {
   CalendarIcon
 } from '@heroicons/react/24/outline';
 
-const LandlordDashboard = () => {
+const LandownerDashboard = () => {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('week');
@@ -127,7 +127,7 @@ const LandlordDashboard = () => {
       {/* Header */}
       <div className="sm:flex sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Landlord Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Landowner Dashboard</h1>
           <p className="mt-2 text-sm text-gray-700">
             Manage your parking lots and monitor performance
           </p>
@@ -251,59 +251,9 @@ const LandlordDashboard = () => {
                   <p className="text-sm font-medium text-gray-900">
                     Rp {booking.amount.toLocaleString()}
                   </p>
-                  <p className="text-xs text-gray-500">#{booking.id}</p>
                 </div>
               </div>
             ))}
-          </div>
-          <div className="mt-4">
-            <button className="w-full text-center text-sm text-blue-600 hover:text-blue-800">
-              View all bookings →
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-6">Quick Actions</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <button className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <BuildingOfficeIcon className="w-5 h-5 mr-2 text-gray-400" />
-            Add Parking Lot
-          </button>
-          <button className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <ChartBarIcon className="w-5 h-5 mr-2 text-gray-400" />
-            View Analytics
-          </button>
-          <button className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <CurrencyDollarIcon className="w-5 h-5 mr-2 text-gray-400" />
-            Revenue Report
-          </button>
-          <button className="flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            <UsersIcon className="w-5 h-5 mr-2 text-gray-400" />
-            Manage Spots
-          </button>
-        </div>
-      </div>
-
-      {/* Performance Summary */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-6">Performance Summary</h3>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600">{stats.averageOccupancy}%</div>
-            <div className="text-sm text-gray-500">Average Occupancy</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-green-600">
-              Rp {stats.monthlyRevenue?.toLocaleString()}
-            </div>
-            <div className="text-sm text-gray-500">Monthly Revenue</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-purple-600">{stats.totalBookings}</div>
-            <div className="text-sm text-gray-500">Total Bookings</div>
           </div>
         </div>
       </div>
@@ -311,4 +261,4 @@ const LandlordDashboard = () => {
   );
 };
 
-export default LandlordDashboard;
+export default LandownerDashboard; 
